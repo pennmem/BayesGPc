@@ -421,7 +421,7 @@ void CGp::setOptParams(const CMatrix& param)
     }
   }
   for(unsigned int i=0; i<pkern->getNumParams(); i++) 
-  {	  
+  {
     pkern->setTransParam(param.getVal(counter), i);
     counter++;
   }
@@ -1024,7 +1024,7 @@ double CGp::logLikelihoodGradient(CMatrix& g) const
     {
       for(unsigned int j=0; j<getInputDim(); j++)
       {
-	for(unsigned int i=0; i<getNumData(); i++)
+	      for(unsigned int i=0; i<getNumData(); i++)
       	{
           g.setVal(gXorW.getVal(i, j), 0, counter);
           counter++;
@@ -1099,7 +1099,7 @@ void CGp::updateG() const
       gXorW.zeros();
       pkern->getDiagGradX(dgKX, *pX);
     }
-    for(unsigned int j=0; j<getOutputDim(); j++) 
+    for(unsigned int j=0; j<getOutputDim(); j++)
     {
       updateCovGradient(j, tmpV); //covGrad = -(invK Y(:,j) Y(:,j)^t invK - invK)/2
       if(j==0) 
@@ -1117,28 +1117,28 @@ void CGp::updateG() const
 
       if(isOptimiseX())
       {
-	for(unsigned int i=0; i<getNumData(); i++)
-	{
-	  pkern->getGradX(gKX, *pX, i, *pX); // gX[1...ndata].val(1:ndata,1:latentdim)
-	  gKX.scale(2.0); // accounts for symmetric covariance
-	  for(unsigned int l=0; l<getInputDim(); l++)
-	  {
-	    // deal with diagonal 
-	    gKX.setVal(dgKX.getVal(i, l), i, l);
-	  }
-	  if(!isBackConstrained())
-	  {
-	    for(unsigned int k=0; k<getInputDim(); k++)
-	    {
-	      int ind = i + getNumData()*k;
-	      gXorW.addVal(gKX.dotColCol(k, covGrad, i), ind);
-	    }
-	  }
-	  else
-	  {
-	    throw ndlexceptions::NotImplementedError("Back constraints not yet implemented.");
-	  }
-	}
+        for(unsigned int i=0; i<getNumData(); i++)
+        {
+          pkern->getGradX(gKX, *pX, i, *pX); // gX[1...ndata].val(1:ndata,1:latentdim)
+          gKX.scale(2.0); // accounts for symmetric covariance
+          for(unsigned int l=0; l<getInputDim(); l++)
+          {
+            // deal with diagonal 
+            gKX.setVal(dgKX.getVal(i, l), i, l);
+          }
+          if(!isBackConstrained())
+          {
+            for(unsigned int k=0; k<getInputDim(); k++)
+            {
+              int ind = i + getNumData()*k;
+              gXorW.addVal(gKX.dotColCol(k, covGrad, i), ind);
+            }
+          }
+          else
+          {
+            throw ndlexceptions::NotImplementedError("Back constraints not yet implemented.");
+          }
+        }
       }
     }
     break;

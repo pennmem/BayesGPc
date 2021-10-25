@@ -9,6 +9,8 @@
 #include "CKern.h"
 #include "CGp.h"
 #include "CClctrl.h"
+#include "cnpy.h"
+
 
 int main(int argc, char* argv[]);
 

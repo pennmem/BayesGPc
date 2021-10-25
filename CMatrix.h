@@ -40,7 +40,6 @@ public:
     triangular = false;
     memAllocate();
     vals[0] = 0;
-      
   }
   // A constructor for creating a 1x1 CMatrix from a double.
   CMatrix(double val)
@@ -1186,6 +1185,9 @@ public:
   bool equals(const CMatrix& A, double tol=ndlutil::MATCHTOL) const;
   // find the maximum absolute difference between matrices.
   double maxAbsDiff(const CMatrix& X) const;
+  // find the maximum relative difference between matrices 
+  // (normalized by mean of absolute value of values being compared).
+  double maxRelDiff(const CMatrix& X, double eps=1e-06) const;
   // find the maximum element of the matrix.
   double max() const; 
   // Find the minimum of each row. 

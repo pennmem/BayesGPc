@@ -1,0 +1,2 @@
+/Library/Developer/CommandLineTools/usr/bin/ar qc libcmatrix.a CMakeFiles/cmatrix.dir/CMatrix.o CMakeFiles/cmatrix.dir/ndlassert.o CMakeFiles/cmatrix.dir/ndlfortran.o CMakeFiles/cmatrix.dir/ndlstrutil.o CMakeFiles/cmatrix.dir/ndlutil.o
+/Library/Developer/CommandLineTools/usr/bin/ranlib libcmatrix.a

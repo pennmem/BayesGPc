@@ -140,19 +140,19 @@ void CClgp::learn()
         scaleData=getBoolFromCurrentArgument();
       }
       else if(isCurrentArg("-a", "--active-set-size")) {
-	incrementArgument();
-	activeSetSize = getIntFromCurrentArgument();
+        incrementArgument();
+        activeSetSize = getIntFromCurrentArgument();
       }
       else if (isCurrentArg("-A", "--Approximation-type")) {
-	incrementArgument();
-	approxTypeStr = getCurrentArgument();
+        incrementArgument();
+        approxTypeStr = getCurrentArgument();
       }
       else if (isCurrentArg("-k", "--kernel")) {
-        incrementArgument(); 
+        incrementArgument();
         kernelTypes.push_back(getCurrentArgument()); 
         kernelUsageFlag.push_back(KERNEL_USAGE_FWD);
         ratQuadAlphas.push_back(-1.0);
-		rbfInvWidths.push_back(-1.0);
+    		rbfInvWidths.push_back(-1.0);
         weightVariances.push_back(-1.0);
         biasVariances.push_back(-1.0);
         variances.push_back(-1.0);
@@ -206,8 +206,8 @@ void CClgp::learn()
         selectInputs[selectInputs.size()-1]=getBoolFromCurrentArgument();
       }
       else if(isCurrentArg("-O", "--optimiser")) {
-	incrementArgument(); 
-	optimiser=getCurrentArgument(); 
+        incrementArgument(); 
+        optimiser=getCurrentArgument(); 
 	    }
      else if (isCurrentArg("-#", "--#iterations")) {
         incrementArgument();
@@ -277,7 +277,7 @@ void CClgp::learn()
         kernels[i]->setParam(rbfInvWidths[i], 0); /// set rbf inverse width as specified.
       if(variances[i]!=-1.0)
         kernels[i]->setParam(variances[i], 1); /// set variance parameter as specified.
-	}
+  	}
     else if(kernelTypes[i]=="exp") {
       if(selectInputs[i])
         exitError("Exponential covariance function not available with input selection yet.");
@@ -287,7 +287,7 @@ void CClgp::learn()
         kernels[i]->setParam(rbfInvWidths[i], 0); /// set exp inverse width as specified.
       if(variances[i]!=-1.0)
         kernels[i]->setParam(variances[i], 1); /// set variance parameter as specified.
-	}
+	  }
     else if(kernelTypes[i]=="ratquad") {
       if(selectInputs[i])
         exitError("Rational quadratic covariance function not available with input selection yet.");
@@ -295,7 +295,7 @@ void CClgp::learn()
         kernels.push_back(new CRatQuadKern(*M));
       if(ratQuadAlphas[i]!=-1.0)
         kernels[i]->setParam(ratQuadAlphas[i], 0); /// set rat quad length scale as specified.
-	  if(rbfInvWidths[i]!=-1.0)
+	    if(rbfInvWidths[i]!=-1.0)
         kernels[i]->setParam(1/sqrt(rbfInvWidths[i]), 1); /// set rat quad length scale as specified.
       if(variances[i]!=-1.0)
         kernels[i]->setParam(variances[i], 2); /// set variance parameter as specified.
@@ -613,9 +613,20 @@ void CClgp::gnuplot()
   string outputFileName=name+"_plot_data";
   if((getCurrentArgumentNo()+3)<argc) 
     outputFileName=argv[getCurrentArgumentNo()+2];
-  CMatrix y;
-  CMatrix X;
-  readData(X, y, dataFileName);
+
+  // TODO detect .npz files for loading, otherwise use MATLAB
+  // CMatrix y;
+  // CMatrix X;
+  // readData(X, y, dataFileName);
+
+  // cout << "here " << dataFileName << endl;
+  cnpy::npz_t npz_dict = cnpy::npz_load(dataFileName);
+  // cout << "here after load" << endl;
+  double* temp = npz_dict["X"].data<double>();
+  CMatrix X(temp, npz_dict["X"].shape[0], npz_dict["X"].shape[1]);
+  CMatrix y(npz_dict["y"].data<double>(), npz_dict["y"].shape[0], npz_dict["y"].shape[1]);
+
+
   CGp* pmodel=readGpFromFile(modelFileName, getVerbosity());
   pmodel->py=&y;
   pmodel->updateM();
@@ -653,22 +664,22 @@ void CClgp::gnuplot()
     int unlabIndex = 0;
     for(int i=0; i<X.getRows(); i++) {
       if(y.getVal(i)==1.0) {
-	for(int j=0; j<X.getCols(); j++)
-	  XPos.setVal(X.getVal(i, j), posIndex, j);
-	XPos.setVal(0, posIndex, XPos.getCols()-1);
-	posIndex++;
+        for(int j=0; j<X.getCols(); j++)
+          XPos.setVal(X.getVal(i, j), posIndex, j);
+        XPos.setVal(0, posIndex, XPos.getCols()-1);
+        posIndex++;
       }
       else if(y.getVal(i)==-1.0) {
-	for(int j=0; j<X.getCols(); j++)
-	  XNeg.setVal(X.getVal(i, j), negIndex, j);
-	XNeg.setVal(0, negIndex, XNeg.getCols()-1);
-	negIndex++;
+        for(int j=0; j<X.getCols(); j++)
+          XNeg.setVal(X.getVal(i, j), negIndex, j);
+        XNeg.setVal(0, negIndex, XNeg.getCols()-1);
+      	negIndex++;
       }
       else {
-	for(int j=0; j<X.getCols(); j++)
-	  XUnlab.setVal(X.getVal(i, j), unlabIndex, j);
-	XUnlab.setVal(0, unlabIndex, XUnlab.getCols()-1);
-	unlabIndex++;
+        for(int j=0; j<X.getCols(); j++)
+          XUnlab.setVal(X.getVal(i, j), unlabIndex, j);
+        XUnlab.setVal(0, unlabIndex, XUnlab.getCols()-1);
+        unlabIndex++;
       }
     }
     if(numPos>0)
@@ -695,10 +706,10 @@ void CClgp::gnuplot()
       probOut.push_back(new CMatrix(numx, 3));
       x=minVals.getVal(0, 0);
       for(int j=0; j<numx; x+=xdiff, j++) {
-	Xgrid.setVal(x, i*numy+j, 0);
-	probOut[i]->setVal(x, j, 0);
-	Xgrid.setVal(y, i*numy+j, 1);
-	probOut[i]->setVal(y, j, 1);
+        Xgrid.setVal(x, i*numy+j, 0);
+        probOut[i]->setVal(x, j, 0);
+        Xgrid.setVal(y, i*numy+j, 1);
+        probOut[i]->setVal(y, j, 1);
       }
     }
     CMatrix yTest(Xgrid.getRows(), pmodel->getOutputDim());
@@ -707,7 +718,7 @@ void CClgp::gnuplot()
 //TODO need to fill in for classification    pmodel->likelihoods(probs, yTest, Xgrid);
     for(int i=0; i<numy; i++)
       for(int j=0; j<numx; j++) {
-	probOut[i]->setVal(probs.getVal(i*numy+j), j, 2);
+	      probOut[i]->setVal(probs.getVal(i*numy+j), j, 2);
       }
     string matrixFile = name + "_prob_matrix.dat";
     ofstream out(matrixFile.c_str());
@@ -798,23 +809,23 @@ void CClgp::gnuplot()
       int j;
       for(i=0, y=minVals.getVal(0, 1); i<numy; y+=ydiff, i++) 
       {
-	regressOut.push_back(new CMatrix(numx, 3));
-	for(j=0,  x=minVals.getVal(0, 0); j<numx; x+=xdiff, j++) 
-	{
-	  Xgrid.setVal(x, i*numy+j, 0);
-	  regressOut[i]->setVal(x, j, 0);
-	  Xgrid.setVal(y, i*numy+j, 1);
-	  regressOut[i]->setVal(y, j, 1);
-	}
+        regressOut.push_back(new CMatrix(numx, 3));
+        for(j=0,  x=minVals.getVal(0, 0); j<numx; x+=xdiff, j++) 
+        {
+          Xgrid.setVal(x, i*numy+j, 0);
+          regressOut[i]->setVal(x, j, 0);
+          Xgrid.setVal(y, i*numy+j, 1);
+          regressOut[i]->setVal(y, j, 1);
+        }
       }
       CMatrix outVals(Xgrid.getRows(), pmodel->getOutputDim());
       pmodel->out(outVals, Xgrid);
       for(int i=0; i<numy; i++)
       {
-	for(int j=0; j<numx; j++) 
-	{
-	  regressOut[i]->setVal(outVals.getVal(i*numy+j), j, 2);
-	}
+        for(int j=0; j<numx; j++) 
+        {
+          regressOut[i]->setVal(outVals.getVal(i*numy+j), j, 2);
+        }
       }
       string matrixFile = name + "_output_matrix.dat";
       ofstream out(matrixFile.c_str());
@@ -824,8 +835,8 @@ void CClgp::gnuplot()
       out << "# Prepared plot of model file " << endl;
       for(int i=0; i<numy; i++) 
       {
-	regressOut[i]->toUnheadedStream(out);
-	out << endl;
+        regressOut[i]->toUnheadedStream(out);
+        out << endl;
       }
       out.close();
       string plotFileName = name + "_plot.gp";
@@ -858,19 +869,19 @@ void CClgp::gnuplot()
       int j;
       for(j=0, x=minVals.getVal(0, 0); j<numx; x+=xdiff, j++) 
       {
-	Xinvals.setVal(x, j, 0);
-	regressOut.setVal(x, j, 0);
-	errorBarPlus.setVal(x, j, 0);
-	errorBarMinus.setVal(x, j, 0);
+        Xinvals.setVal(x, j, 0);
+        regressOut.setVal(x, j, 0);
+        errorBarPlus.setVal(x, j, 0);
+        errorBarMinus.setVal(x, j, 0);
       }
       CMatrix outVals(Xinvals.getRows(), pmodel->getOutputDim());
       CMatrix stdVals(Xinvals.getRows(), pmodel->getOutputDim());
       pmodel->out(outVals, stdVals, Xinvals);
       for(int j=0; j<numx; j++) {
-	double val = outVals.getVal(j);
-	regressOut.setVal(val, j, 1);
-	errorBarPlus.setVal(val + 2*stdVals.getVal(j), j, 1);
-	errorBarMinus.setVal(val - 2*stdVals.getVal(j), j, 1);
+        double val = outVals.getVal(j);
+        regressOut.setVal(val, j, 1);
+        errorBarPlus.setVal(val + stdVals.getVal(j), j, 1);
+        errorBarMinus.setVal(val - stdVals.getVal(j), j, 1);
       }
       string lineFile = name + "_line_data.dat";
       regressOut.toUnheadedFile(lineFile);

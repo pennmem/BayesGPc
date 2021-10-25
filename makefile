@@ -4,7 +4,7 @@
 #  July 6, 2005
 #  Dec 23, 2008
 # dependencies created with gcc -MM XXX.cpp
-
+	
 include make.linux
 
 all: gplvm ivm gp libgp$(LIBSEXT) libgp$(LIBDEXT)
@@ -39,6 +39,7 @@ gp.o: gp.cpp gp.h ndlexceptions.h ndlstrutil.h CMatrix.h ndlassert.h \
 	$(CC) -c gp.cpp -o gp.o $(CCFLAGS)
 
 
+
 # To compile tests, the MATLAB interface must be enabled (i.e. define _NDLMATLAB)
 tests: testDist testGp testIvm testKern testMatrix testMltools testNdlutil testNoise testTransform  
 
@@ -53,7 +54,34 @@ testGp: testGp.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CT
 
 testGp.o: testGp.cpp CGp.h CKern.h CMatrix.h CClctrl.h
 	$(CC) -c testGp.cpp -o testGp.o $(CCFLAGS)
- 
+
+#gp: gp.o CClctrl.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o ndlassert.o
+#	$(LD) ${XLINKERFLAGS} -o gp gp.o CGp.o CClctrl.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o ndlassert.o $(LDFLAGS)
+
+testGp_sklearn: testGp_sklearn.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o
+	$(LD) ${XLINKERFLAGS} -o testGp_sklearn  testGp_sklearn.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o $(LDFLAGS)
+
+testGp_sklearn.o: testGp_sklearn.cpp CKern.h ndlassert.h ndlexceptions.h CTransform.h \
+  CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h \
+  lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
+  CClctrl.h sklearn_util.h
+	$(CC) -c testGp_sklearn.cpp -o testGp_sklearn.o $(CCFLAGS)
+
+testKern_sklearn: testKern_sklearn.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o
+	$(LD) ${XLINKERFLAGS} -o testKern_sklearn  testKern_sklearn.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o $(LDFLAGS)
+
+testKern_sklearn.o: testKern_sklearn.cpp CKern.h ndlassert.h ndlexceptions.h CTransform.h \
+  CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h \
+  lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
+  CClctrl.h sklearn_util.h
+	$(CC) -c testKern_sklearn.cpp -o testKern_sklearn.o $(CCFLAGS)
+
+# testKern_sklearn: testKern_sklearn.o CMatrix.o ndlfortran.o CKern.o CTransform.o COptimisable.o CDist.o ndlutil.o ndlstrutil.o CClctrl.o sklearn_util.o
+# 	$(LD) ${XLINKERFLAGS} -o testKern_sklearn testKern_sklearn.o CMatrix.o ndlfortran.o CKern.o CTransform.o COptimisable.o CDist.o ndlutil.o ndlstrutil.o CClctrl.o sklearn_util.o $(LDFLAGS) 
+
+# testKern_sklearn.o: testKern_sklearn.cpp CKern.h CDist.h CTransform.h CMatrix.h CClctrl.h sklearn_util.h
+# 	$(CC) -c testKern_sklearn.cpp -o testKern_sklearn.o $(CCFLAGS)
+
 testIvm: testIvm.o CIvm.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o
 	$(LD) ${XLINKERFLAGS} -o testIvm  testIvm.o CIvm.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o $(LDFLAGS)
 

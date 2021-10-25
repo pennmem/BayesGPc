@@ -13,6 +13,12 @@ LIBDCOMMAND = gcc -shared -o
 LIBSEXT = .a
 LIBDEXT = .so
 
+# Python-numpy interface
+NPYLIBS = -lcnpy -lz
+NPYLIBDIR = /usr/local/lib
+#NPYLINKFLAG =-L${NPYLIBDIR} ${NPYLIBS}
+NPYLINKFLAG =${NPYLIBS}
+
 # Uncomment these lines to set up the MATLAB interface.
 #MATLABLIBS = -lmat -lmx
 #MATLABBASE=/usr/local/pkg/matlab/
@@ -24,7 +30,8 @@ LIBDEXT = .so
 
 INCLUDE = $(MATLABINCLUDE)
 LD=g++
-LDFLAGS = ${MATLABLIBS} ${LAPACKLIBS} ${F2CLIB} -lc ${MATLABXLINKFLAG}
+LDFLAGS = ${LAPACKLIBS} ${F2CLIB} -lc ${NPYLINKFLAG}
+#LDFLAGS = ${MATLABLIBS} ${LAPACKLIBS} ${F2CLIB} -lc ${MATLABXLINKFLAG} ${NPYLINKFLAG}
 CC=g++
 CCFLAGS = -ggdb -DDBG -fPIC -I$(INCLUDE) -D$(PLAT) $(MATLABFLAG)
 #CCFLAGS = -O3 -fPIC -I$(INCLUDE) -D$(PLAT) $(MATLABFLAG)

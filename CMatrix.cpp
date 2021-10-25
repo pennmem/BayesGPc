@@ -564,7 +564,20 @@ double CMatrix::maxAbsDiff(const CMatrix& X) const
     }
   return max;
 } 
-
+double CMatrix::maxRelDiff(const CMatrix& X, double eps) const
+{
+  DIMENSIONMATCH(dimensionsMatch(X));
+  double max=0.0;
+  double diff=0.0;
+  for(unsigned int i=0; i<nrows*ncols; i++)
+    {
+      // normalize absolute difference by mean absolute value
+      diff = abs(vals[i] - X.vals[i])/(0.5*(abs(vals[i]) + abs(X.vals[i])) + eps);
+      if(diff>max)
+      	max = diff;
+    }
+  return max;
+}
 double CMatrix::max() const
 {
   double max = vals[0];

@@ -18,8 +18,8 @@ int main(int argc, char* argv[])
   int fail = 0;
   try 
   {
-    //fail += testGaussian("ftc");
-    fail += testGaussian("dtc");
+    fail += testGaussian("ftc");
+    //fail += testGaussian("dtc");
     //fail += testGaussian("fitc");
     //fail += testGaussian("pitc");
     command.exitNormal();
@@ -75,7 +75,8 @@ int testGaussian(string type)
   modelInit.setScale(scale);
   modelInit.setBias(bias);
   modelInit.updateM();
-
+  
+  /* loading in model from MATLAB
   CCmpndKern kern(X);
   kern.readMatlabFile(fileName.c_str(), "kernInit");
   //CGaussianNoise noise(y);
@@ -96,6 +97,7 @@ int testGaussian(string type)
     modelInit.display(cout);
     fail++;
   }
+  */
 
   // Compare C++ parameters with MATLAB provided parameters.
   CMatrix fileParams;

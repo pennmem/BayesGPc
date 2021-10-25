@@ -1879,9 +1879,9 @@ void CMatern32Kern::getGradParams(CMatrix& g, const CMatrix& X, const CMatrix& X
       double k = (1+sqrtn2wi2)*expmsqrtn2wi2;
       double ratio;
       if(sqrtn2wi2==0.0)
-	ratio = 1.0;
+	      ratio = 1.0;
       else
-	ratio = n2/sqrtn2wi2;
+	      ratio = n2/sqrtn2wi2;
       g1 += cgVal*wi2/lengthScale*ratio*(k-expmsqrtn2wi2);
       g2 += cgVal*k;
     }
@@ -3856,8 +3856,6 @@ void CPolyardKern::writeParamsToStream(ostream& out) const
   par.toStream(out);
   writeToStream(out, "numPriors", getNumPriors());
   writePriorsToStream(out);
-
-
 
 }
 void CPolyardKern::readParamsFromStream(istream& in)

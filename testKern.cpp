@@ -234,6 +234,7 @@ int testKern(CKern* kern, CKern* kern2, const string fileName)
   CMatrix X2;
   X2.readMatlabFile(fileName, "X2");
   kern->setTransParams(params);
+  // test C++ model and model loaded directly from reference implementation match
   kern2->readMatlabFile(fileName, "kern2");
   if(kern2->equals(*kern))
     cout << kern->getName() << " Initial Kernel matches." << endl;
@@ -243,6 +244,7 @@ int testKern(CKern* kern, CKern* kern2, const string fileName)
     cout << "Matlab kernel" << endl << *kern2 << endl << "C++ Kernel " << endl << *kern << endl;
     fail++;
   }
+  // test C++ and reference kernel matrix computations match
   CMatrix K1(X.getRows(), X.getRows());
   kern->compute(K1, X);
   CMatrix K2;
@@ -256,6 +258,7 @@ int testKern(CKern* kern, CKern* kern2, const string fileName)
     cout << "Maximum absolute difference: " << diff << endl;    
     fail++;
   }
+  // test cross kernels
   CMatrix K3(X.getRows(), X2.getRows());
   kern->compute(K3, X, X2);
   CMatrix K4;
@@ -269,6 +272,7 @@ int testKern(CKern* kern, CKern* kern2, const string fileName)
     cout << "Maximum absolute difference: " << diff << endl;    
     fail++;
   }
+  // test diagonal kernel computations match
   CMatrix k1(X.getRows(), 1);
   kern->diagCompute(k1, X);
   CMatrix k2;
@@ -282,6 +286,7 @@ int testKern(CKern* kern, CKern* kern2, const string fileName)
     cout << "Maximum absolute difference: " << diff << endl;    
     fail++;
   }
+  // test kernel gradients match
   CMatrix covGrad;
   covGrad.readMatlabFile(fileName, "covGrad");
   covGrad.setSymmetric(true);
@@ -302,7 +307,7 @@ int testKern(CKern* kern, CKern* kern2, const string fileName)
     cout << "Maximum absolute difference: " << diff << endl;    
     fail++;
   }
-  
+  // test cross kernel gradients match  
   CMatrix covGrad2;
   covGrad2.readMatlabFile(fileName, "covGrad2");
   covGrad.setSymmetric(true);
