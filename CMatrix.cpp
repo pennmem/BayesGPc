@@ -704,8 +704,14 @@ void CMatrix::memDeAllocate()
 }
 void CMatrix::memReAllocate(int rowIncrease, int colIncrease)
 {
-  SANITYCHECK(-rowIncrease<nrows);
-  SANITYCHECK(-colIncrease<ncols);
+  // original code did not type cast nrows and ncols to int before comparisons. comparisons implicitly cast
+  // to unsigned int, leading to incorrect comparisons saying, 
+  // e.g., -rowIncrease<nrows -> false for rowIncrease = 1, nrows = 1
+  // the two incorrect checks are included below in case something else breaks
+  // SANITYCHECK(-rowIncrease<nrows);
+  // SANITYCHECK(-colIncrease<ncols);
+  SANITYCHECK(-rowIncrease<(int)nrows);
+  SANITYCHECK(-colIncrease<(int)ncols);
   unsigned int newRows = nrows+rowIncrease;
   unsigned int newCols = ncols+colIncrease;
   unsigned int minRows = newRows;

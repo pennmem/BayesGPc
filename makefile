@@ -39,6 +39,12 @@ gp.o: gp.cpp gp.h ndlexceptions.h ndlstrutil.h CMatrix.h ndlassert.h \
 	$(CC) -c gp.cpp -o gp.o $(CCFLAGS)
 
 
+test_optim: test_optim.o
+	$(LD) ${XLINKERFLAGS} -o test_optim test_optim.o $(LDFLAGS)
+
+test_optim.o: test_optim.cpp
+	$(CC) -c test_optim.cpp -o test_optim.o $(CCFLAGS)
+
 
 # To compile tests, the MATLAB interface must be enabled (i.e. define _NDLMATLAB)
 tests: testDist testGp testIvm testKern testMatrix testMltools testNdlutil testNoise testTransform  
@@ -76,11 +82,14 @@ testKern_sklearn.o: testKern_sklearn.cpp CKern.h ndlassert.h ndlexceptions.h CTr
   CClctrl.h sklearn_util.h
 	$(CC) -c testKern_sklearn.cpp -o testKern_sklearn.o $(CCFLAGS)
 
-# testKern_sklearn: testKern_sklearn.o CMatrix.o ndlfortran.o CKern.o CTransform.o COptimisable.o CDist.o ndlutil.o ndlstrutil.o CClctrl.o sklearn_util.o
-# 	$(LD) ${XLINKERFLAGS} -o testKern_sklearn testKern_sklearn.o CMatrix.o ndlfortran.o CKern.o CTransform.o COptimisable.o CDist.o ndlutil.o ndlstrutil.o CClctrl.o sklearn_util.o $(LDFLAGS) 
+testBayesianSearch: testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o
+	$(LD) ${XLINKERFLAGS} -o testBayesianSearch testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o $(LDFLAGS)
 
-# testKern_sklearn.o: testKern_sklearn.cpp CKern.h CDist.h CTransform.h CMatrix.h CClctrl.h sklearn_util.h
-# 	$(CC) -c testKern_sklearn.cpp -o testKern_sklearn.o $(CCFLAGS)
+testBayesianSearch.o: testBayesianSearch.cpp CBayesianSearch.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \
+  CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h \
+  lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
+  CClctrl.h sklearn_util.h
+	$(CC) -c testBayesianSearch.cpp -o testBayesianSearch.o $(CCFLAGS)
 
 testIvm: testIvm.o CIvm.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o
 	$(LD) ${XLINKERFLAGS} -o testIvm  testIvm.o CIvm.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o $(LDFLAGS)
@@ -174,6 +183,13 @@ CIvm.o: CIvm.cpp CIvm.h CMltools.h ndlassert.h ndlexceptions.h \
   ndlfortran.h lapack.h CKern.h CTransform.h CDataModel.h CDist.h \
   CNoise.h
 	$(CC) -c CIvm.cpp -o CIvm.o $(CCFLAGS)
+
+CBayesianSearch.o: CBayesianSearch.cpp CBayesianSearch.h CGp.cpp CGp.h \
+  CMltools.h ndlassert.h ndlexceptions.h \
+  ndlstrutil.h COptimisable.h CMatrix.h CNdlInterfaces.h ndlutil.h \
+  ndlfortran.h lapack.h CKern.h CTransform.h CDataModel.h CDist.h \
+  CNoise.h
+	$(CC) -c CBayesianSearch.cpp -o CBayesianSearch.o $(CCFLAGS) ${BOOSTLIB}
 
 ndlutil.o: ndlutil.cpp ndlutil.h ndlassert.h ndlexceptions.h ndlfortran.h
 	$(CC) -c ndlutil.cpp -o ndlutil.o $(CCFLAGS)

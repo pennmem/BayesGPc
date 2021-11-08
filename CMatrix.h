@@ -52,7 +52,7 @@ public:
     memAllocate();
     vals[0] = val;
   }
-  // The standard memory allocating constructor for creating a matrix o f size numRows*numCols.
+  // The standard memory allocating constructor for creating a matrix of size numRows*numCols.
   CMatrix(unsigned int numRows, unsigned int numCols) : nrows(numRows), ncols(numCols)
   {
     _init();
@@ -68,6 +68,15 @@ public:
     triangular = false;
     memAllocate();
     setVals(val);
+  }
+  // Constructor for initialising a CMatrix from a double* array.
+  CMatrix(unsigned int numRows, unsigned int numCols, const double* const inVals) : nrows(numRows), ncols(numCols)
+  {
+    _init();
+    symmetric = false;
+    triangular = false;
+    memAllocate();
+    dcopy_(nrows*ncols, inVals, 1, vals, 1);
   }
   // Constructor for initialising a CMatrix from a double* array.
   CMatrix(unsigned int numRows, unsigned int numCols, double* inVals) : nrows(numRows), ncols(numCols)

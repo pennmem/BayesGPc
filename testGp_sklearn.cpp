@@ -119,8 +119,6 @@ int testGaussian(string type, string kernel)
   CCmpndKern kern(X);
   CCmpndKern kern_ref(X);
   // parse .npy kernel parameters, obtain kernel structure
-  bool structureOnly = false;
-  bool arbitraryChange = true;
   getSklearnKernels(&kern, npz_dict, &X, true);
   getSklearnKernels(&kern_ref, npz_dict, &X, false);
 
@@ -247,7 +245,7 @@ int testGaussian(string type, string kernel)
     cout << "FAILURE: GP parameter match." << endl;
     cout << "Reference implementation loaded params: " << endl << params_ref;
     cout << "C++ optimised params: " << endl << params;
-    cout << "Maximum relative difference: " << params.maxRelDiff(params_ref) << endl << endl;
+    cout << "Maximum relative difference: " << diff << endl << endl;
     fail++;
   }
   

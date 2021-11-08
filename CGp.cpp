@@ -605,6 +605,12 @@ void CGp::_posteriorVar(CMatrix& varSigma, CMatrix& kX, const CMatrix& Xin) cons
     {
       double vsVal = pkern->diagComputeElement(Xin, i) - kX.norm2Col(i);
       CHECKZEROORPOSITIVE(vsVal>=0);
+      // appears exceptions (mentioned briefly in gp.fit by debugger) might be occurring and since
+      // cpp17 appears to not allow for the dynamic exception specifications used and I just replaced them
+      // with noexcept, those exceptions may not be being thrown as they should be, leading to a bug down the
+      // line with a negative standard deviation prediction
+      // need to get exceptions printing... just trying to use cout doesn't work
+      // also, try removing "only examine my code" option in visual studio
       for(unsigned int j=0; j<getOutputDim(); j++)
       {
         varSigma.setVal(vsVal, i, j);

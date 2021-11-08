@@ -82,5 +82,32 @@ extern "C" void lbfgs_(const int& numVariables,
 		       double* W, // work vector size N(2M+1) + 2M
 		       int& iFlag);
 
-
+// from attempt to integrate simann.f:
+// extern "C" void SA_(const int N, 
+// 			   const double* X,
+// 			   bool MAX,
+// 			   double RT,
+// 			   double EPS,
+// 			   int NS,
+// 			   int NT,
+// 			   int NEPS,
+// 			   int MAXEVL,
+// 			   double* LB,
+// 			   double* UB,
+// 			   double* C,
+// 			   int IPRINT,
+//                int ISEED1,
+// 			   int ISEED2,
+// 			   double T,
+// 			   double* VM,
+// 			   double* XOPT,
+// 			   double FOPT,
+// 			   int NACC,
+// 			   int NFCNEV,
+// 			   int NOBDS,
+// 			   int IER,
+//                double* FSTAR,
+// 			   double* XP,
+// 			   int* NACP
+//                );
 #endif
