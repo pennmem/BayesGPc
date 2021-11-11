@@ -1,0 +1,121 @@
+11/11/21
+TODO
+need to correct gradients in CGp for noise, failing CGp grad tests only with observation noise and matern32 kernel, 
+passing them without observation noise
+unit tests
+try multiple L-BFGS optimization runs, other solvers
+
+
+11/9/21
+
+Select kernel with CV once we have data
+in what way are the collected samples biased by the search produced by the selected kernel?
+
+How is prior variance selected? Just observation noise?
+
+Extensions:
+prior sample weighting/weighted GP - simple technique
+how to determine the weights?
+if you had multiple prior subjects, you could directly compute this with leave-one-patient-out cross validation
+on the log-likelihood, i.e., fit on all subjects' data but one and all of that one
+patient's data but one session. Tune the weight on performance (marginal likelihood, MSE...)
+this would give an optimized weight for each subject tuned for generalization performance,
+could take mean or probably better, median
+
+could look at distribution of kernel HPs across subjects, maybe just reuse HPs from previous subjects
+might think that different subjects would have similar HPs, but task, classifiers, electrodes, patients, etc.
+are very noisy...
+
+could anneal prior data weighting over the course of training
+
+question of generalization:
+tuning HPs on marginal log-likelihood alone for all current data could overfit, can overfit to noise
+since we're just using GP as a proxy for search, we don't necessarily care as much during search
+poor generalization during search would be expected to decrease sample efficiency (which we don't want, but
+wouldn't be fatal) but adding noise to the search isn't terrible given the model assumptions aren't entirely 
+correct.
+Weighting initial samples with prior data would provide for regularization.
+Increasing the sample noise estimate would as well.
+We could penalize the log likelihood in other ways as well
+>> it'd really be nice to have an autograd system in place >> could consider pytorch/tensorflow c++...
+
+
+We want a robust method for comparing effects of stim. after fitting
+CV via fitting HPs on different subsets of subject data? how to aggregate model predictions across folds
+to obtain prediction of best set of parameters?
+
+
+
+use non-behavioral data to estimate effects on classifier features, then use mean feature weights in each 
+region to estimate delta variance
+start out looking at feature variances rather than classifier weights
+
+look at all data sets with BlackRock systems and 500 ms stim length
+non-behavioral data sets: ps1, 2, 2b, 3, 4 data sites - 150 patients, subjects have to sit and do little
+behavioral datasets: FR3 catFR3, PAL3 - 50 patients
+    stim occurs at particular points in time during a task with a particular structure
+    get an effect of not only stim but also current brain activity/behavior > behavior adds noise
+    but behavioral task allows for directly measuring what we care about
+
+Mike would start with OPS data, has larger data set per patient, get pipeline working, then expand to other
+data sets
+OPS is most recent, if there are issues I can talk to Ryan who wrote the code, OPS is smaller though
+
+eventually, look at aggregate classifier across subjects/regions
+John Burke's univariate analyses didn't take into account feature correlations, this would allow for 
+feature correlations and be on a much larger dataset (450 subjects vs. 90)
+
+
+
+
+variable length scales over domain
+
+multidimensional:
+    anisotropic kernels/length scales
+
+    discrete models (might be better to just implement a bandit model to choose sampling for a set of GPs than
+        to directly use a GP with discrete RVs in combination with continuous RVs)
+
+
+Testing
+push
+Start with unit tests rather than qualitative testing, unless I have specific hypotheses in mind to improve fits
+Add search performance tests
+Add timing tests
+    ask James and Ryan about computational resources available at sites
+smart pointers
+
+
+11/8/21
+
+BO is mostly working on 1D test function of sin(x) with Matern32 kernel based on qualitative plotting tests
+0.3 noise level in samples, lower alpha value (0.05) was used for most experiments than in sklearn
+using 0.45 (value used in sklearn), resulted in flat predicted variances and less exploration
+no, CGP WAS NEVER IMPLEMENTING OBSERVATION NOISE...
+
+DE is optimizing EI decently well, misses sporadically
+
+overall exploration is more "reluctant", much higher exploration biases being used...
+
+CGp GP fit is much rougher than fit with sklearn using same kernel
+
+Seems like the predicted variance might be flatter than sklearn?
+sklearn appears to be only adding observation noise to sample variances, whereas CGp is adding noise all 
+elements of covariance
+CGp was not adding observation noise to diagonal elements
+
+Also had one instance where GP fit was drastically off after a new sample (curves fit to twice the true curves), 
+will need to detect that... maybe just an outlier detection scheme on the log likelihood
+
+EI returning constant values oftentimes?
+
+
+Model definitely slows down considerably after 100 points, gets to about 2 Hz rate around 200 samples...
+Probably will need sparse sampling, batched updates, some additional optimization/caching 
+(fit HPs with only prior data from other patients), 
+using better (parallelized) libraries
+column-row addition update to Cholesky - Linpack - O(k^2)
+averaging multiple samples together would reduce sample noise and computational costs
+
+full updates to Cholesky decomposition could be performed periodically to manage numerical error and
+to remove e.g. samples from prior subjects below some weighting threshold during prior data annealing

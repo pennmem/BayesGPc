@@ -337,11 +337,11 @@ void CGp::getOptParams(CMatrix& param) const
     {
       for(unsigned int j=0; j<getInputDim(); j++)
       {
-	for(unsigned int i=0; i<getNumData(); i++)
-	{
-	  param.setVal(pX->getVal(i, j), counter);
-	  counter++;
-	}
+        for(unsigned int i=0; i<getNumData(); i++)
+        {
+          param.setVal(pX->getVal(i, j), counter);
+          counter++;
+        }
       }
     }
     else
@@ -356,11 +356,11 @@ void CGp::getOptParams(CMatrix& param) const
     {
       for(unsigned int j=0; j<getInputDim(); j++) 
       { 
-	for(unsigned int i=0; i<numActive; i++) 
-	{
-	  param.setVal(X_u.getVal(i, j), counter);
-	  counter++;
-	}
+        for(unsigned int i=0; i<numActive; i++) 
+        {
+          param.setVal(X_u.getVal(i, j), counter);
+          counter++;
+        }
       }
     }
   }
@@ -394,11 +394,11 @@ void CGp::setOptParams(const CMatrix& param)
     {
       for(unsigned int j=0; j<getInputDim(); j++)
       {
-	for(unsigned int i=0; i<getNumData(); i++)
-	{
-	  pX->setVal(param.getVal(counter), i, j);
-	  counter++;
-	}
+        for(unsigned int i=0; i<getNumData(); i++)
+        {
+          pX->setVal(param.getVal(counter), i, j);
+          counter++;
+        }
       }
     }
     else
@@ -604,13 +604,19 @@ void CGp::_posteriorVar(CMatrix& varSigma, CMatrix& kX, const CMatrix& Xin) cons
     for(unsigned int i=0; i<kX.getCols(); i++)
     {
       double vsVal = pkern->diagComputeElement(Xin, i) - kX.norm2Col(i);
-      CHECKZEROORPOSITIVE(vsVal>=0);
+      if (vsVal < 0) {
+        cout << "Negative predictive variance: " << vsVal << endl;
+        if (vsVal < -1e-6)  // allow some room for numerical stability
+          CHECKZEROORPOSITIVE(vsVal >= -1e-6);
+        else {
+          vsVal = 0;
+        }
+      }
       // appears exceptions (mentioned briefly in gp.fit by debugger) might be occurring and since
       // cpp17 appears to not allow for the dynamic exception specifications used and I just replaced them
       // with noexcept, those exceptions may not be being thrown as they should be, leading to a bug down the
       // line with a negative standard deviation prediction
-      // need to get exceptions printing... just trying to use cout doesn't work
-      // also, try removing "only examine my code" option in visual studio
+      // TODO get exceptions working...
       for(unsigned int j=0; j<getOutputDim(); j++)
       {
         varSigma.setVal(vsVal, i, j);
@@ -701,43 +707,43 @@ void CGp::_updateK() const
   double kVal=0.0;
   switch(getApproximationType()) 
   {
-  case FTC:
-    // TODO: These computes should be done with pkern->compute, which 
-    // could be made multi-threaded.
-    for(unsigned int i=0; i<getNumData(); i++) 
-    {
-      K.setVal(pkern->diagComputeElement(*pX, i), i, i);
-      for(unsigned int j=0; j<i; j++) 
+    case FTC:
+      // TODO: These computes should be done with pkern->compute, which 
+      // could be made multi-threaded.
+      for(unsigned int i=0; i<getNumData(); i++) 
       {
-	kVal=pkern->computeElement(*pX, i, *pX, j);
-	K.setVal(kVal, i, j);
-	K.setVal(kVal, j, i);
+        K.setVal(pkern->diagComputeElement(*pX, i) + obsNoiseVar, i, i);
+        for(unsigned int j=0; j<i; j++) 
+        {
+          kVal=pkern->computeElement(*pX, i, *pX, j);
+          K.setVal(kVal, i, j);
+          K.setVal(kVal, j, i);
+        }
       }
-    }
-    K.setSymmetric(true);
-    break;
-  case DTC:
-  case DTCVAR:
-  case FITC:
-  case PITC:
-    // TODO: These computes should be done with pkern->compute, which 
-    // could be made multi-threaded.
-    for(unsigned int i=0; i<numActive; i++) 
-    {
-      K_uu.setVal(pkern->diagComputeElement(X_u, i), i, i);
-      for(unsigned int j=0; j<i; j++) 
+      K.setSymmetric(true);
+      break;
+    case DTC:
+    case DTCVAR:
+    case FITC:
+    case PITC:
+      // TODO: These computes should be done with pkern->compute, which 
+      // could be made multi-threaded.
+      for(unsigned int i=0; i<numActive; i++) 
       {
-	kVal=pkern->computeElement(X_u, i, X_u, j);
-	K_uu.setVal(kVal, i, j);
-	K_uu.setVal(kVal, j, i);
+        K_uu.setVal(pkern->diagComputeElement(X_u, i) + obsNoiseVar, i, i);
+        for(unsigned int j=0; j<i; j++) 
+        {
+          kVal=pkern->computeElement(X_u, i, X_u, j);
+          K_uu.setVal(kVal, i, j);
+          K_uu.setVal(kVal, j, i);
+        }
+        K_uu.setSymmetric(true);
+        for(unsigned int j=0; j<getNumData(); j++) {
+          kVal=pkern->computeElement(X_u, i, *pX, j);
+          K_uf.setVal(kVal, i, j);
+        }
       }
-      K_uu.setSymmetric(true);
-      for(unsigned int j=0; j<getNumData(); j++) {
-	kVal=pkern->computeElement(X_u, i, *pX, j);
-	K_uf.setVal(kVal, i, j);
-      }
-    }
-    break;
+      break;
   }
   switch(getApproximationType()) 
   {
@@ -887,9 +893,10 @@ void CGp::_updateInvK(unsigned int dim) const
   case FTC:
     jit = LcholK.jitChol(K); // this will initially be upper triangular.
     if(jit>1e-2)
+    {
       if(getVerbosity()>2)
-	cout << "Warning: jitter of " << jit << " added to K in _updateInvK()." << endl;
-
+      	cout << "Warning: jitter of " << jit << " added to K in _updateInvK()." << endl;
+    }
     logDetK = logDet(LcholK);
     invK.setSymmetric(true);
     invK.pdinv(LcholK);
@@ -1092,7 +1099,9 @@ void CGp::updateG() const
   
   updateK();
   updateAD();
+  // main grad
   CMatrix tempG(1, numKernParams);
+  // only used in PITC sparse approximation implementation
   CMatrix tempG2(1, numKernParams);
   CMatrix tmpV(getOutputDim(), 1);
   g_param.zeros();

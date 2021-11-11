@@ -1199,6 +1199,8 @@ public:
   double maxRelDiff(const CMatrix& X, double eps=1e-06) const;
   // find the maximum element of the matrix.
   double max() const; 
+  // find min element of matrix
+  double min() const;
   // Find the minimum of each row. 
   void minRow(CMatrix& m) const;
   // Find the maximum of each row.

@@ -65,15 +65,18 @@ class BayesianSearch:
             self.gp.fit(self.samples_x, self.samples_y)
         y_plot, std_plot = self.gp.predict(x_plot, return_std=True)
         plt.plot(x_plot, y_plot, label="mu", color='b')
-        plt.fill_between(x_plot.reshape(-1), 
-                         y_plot.reshape(-1)+std_plot, 
-                         y_plot.reshape(-1)-std_plot, 
+        plt.fill_between(x_plot.reshape(-1),
+                         y_plot.reshape(-1)+std_plot,
+                         y_plot.reshape(-1)-std_plot,
                          alpha=0.3, color='r')
         
         plt.scatter(self.samples_x, self.samples_y, marker='x', label="Samples", c='k')
         acq_func_vals = self.acq_func(x_plot, self.y_best, self.gp)
-        acq_func_vals = (acq_func_vals - np.mean(acq_func_vals))/np.std(acq_func_vals)
+        acq_func_vals = acq_func_vals - np.min(acq_func_vals)
+        acq_func_vals /= np.max(acq_func_vals)
+        acq_func_vals -= range_interval[0] + 2
         plt.plot(x_plot, acq_func_vals, color='g', label="Acquisition function")
+        plt.plot(x_plot, std_plot - range_interval[0] - 2, color="b", label="std")
         x_next = self.get_next_sample()
 
         y_next = self.gp.predict(x_next)
@@ -108,7 +111,7 @@ def ExpectedImprovement(x, y_best, gp, exploration_bias=0):
 
 if __name__ == "__main__":
     from sklearn import gaussian_process
-    np.random.seed(3)
+    np.random.seed(4)
     
     # search problem
     # domain_interval = (-1, 1)
@@ -131,10 +134,10 @@ if __name__ == "__main__":
     def observation_noise():
         return noise_std * np.random.randn()
 
-    num_samples = 60
+    num_samples = 250
 
     # model
-    kern = gaussian_process.kernels.WhiteKernel()
+    kern = gaussian_process.kernels.WhiteKernel(noise_level_bounds=(1e-30, 100000))
     kern += gaussian_process.kernels.Matern(nu=3/2) * gaussian_process.kernels.ConstantKernel()
     gp = gaussian_process.GaussianProcessRegressor(kern, normalize_y=True, alpha=noise_std)
 
@@ -142,21 +145,27 @@ if __name__ == "__main__":
     exploration_bias = 0.1 * (range_interval[1] - range_interval[0])
     EI_exploration = partial(ExpectedImprovement, exploration_bias=exploration_bias)
 
-    b = BayesianSearch(gp, EI_exploration, init_samples=3, num_restarts=1, 
+    b = BayesianSearch(gp, EI_exploration, init_samples=10, num_restarts=1, 
                        x_dim=1, bounds=[domain_interval], tol=1e-9)
 
     for s in range(num_samples):
         x = b.get_next_sample()
         y = test_func(x) + observation_noise()
+        print(f"Sample {s}: (x, y): ({x}, {y})")
         b.add_sample(x, y)
     
-        if s >= b.init_samples - 1:
-            b.plot()
-            x_plot = np.expand_dims(np.linspace(b.bounds[0][0], b.bounds[0][1], 200), -1)
-            plt.plot(x_plot, test_func(x_plot), '-', label="True objective", c='c')
-            plt.legend()
-            plt.show()
+        # if s >= b.init_samples - 1:
+        #     b.plot()
+        #     x_plot = np.expand_dims(np.linspace(b.bounds[0][0], b.bounds[0][1], 200), -1)
+        #     plt.plot(x_plot, test_func(x_plot), '-', label="True objective", c='c')
+        #     plt.legend()
+        #     plt.show()
 
+    b.plot()
+    x_plot = np.expand_dims(np.linspace(b.bounds[0][0], b.bounds[0][1], 200), -1)
+    plt.plot(x_plot, test_func(x_plot), '-', label="True objective", c='c')
+    plt.legend()
+    plt.show()
 # TODO
 
 # needed to start testing in patients with tuning continuous parameters with BO, stim locations with statistical tests:

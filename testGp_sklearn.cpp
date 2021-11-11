@@ -130,8 +130,8 @@ int testGaussian(string type, string kernel)
     noiseInit.setBiasVal(0.0, i);
     noiseInit_ref.setBiasVal(0.0, i);
   }
-  noiseInit.setParam(1e-10, noiseInit.getOutputDim());
-  noiseInit_ref.setParam(1e-10, noiseInit.getOutputDim());
+  noiseInit.setParam(0.0, noiseInit.getOutputDim());
+  noiseInit_ref.setParam(0.0, noiseInit.getOutputDim());
   
   int iters = 100;
   bool outputScaleLearnt = false;
@@ -148,6 +148,8 @@ int testGaussian(string type, string kernel)
   model_ref.setBias(bias);
   model.updateM();
   model_ref.updateM();
+  temp = npz_dict["obsNoiseVar"].data<double>();
+  model.setObsNoiseVar(*temp);
 
   model.setVerbosity(2);
   model.setDefaultOptimiser(CGp::BFGS);  //options: SCG, CG, GD
@@ -234,6 +236,9 @@ int testGaussian(string type, string kernel)
 
   model.getOptParams(params);
   model_ref.getOptParams(params_ref);
+  for (int i = 0; i < params_ref.getCols(); i++) {
+    cout << params_ref.getVal(0, i) << "  " << params.getVal(0, i) << endl;
+  }
   double diff = params.maxRelDiff(params_ref);
   if(diff < tol)
   {

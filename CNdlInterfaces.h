@@ -34,7 +34,7 @@ public:
     writeParamsToStream(out);
   }
   // static double readVersionFromStream(istream& in) throw(ndlexceptions::StreamVersionError&)
-  static double readVersionFromStream(istream& in) noexcept(false)
+  static double readVersionFromStream(istream& in) //noexcept(false)
   {
     double ver = readDoubleFromStream(in, "version");
     if(ver<getMinCompatVersion())
@@ -61,7 +61,7 @@ public:
       return false;
   }
   // static vector<int> readVectorIntFromStream(istream& in, const std::string fieldName) throw(ndlexceptions::StreamFormatError&)
-  static vector<int> readVectorIntFromStream(istream& in, const std::string fieldName) noexcept(false)
+  static vector<int> readVectorIntFromStream(istream& in, const std::string fieldName) //noexcept(false)
   {
     vector<int> vals;
     string str = readStringFromStream(in, fieldName);
@@ -74,7 +74,7 @@ public:
     return vals;
   }
   // static vector<unsigned int> readVectorUintFromStream(istream& in, const std::string fieldName) throw(ndlexceptions::StreamFormatError&)
-  static vector<unsigned int> readVectorUintFromStream(istream& in, const std::string fieldName) noexcept(false)
+  static vector<unsigned int> readVectorUintFromStream(istream& in, const std::string fieldName) //noexcept(false)
   {
     vector<unsigned int> vals;
     string str = readStringFromStream(in, fieldName);
@@ -87,7 +87,7 @@ public:
     return vals;
   }
   // static string readStringFromStream(istream& in, const std::string fieldName) throw(ndlexceptions::StreamFormatError&)
-  static string readStringFromStream(istream& in, const std::string fieldName) noexcept(false)
+  static string readStringFromStream(istream& in, const std::string fieldName) //noexcept(false)
   {
     string line;
     vector<string> tokens;
@@ -149,7 +149,7 @@ public:
     return readStringFromStream(in, "type");
   }
   // virtual void fromStream(istream& in) throw(ndlexceptions::StreamFormatError&)
-  virtual void fromStream(istream& in) noexcept(false)
+  virtual void fromStream(istream& in) //noexcept(false)
   {
     readVersionFromStream(in);
     readParamsFromStream(in);
@@ -166,7 +166,7 @@ public:
   virtual void writeParamsToStream(ostream& out) const=0;
   virtual void readParamsFromStream(istream& out)=0;
   // void toFile(const string fileName, const string comment="") const throw(ndlexceptions::FileWriteError&)
-  void toFile(const string fileName, const string comment="") const noexcept(false)
+  void toFile(const string fileName, const string comment="") const //noexcept(false)
   {
     ofstream out(fileName.c_str());
     if(!out) throw ndlexceptions::FileWriteError(fileName);
@@ -176,7 +176,7 @@ public:
     out.close();
   }
   // void fromFile(const string fileName) throw(ndlexceptions::FileReadError&, ndlexceptions::FileFormatError&)
-  void fromFile(const string fileName) noexcept(false)
+  void fromFile(const string fileName) //noexcept(false)
   {
     ifstream in(fileName.c_str());
     if(!in.is_open()) throw ndlexceptions::FileReadError(fileName);
@@ -206,7 +206,7 @@ class CMatInterface
   virtual mxArray* toMxArray() const=0;
   virtual void fromMxArray(const mxArray* matlabArray)=0;
   // void readMatlabFile(const string fileName, const string variableName) throw(ndlexceptions::FileReadError&, ndlexceptions::FileFormatError&)
-  void readMatlabFile(const string fileName, const string variableName) noexcept(false)
+  void readMatlabFile(const string fileName, const string variableName) //noexcept(false)
   {
     MATFile* matFile = matOpen(fileName.c_str(), "r");
     if(matFile==NULL)
@@ -230,7 +230,7 @@ class CMatInterface
       throw ndlexceptions::FileReadError(fileName);   
   }
   // void updateMatlabFile(string fileName, const string variableName) const throw(ndlexceptions::FileWriteError&)
-  void updateMatlabFile(string fileName, const string variableName) noexcept(false)
+  void updateMatlabFile(string fileName, const string variableName) //noexcept(false)
   {
     MATFile* matFile = matOpen(fileName.c_str(), "u");
     if(matFile==NULL)
@@ -243,7 +243,7 @@ class CMatInterface
   }
   
   // void writeMatlabFile(const string fileName, const string variableName) const throw(ndlexceptions::FileWriteError&)
-  void writeMatlabFile(const string fileName, const string variableName) noexcept(false)
+  void writeMatlabFile(const string fileName, const string variableName) //noexcept(false)
   {
     MATFile* matFile = matOpen(fileName.c_str(), "w");
     if(matFile==NULL)

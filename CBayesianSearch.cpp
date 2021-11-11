@@ -7,7 +7,7 @@ double expected_improvement(const CMatrix& x, const CGp& model, double y_b, doub
 
     CMatrix mu_mat(1, 1);
     CMatrix std_mat(1, 1);
-    double y_best = y_b - exp_bias;
+    double y_best = y_b + exp_bias;
 
     model.out(mu_mat, std_mat, x);
     double mu = mu_mat.getVal(0, 0);
@@ -27,7 +27,7 @@ double expected_improvement(const CMatrix& x, const CGp& model, double y_b, doub
 struct EIOptimStruct {
     CGp model;
     double y_b;
-    double exp_bias; 
+    double exp_bias;
 };
 
 // TODO write wrapper for converting between CMatrix and major armadillo/eigen types
@@ -53,32 +53,36 @@ CMatrix* BayesianSearchModel::get_next_sample() {
         }
     }
     else {
-        // set up model
-        // TODO move model set up to separate function, only set up function once after first sample
-        CGaussianNoise noiseInit(y_samples);
-        for(int i=0; i<noiseInit.getOutputDim(); i++) {noiseInit.setBiasVal(0.0, i);}
-        noiseInit.setParam(1e-6, noiseInit.getOutputDim());
-        
-        int iters = 10;
-        bool outputScaleLearnt = false;
-        int approxType = 0;
-
         // update Gaussian process model
         // TODO valid? want to free old gp memory if it was previously allocated
-        // if (gp != nullptr) {delete gp;}
+        if (gp != nullptr) {delete gp;}
         // want persistent access to model after fitting and getting next sample in order to fit new model
-        gp = CGp(&kern, &noiseInit, x_samples, approxType, -1, 3);
-        gp.setBetaVal(1);
-        gp.setScale(1.0);
-        gp.setBias(0.0);
-        gp.updateM();
 
-        gp.setVerbosity(2);
-        gp.setDefaultOptimiser(CGp::BFGS);  //options: SCG, CG, GD
-        gp.setObjectiveTol(1e-6);
-        gp.setParamTol(1e-6);
-        gp.setOutputScaleLearnt(outputScaleLearnt);
-        gp.optimise(iters);
+        // will this object be persistent? will it be destroyed?
+
+        // TODO move model set up to separate function, only set up function once after first sample
+        if (noiseInit != nullptr) {delete noiseInit;}
+        noiseInit = new CGaussianNoise(y_samples);
+        for(int i=0; i<noiseInit->getOutputDim(); i++) {noiseInit->setBiasVal(0.0, i);}
+        noiseInit->setParam(0.0, noiseInit->getOutputDim());
+        
+        int iters = 100;
+        bool outputScaleLearnt = true;
+        int approxType = 0;
+
+        gp = new CGp(&kern, noiseInit, x_samples, approxType, -1, 3);
+        gp->setBetaVal(1);
+        gp->setScale(1.0);
+        gp->setBias(0.0);
+        gp->setObsNoiseVar(0.45);
+        gp->updateM();
+
+        gp->setVerbosity(verbosity);
+        gp->setDefaultOptimiser(CGp::BFGS);  //options: BFGS, SCG, CG, GD
+        gp->setObjectiveTol(1e-6);
+        gp->setParamTol(1e-6);
+        gp->setOutputScaleLearnt(outputScaleLearnt);
+        gp->optimise(iters);
 
         // optimize acquisition function
         Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
@@ -90,18 +94,32 @@ CMatrix* BayesianSearchModel::get_next_sample() {
             lower_bounds[i] = bounds->getVal(i, 0);
             upper_bounds[i] = bounds->getVal(i, 1);
         }
+
+        CMatrix x_test(1, x_dim, x_optim.data());
+        if (verbosity>0) {
+            double temp_EI = expected_improvement(x_test, *gp, y_best, exploration_bias);
+            cout << "Current acquisition function value: " << temp_EI << endl;
+        }
+
         optim::algo_settings_t optim_settings;
-        optim_settings.print_level = 2;
+        optim_settings.print_level = verbosity;
+        if (verbosity > 0) optim_settings.print_level -= 1;
         optim_settings.vals_bound = true;
+        // optim_settings.iter_max = 15;  // doesn't seem to control anything with DE
+        optim_settings.rel_objfn_change_tol = 1e-05;
+        optim_settings.rel_sol_change_tol = 1e-05;
+
+        optim_settings.de_settings.n_pop = 25;
+        optim_settings.de_settings.n_gen = 25;
+
         optim_settings.lower_bounds = lower_bounds;
         optim_settings.upper_bounds = upper_bounds;
+
         bool success;
 
         if (acq_func_name.compare("expected_improvement") == 0) {
-            EIOptimStruct opt_data = {gp, y_best, exploration_bias};
-            cout << "entered optim::de." << endl;
+            EIOptimStruct opt_data = {*gp, y_best, exploration_bias};
             success = optim::de(x_optim, expected_improvement_optim, &opt_data, optim_settings);
-            cout << "left optim::de.    success:" << success << endl;
         }
         else {
             throw std::invalid_argument("Acquisition function " + acq_func_name + " not implemented. Current options: 'expected_improvement'");

@@ -94,6 +94,15 @@ public:
   {
     return numActive;
   }
+
+  void setObsNoiseVar(double val) {
+    obsNoiseVar = val;
+  }
+
+  double getObsNoiseVar() {
+    return obsNoiseVar;
+  }
+
   void setNumActive(unsigned int val) 
   {
     numActive = val;
@@ -253,7 +262,7 @@ public:
       throw ndlexceptions::Error("Unknown approximation type");
   }
   // Flag which indicates if a sparse approximation is used.
-  bool isSparseApproximation() const 
+  bool isSparseApproximation() const
   {
     return sparseApproximation;
   }
@@ -361,6 +370,8 @@ public:
 #endif
   bool optimiseX;
   bool backConstrained;
+
+  double obsNoiseVar;
 
   mutable CMatrix m;  // scaled and biased Y
   mutable CMatrix Alpha; // SVM style 'alphas'.

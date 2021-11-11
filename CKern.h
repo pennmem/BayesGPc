@@ -172,7 +172,7 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
     cerr << "getGradParams should not be used in CKern" << endl;
     exit(1);
   }
-  // Compute the gradient of the kernel matrix with respect to parameters given an additional gradient matrix.
+  // Compute the gradient of the kernel matrix with respect to parameters given gradient wrt kernel.
   virtual void getGradParams(CMatrix& g, const CMatrix& X, const CMatrix& X2, const CMatrix& cvGrd, bool regularise=true) const
   {
     DIMENSIONMATCH(g.getRows()==1);

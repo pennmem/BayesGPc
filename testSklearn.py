@@ -43,14 +43,14 @@ if train:
     # for generating tests of GPR, uncomment white kernel and one of the non-trivial kernels
     kern = gp.kernels.WhiteKernel(noise_level=noise_level)
 
-    # kern += gp.kernels.Matern() * gp.kernels.ConstantKernel(); kern_name = "matern32"
-    # param_permutation = np.arange(3)
+    kern += gp.kernels.Matern() * gp.kernels.ConstantKernel(); kern_name = "matern32"
+    param_permutation = np.arange(3)
 
     # kern += gp.kernels.Matern(nu=2.5) * gp.kernels.ConstantKernel(); kern_name = "matern52"
     # param_permutation = np.arange(3)
 
-    kern += gp.kernels.RBF() * gp.kernels.ConstantKernel(); kern_name = "rbf"
-    param_permutation = np.arange(3)
+    # kern += gp.kernels.RBF() * gp.kernels.ConstantKernel(); kern_name = "rbf"
+    # param_permutation = np.arange(3)
 
     # kern += gp.kernels.RationalQuadratic(alpha_bounds=(1e-05, 1e20)) * gp.kernels.ConstantKernel(); kern_name = "ratquad"
     # param_permutation = np.arange(3)
@@ -88,7 +88,8 @@ else:
 
 # print(kern_clone.get_params())
 # print(kern.get_params())
-gpr = gp.GaussianProcessRegressor(kernel=kern, normalize_y=True, random_state=RANDOM_STATE+2)
+obsNoiseVar = np.array([1e-1,])
+gpr = gp.GaussianProcessRegressor(kernel=kern, normalize_y=True, random_state=RANDOM_STATE+2, alpha=obsNoiseVar)
 # must train GPR to access hyperparameter gradients and log-likelihoods
 # (even for testing with arbitrary hyperparameter values)
 gpr.fit(X, y)
@@ -151,7 +152,8 @@ print()
 output_dict = {"test:"+("fit" if train else "inference"): np.array([0]), "X": X,"X2": X2, "y": y, "X_pred": X_pred, 
                "y_pred": y_pred, "std_pred": std_pred, "bias": 0, "scale": 1, "numActive": -1, "approxInt": 0, 
                "K": KX, "K1_2": KX1_2, "K_diag": K_diag, "gradX": gKX, "logL": logL, "gradTheta": gradTheta,
-               "logL_rand": logL_rand, "gradTheta_rand": gradTheta_rand, "theta_rand": kern_rand.theta}
+               "logL_rand": logL_rand, "gradTheta_rand": gradTheta_rand, "theta_rand": kern_rand.theta,
+               "obsNoiseVar": obsNoiseVar}
 
 # TODO this is a mess... rewrite for arbitrary kernels
 def add_kernel_attributes(output_dict, kern):

@@ -271,11 +271,11 @@ class CRegularisable {
       DIMENSIONMATCH(g.getCols()==getNumParams());
       double param=0.0;
       for(unsigned int i=0; i<distArray.distIndex.size(); i++)
-	{
-	  param=getParam(distArray.distIndex[i]);
-	  g.addVal(getPriorGradInput(param, i), 
-		   distArray.distIndex[i]);
-	}  
+      {
+        param=getParam(distArray.distIndex[i]);
+        g.addVal(getPriorGradInput(param, i), 
+          distArray.distIndex[i]);
+      }  
     }
       
   virtual void writePriorsToStream(ostream& out) const

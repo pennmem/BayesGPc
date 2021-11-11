@@ -578,14 +578,26 @@ double CMatrix::maxRelDiff(const CMatrix& X, double eps) const
     }
   return max;
 }
+double CMatrix::min() const
+{
+  double min = vals[0];
+  double val = 0.0;
+  for(unsigned int i=1; i<nrows*ncols; i++) {
+    val = vals[i];
+    if(val < min)
+      min = val;
+  }
+  return min;
+}
 double CMatrix::max() const
 {
   double max = vals[0];
   double val = 0.0;
-  for(unsigned int i=1; i<nrows*ncols; i++)
+  for(unsigned int i=1; i<nrows*ncols; i++) {
     val = vals[i];
     if(val > max)
       max = val;
+  }
   return max;
 }
 void CMatrix::randn()
@@ -807,7 +819,7 @@ double CMatrix::jitChol(CMatrix& A, unsigned int maxTries)
       jitter*=10;
       tries++;
       if(jitter>10)
-	throw ndlexceptions::MatrixNonPosDef();
+      throw ndlexceptions::MatrixNonPosDef();
     }
     catch(...)
     {

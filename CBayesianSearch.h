@@ -6,6 +6,7 @@
 #include "CGp.h"
 #include "CKern.h"
 #include "CMatrix.h"
+#include "CNoise.h"
 #include <cmath>
 
 #include <boost/random/mersenne_twister.hpp>
@@ -14,14 +15,16 @@
 #include <boost/math/distributions.hpp>
 #include <stdexcept>
 
+#define _NDLCASSERT
 
 class BayesianSearchModel {
     public:
-        BayesianSearchModel(CCmpndKern& kernel, CMatrix* param_bounds, double exp_bias, int init_samples, int rng_seed) {
+        BayesianSearchModel(CCmpndKern& kernel, CMatrix* param_bounds, double exp_bias, int init_samples, int rng_seed, int verbose) {
             kern = kernel;
             // TODO check bounds dimensions
             bounds = param_bounds;
             seed = rng_seed;
+            verbosity = verbose;
             _init();
             x_dim = bounds->getRows();
             num_samples = 0;
@@ -44,18 +47,23 @@ class BayesianSearchModel {
             }
         }
 
-        // TODO use smart pointers?
+        // TODO use smart pointers
         int num_samples;
         int x_dim;
         int initial_samples;
         int seed;
+        int verbosity;
         boost::mt19937 rng;
         CMatrix* x_samples;
         CMatrix* y_samples;
         double y_best;
         double exploration_bias;
+
+        // CGp model
         CCmpndKern kern;
-        CGp gp;
+        CGaussianNoise* noiseInit = nullptr;
+        CGp* gp = nullptr;
+
         CMatrix* bounds;
         CMatrix* get_next_sample();
         void add_sample(const CMatrix& x, const CMatrix& y);
