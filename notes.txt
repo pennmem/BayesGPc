@@ -1,9 +1,18 @@
 11/11/21
 TODO
+unit tests, performance tests, runtime tests
+find solid unit testing framework, look into what Elemem
+is using
+add observation noise to predictions
+    try reducing observation noise, better to only allow
+    model to fit to data? don't want higher noise than
+    needed
+
 need to correct gradients in CGp for noise, failing CGp grad tests only with observation noise and matern32 kernel, 
 passing them without observation noise
-unit tests
 try multiple L-BFGS optimization runs, other solvers
+
+implement discrete location selection
 
 
 11/9/21

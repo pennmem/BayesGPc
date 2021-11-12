@@ -937,6 +937,17 @@ public:
   {
     negate();
   }
+
+  double& operator()(int i, int j) {
+    BOUNDCHECK(i < getRows() && j < getCols());
+    return getVals()[i * getCols() + j];
+  }
+
+  double& operator()(int i) {
+    BOUNDCHECK(i < getRows() * getCols());
+    return getVals()[i];
+  }
+
   // element by element operations
   // the MATLAB .* (element by element multiply)
   void dotMultiply(const CMatrix& A)
@@ -1289,5 +1300,6 @@ double logDet(const CMatrix& U);
     
 // inline void swap(CMatrix& x, CMatrix& y);
 
+CMatrix linspace(double x0, double x1, int n);
 
 #endif

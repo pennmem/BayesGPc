@@ -82,7 +82,7 @@ testKern_sklearn.o: testKern_sklearn.cpp CKern.h ndlassert.h ndlexceptions.h CTr
   CClctrl.h sklearn_util.h
 	$(CC) -c testKern_sklearn.cpp -o testKern_sklearn.o $(CCFLAGS)
 
-testBayesianSearch: testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o
+testBayesianSearch: testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o ndlassert.o
 	$(LD) ${XLINKERFLAGS} -o testBayesianSearch testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o $(LDFLAGS)
 
 testBayesianSearch.o: testBayesianSearch.cpp CBayesianSearch.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \

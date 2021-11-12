@@ -124,7 +124,7 @@ void CComponentKern::writeParamsToStream(ostream& out) const
 }
 
 
-// The Compound kernel.
+// The Compound kernel for adding kernels together.
 CCmpndKern::CCmpndKern() : CComponentKern()
 {
   _init();

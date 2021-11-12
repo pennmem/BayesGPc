@@ -1085,6 +1085,20 @@ double randn() {
 //   DIMENSIONMATCH(y.nrows==x.nrows);   
 //   dswap_(x.ncols*x.nrows, x.vals, 1, y.vals, 1);
 // }
+
+
+CMatrix linspace(double x0, double x1, int n) {
+  CMatrix v(n, 1);
+  double diff = (x1 - x0)/(double)n;
+  double curr = x0;
+  for (int i = 0; i < n; i++) {
+    v(i, 0) = curr;
+    curr += diff;
+  }
+  return v;
+}
+
+
 void CMatrix::readParamsFromStream(istream& in) 
 {
   string line;
