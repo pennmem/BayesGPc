@@ -32,20 +32,21 @@ kerns["matern32"] = {"kern": partial(kernels.Matern, nu=1.5),
                    "hps": {"length_scale": [0.01, 0.5, 1.0, 2.0, 100.0]}}
 
 # test data sets
-range_interval = (-1, 1)
-# def test_func(x):
-#     return (1-x**2).reshape(-1)
-
-# for varying degrees of variation or smoothness over function domain
+range_interval = (1, -15)
 def test_func(x):
-    return (np.sin(x**2)).reshape(-1)
+    return (1-x**2).reshape(-1)
+
+# range_interval = (-1, 1)
+# for varying degrees of variation or smoothness over function domain
+# def test_func(x):
+#     return (np.sin(x**2)).reshape(-1)
 
 noise_scale = 0.1
 def observation_noise(shape):
     return noise_scale * (range_interval[1] - range_interval[0]) * np.random.randn(*shape)
 
 x_interval = np.array([0, 4])
-num_samples = 100
+num_samples = 15  # 100
 
 # X_train = np.random.rand(num_samples, 1) * np.diff(x_interval) + x_interval[0]
 X_train = np.linspace(x_interval[0], x_interval[1], num_samples).reshape(-1, 1)
@@ -64,7 +65,7 @@ for kern_name, kern_dict in kerns.items():
         pars_w_bounds = {**pars, **{(k + "_bounds"): "fixed" for k, v in pars.items()}}
         kern = kern_dict["kern"](**pars_w_bounds) + kernels.WhiteKernel()
 
-        gp = GPR(kern)
+        gp = GPR(kern, alpha=1e-1)
         gp.fit(X_train, y_train)
 
         x_plot = np.expand_dims(np.linspace(x_interval[0], x_interval[1], 500), -1)
@@ -75,7 +76,7 @@ for kern_name, kern_dict in kerns.items():
         plt.fill_between(x_plot.reshape(-1), 
                          y_plot.reshape(-1)+std_plot, 
                          y_plot.reshape(-1)-std_plot, 
-                         alpha=0.3, color='r')
+                         alpha=0.3, color='r', label="std")
     
         plt.scatter(X_train, y_train, marker='x', label="Samples", c='k')
         plt.plot(x_plot, test_func(x_plot), '--', label="True objective", c='g')
@@ -86,8 +87,9 @@ for kern_name, kern_dict in kerns.items():
         plt.xlabel("x")
 
     # fit hyperparameters
-    kern = kern_dict["kern"]() + kernels.WhiteKernel()
-    gp = GPR(kern)
+    kern = kern_dict["kern"]()  # + kernels.WhiteKernel()
+    obs_noise = 0.05
+    gp = GPR(kern, alpha=obs_noise)
     gp.fit(X_train, y_train)
     pars = {k: v for k, v in gp.kernel_.get_params().items() if k in list(pars.keys())}
 
@@ -95,18 +97,20 @@ for kern_name, kern_dict in kerns.items():
     y_plot, std_plot = gp.predict(x_plot, return_std=True)
     plt.subplot(subplot_rows, subplot_cols, subplot)
     subplot += 1
-    plt.plot(x_plot, y_plot, label="mu: " + str(list(pars.values())), color="b")
+    plt.plot(x_plot, y_plot, label="Predicted mean", color="b")
+    # plt.plot(x_plot, y_plot, label="mu: " + str(list(pars.values()))[:5], color="b")
     plt.fill_between(x_plot.reshape(-1), 
                         y_plot.reshape(-1)+std_plot, 
                         y_plot.reshape(-1)-std_plot, 
-                        alpha=0.3, color='r')
+                        alpha=0.3, color='r', label="std")
 
     plt.scatter(X_train, y_train, marker='x', label="Samples", c='k')
     plt.plot(x_plot, test_func(x_plot), '--', label="True objective", c='g')
     plt.legend()
-    plt.title("GPR for " + kern_name + "\n" + \
-        "Param order: " + str(list(pars.keys()))+ \
-        "  logL: {:.4}".format(gp.log_marginal_likelihood_value_))
+    plt.title(f"GPR for observation noise level {obs_noise}")
+    # plt.title("GPR for " + kern_name + "\n" + \
+    #     "Param order: " + str(list(pars.keys()))+ \
+    #     "  logL: {:.4}".format(gp.log_marginal_likelihood_value_))
     plt.xlabel("x")
 
 plt.show()

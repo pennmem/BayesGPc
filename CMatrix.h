@@ -207,13 +207,20 @@ public:
       }
     }
   }
-  // The copy constructor, it performs a deep copy.
+  // The copy constructor, performs a deep copy.
   CMatrix(const CMatrix& A) : nrows(A.nrows), ncols(A.ncols), symmetric(A.symmetric), triangular(A.triangular)
   {
     _init();
     memAllocate();
     copy(A);
-      
+  }
+  // Copy assignment, performs a deep copy.
+  CMatrix operator=(const CMatrix& A)
+  {
+    if (this != &A) {
+      deepCopy(A);
+    }
+    return *this;
   }
   // The class destructor, it deallocates the memory.
   virtual ~CMatrix()

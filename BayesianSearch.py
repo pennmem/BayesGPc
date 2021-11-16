@@ -28,7 +28,7 @@ class BayesianSearch:
             bounds = np.array(self.bounds)
             return np.random.rand(1, self.x_dim) * np.swapaxes(np.diff(bounds, axis=1), 0, 1) + bounds[:, 0]
 
-        # could use rank-1 inverse updates for efficiency, would require significant internal updating in GPc and Python
+        # could use single column/row inverse updates for efficiency
         # would need to check numerical stability
         self.gp.fit(self.samples_x, self.samples_y)
         self.fit = True

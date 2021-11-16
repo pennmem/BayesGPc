@@ -1,6 +1,16 @@
 11/11/21
 TODO
 unit tests, performance tests, runtime tests
+    performance functions
+        mixture of N gaussians test with random multidimensional mean 
+            locations so long as means are decently distributed
+        simple linear functions
+        negative QUADRATIC with peak at edge
+            tests whether DE has bias against testing edges with log-transforms
+        negative quadratic with peak before edge
+            tests case in which delta increases monotonically with amplitude
+        functions with varying length scales
+    
 find solid unit testing framework, look into what Elemem
 is using
 add observation noise to predictions
@@ -125,6 +135,7 @@ Probably will need sparse sampling, batched updates, some additional optimizatio
 using better (parallelized) libraries
 column-row addition update to Cholesky - Linpack - O(k^2)
 averaging multiple samples together would reduce sample noise and computational costs
+check if optim allows for batch sampling of the objective with population-based methods
 
 full updates to Cholesky decomposition could be performed periodically to manage numerical error and
 to remove e.g. samples from prior subjects below some weighting threshold during prior data annealing

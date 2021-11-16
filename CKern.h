@@ -378,7 +378,9 @@ class CComponentKern : public CKern
   CComponentKern() : CKern() {}
   CComponentKern(unsigned int inDim) : CKern(inDim) {}
   CComponentKern(const CMatrix& X) : CKern(X) {}
-  CComponentKern(const CComponentKern& kern) : CKern(kern), components(kern.components) {}
+  CComponentKern(const CComponentKern& kern) : CKern(kern) {
+    
+  }  //, components(kern.components) {} // not sure why components was being copied in initializer list... leads to double destruction
   virtual unsigned int addKern(const CKern* kern)
   {
     components.push_back(kern->clone());

@@ -143,8 +143,8 @@ CCmpndKern::CCmpndKern(const CCmpndKern& kern) : CComponentKern(kern)
 {
   _init();
   setInputDim(kern.getInputDim());
-  for(size_t i=0; i<components.size(); i++)
-    addKern(components[i]->clone()); 
+  for(size_t i=0; i<kern.components.size(); i++)
+    addKern(kern.components[i]->clone()); 
 }
 // Class destructor
 CCmpndKern::~CCmpndKern()
@@ -347,9 +347,9 @@ CTensorKern::CTensorKern(const CTensorKern& kern) : CComponentKern(kern)
 
   _init();
   setInputDim(kern.getInputDim());
-  for(size_t i=0; i<components.size(); i++)
+  for(size_t i=0; i<kern.components.size(); i++)
   {
-    addKern(components[i]->clone()); 
+    addKern(kern.components[i]->clone()); 
   }
 }
 CTensorKern::CTensorKern(const CTensorKern& kern, unsigned int comp) : CComponentKern(kern)

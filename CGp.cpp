@@ -453,6 +453,7 @@ void CGp::out(CMatrix& yPred, const CMatrix& Xin) const
 
 void CGp::out(CMatrix& yPred, CMatrix& probPred, const CMatrix& Xin) const
 {
+  DIMENSIONMATCH(yPred.getRows()==Xin.getRows());
   CMatrix muTest(yPred.getRows(), yPred.getCols());
   CMatrix varSigmaTest(yPred.getRows(), yPred.getCols());
   posteriorMeanVar(muTest, varSigmaTest, Xin);

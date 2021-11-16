@@ -21,7 +21,7 @@ double expected_improvement(const CMatrix& x, const CGp& model, double y_b, doub
     else {
         EI = 0;
     }
-    return -EI;
+    return EI;
 }
 
 struct EIOptimStruct {
@@ -36,7 +36,22 @@ struct EIOptimStruct {
 double expected_improvement_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_out, void* opt_data) {
     EIOptimStruct* optfn_data = reinterpret_cast<EIOptimStruct*>(opt_data);
     CMatrix x_cmat(1, (int)(x.rows()), x.data());
-    return expected_improvement(x_cmat, optfn_data->model, optfn_data->y_b, optfn_data->exp_bias);
+    return -expected_improvement(x_cmat, optfn_data->model, optfn_data->y_b, optfn_data->exp_bias);
+}
+
+
+struct GPOptimStruct {
+    CGp model;
+};
+
+
+double model_predict_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_out, void* opt_data) {
+    GPOptimStruct* optfn_data = reinterpret_cast<GPOptimStruct*>(opt_data);
+    CMatrix x_cmat(1, (int)(x.rows()), x.data());
+    CMatrix mu_mat(1, 1);
+    CMatrix std_mat(1, 1);
+    optfn_data->model.out(mu_mat, std_mat, x_cmat);
+    return -(mu_mat(0, 0));
 }
 
 
@@ -70,7 +85,7 @@ CMatrix* BayesianSearchModel::get_next_sample() {
         bool outputScaleLearnt = true;
         int approxType = 0;
 
-        gp = new CGp(&kern, noiseInit, x_samples, approxType, -1, 3);
+        gp = new CGp(kern, noiseInit, x_samples, approxType, -1, 3);
         gp->setBetaVal(1);
         gp->setScale(1.0);
         gp->setBias(0.0);
@@ -96,7 +111,7 @@ CMatrix* BayesianSearchModel::get_next_sample() {
         }
 
         CMatrix x_test(1, x_dim, x_optim.data());
-        if (verbosity>0) {
+        if (verbosity>=2) {
             double temp_EI = expected_improvement(x_test, *gp, y_best, exploration_bias);
             cout << "Current acquisition function value: " << temp_EI << endl;
         }
@@ -114,6 +129,9 @@ CMatrix* BayesianSearchModel::get_next_sample() {
 
         optim_settings.lower_bounds = lower_bounds;
         optim_settings.upper_bounds = upper_bounds;
+
+        optim_settings.de_settings.initial_lb = lower_bounds;
+        optim_settings.de_settings.initial_ub = upper_bounds;
 
         bool success;
 
@@ -138,6 +156,67 @@ CMatrix* BayesianSearchModel::get_next_sample() {
     return x;
 }
 
+
+CMatrix* BayesianSearchModel::get_best_solution() {
+    // optimize GP
+    CMatrix* x = new CMatrix(1, x_dim);
+    Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
+    Eigen::VectorXd lower_bounds = Eigen::VectorXd(x_dim);
+    Eigen::VectorXd upper_bounds = Eigen::VectorXd(x_dim);
+    // TODO choose better/random initial values? not strictly needed for global optimization
+    for (int i = 0; i < x_dim; i++) {
+        x_optim[i] = (bounds->getVal(i, 0) + bounds->getVal(i, 1))/2.0;
+        lower_bounds[i] = bounds->getVal(i, 0);
+        upper_bounds[i] = bounds->getVal(i, 1);
+    }
+
+    CMatrix x_test(1, x_dim, x_optim.data());
+
+    optim::algo_settings_t optim_settings;
+    optim_settings.print_level = verbosity;
+    if (verbosity >= 1) optim_settings.print_level -= 1;
+    optim_settings.vals_bound = true;
+    // optim_settings.iter_max = 15;  // doesn't seem to control anything with DE
+    optim_settings.rel_objfn_change_tol = 1e-05;
+    optim_settings.rel_sol_change_tol = 1e-05;
+
+    optim_settings.de_settings.n_pop = 100;
+    optim_settings.de_settings.n_gen = 100;
+
+    optim_settings.lower_bounds = lower_bounds;
+    optim_settings.upper_bounds = upper_bounds;
+
+    bool success;
+
+    GPOptimStruct opt_data = {*gp};
+    success = optim::de(x_optim, model_predict_optim, &opt_data, optim_settings);
+    if (success) {
+        for (int i = 0; i < x_dim; i++) {
+            x->setVal(x_optim[i], i);
+        }
+    }
+    else {
+        // TODO exceptions aren't printing error messages in Visual Studio
+        cout << "Optimization of GP prediction (mean) function failed." << endl;
+        throw std::runtime_error("Optimization of GP prediction (mean) function failed.");
+    }
+
+    if (verbosity >= 1) {
+        CMatrix y(1, 1);
+        gp->out(y, *x);
+        cout << "Best solution with " << num_samples << " samples: (x_best, y_pred): (";
+        if (x_dim > 1) cout << "[";
+        for (int i = 0; i < x_dim; i++) {
+            cout  << x->getVal(i) << ", ";
+        }
+        if (x_dim > 1) cout << "]";
+        cout << ", " << y.getVal(0) << ")" << endl;
+    }
+
+    return x;
+}
+
+
 void BayesianSearchModel::add_sample(const CMatrix& x, const CMatrix& y) {
     if (num_samples == 0) {
         x_samples->copy(x);
@@ -151,4 +230,14 @@ void BayesianSearchModel::add_sample(const CMatrix& x, const CMatrix& y) {
         y_best = y.getVal(0, 0);
     }
     num_samples++;
+
+    if (verbosity >= 1) {
+        cout << "Sample " << num_samples << ": (x, y): (";
+        if (x_dim > 1) cout << "[";
+        for (int i = 0; i < x_dim; i++) {
+            cout  << x.getVal(i) << ", ";
+        }
+        if (x_dim > 1) cout << "]";
+        cout << ", " << y.getVal(0) << ")" << endl;
+    }
 }

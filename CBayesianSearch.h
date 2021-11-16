@@ -20,7 +20,7 @@
 class BayesianSearchModel {
     public:
         BayesianSearchModel(CCmpndKern& kernel, CMatrix* param_bounds, double exp_bias, int init_samples, int rng_seed, int verbose) {
-            kern = kernel;
+            kern = kernel.clone();
             // TODO check bounds dimensions
             bounds = param_bounds;
             seed = rng_seed;
@@ -60,13 +60,14 @@ class BayesianSearchModel {
         double exploration_bias;
 
         // CGp model
-        CCmpndKern kern;
+        CCmpndKern* kern;
         CGaussianNoise* noiseInit = nullptr;
         CGp* gp = nullptr;
 
         CMatrix* bounds;
         CMatrix* get_next_sample();
         void add_sample(const CMatrix& x, const CMatrix& y);
+        CMatrix* get_best_solution();
         // TODO switch to enumeration
         string acq_func_name;
         // double expected_improvement(const CMatrix* x, const CGp model, double y_b, double exp_bias);

@@ -101,20 +101,7 @@ int testGaussian(string type, string kernel)
   CMatrix bias = 0.0;
   // bias.readMatlabFile(fileName.c_str(), "bias");
 
-  // TODO what is GaussianNoise?
-  // TODO how are gradients computed? following the references back to getGradParam for most of the kernels 
-  //          leads to dead ends where most of those functions aren't implemented, including for Mater32,
-  //          which is clearly working, so just follow back the execution with break points to see where the
-  //          where the gradients are actually being computed
-  // TODO what is learning the output scale?
   // TODO add another data set for testing
-  // TODO add hyperparameter gradient testing to GPc testing (not sure if covariance gradient can be easily pulled out
-  //      from sklearn models, not really necessary if gradients match otherwise)
-  // TODO finish GPc testing
-  // TODO switch kernel tests to relative absolute error? would still fail for small values with imprecision...
-
-  // TODO compare GPR inferences, stds, marginal log-likelihoods, gradients for specified input parameters
-  // TODO find unit test library for C++
 
   CCmpndKern kern(X);
   CCmpndKern kern_ref(X);
