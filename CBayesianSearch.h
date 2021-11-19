@@ -19,7 +19,7 @@
 
 class BayesianSearchModel {
     public:
-        BayesianSearchModel(CCmpndKern& kernel, CMatrix* param_bounds, double exp_bias, int init_samples, int rng_seed, int verbose) {
+        BayesianSearchModel(CCmpndKern& kernel, CMatrix* param_bounds, double observation_noise, double exp_bias, int init_samples, int rng_seed, int verbose) {
             kern = kernel.clone();
             // TODO check bounds dimensions
             bounds = param_bounds;
@@ -29,6 +29,7 @@ class BayesianSearchModel {
             x_dim = bounds->getRows();
             num_samples = 0;
             initial_samples = init_samples;
+            obsNoise = observation_noise;
             exploration_bias = exp_bias;
             acq_func_name = "expected_improvement";
             y_best = -INFINITY;
@@ -57,6 +58,8 @@ class BayesianSearchModel {
         CMatrix* x_samples;
         CMatrix* y_samples;
         double y_best;
+        // observation noise. Currently applied to only training samples.
+        double obsNoise;
         double exploration_bias;
 
         // CGp model

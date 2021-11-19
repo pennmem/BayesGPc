@@ -1,118 +1,4 @@
-#include <string>
-#include "CKern.h"
-#include "CMatrix.h"
-#include "CGp.h"
-#include "CClctrl.h"
-#include "cnpy.h"
-#include "sklearn_util.h"
-#include "CNdlInterfaces.h"
-#include <stdexcept>
-#include "CBayesianSearch.h"
-#include <cmath>
-#include <random>
-#include <cassert>
-#include <matplot/matplot.h>
-using namespace matplot;
-
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/variate_generator.hpp>
-#include <boost/random/uniform_real_distribution.hpp>
-#include <boost/math/distributions.hpp>
-#include <boost/random.hpp>
-
-
-void plot_BO_state(const BayesianSearchModel& BO, const CMatrix& x_plot, const CMatrix& y_plot, 
-                   const CMatrix& y_pred, const CMatrix& std_pred, 
-                   CMatrix* x_sample, CMatrix* y_sample);
-int testBayesianSearch(string kernel, 
-                       string test_func_str,
-                       int n_runs=25,
-                       int n_iters=250,
-                       int n_init_samples=10,
-                       double noise_level=0.3,
-                       double exp_bias_ratio=0.1,
-                       int verbosity=0,
-                       bool plotting=false);
-
-class TestFunction {
-  public:
-    string name;
-    int seed = 1235;
-    default_random_engine e;
-    int x_dim;
-    CMatrix x_interval;
-    CMatrix y_interval;
-    double noise_level = 0.3;
-    double y_sol;
-
-    // noise distribution
-    normal_distribution<double> dist;
-
-    TestFunction(string func_name, int seed_temp, double noise_level_temp) {
-      seed = seed_temp;
-      noise_level = noise_level_temp;
-      name = func_name;
-      default_random_engine e(seed);
-      _init();
-      dist = normal_distribution(0.0, noise_level * (y_interval(1) - y_interval(0)));
-    }
-
-    void _init() {
-      // x_dim, x_interval, y_interval set separately for each test function
-      if (name.compare("sin") == 0) {
-        // gives two global maxima (peaks with equal heights)
-        x_dim = 1;
-        x_interval = CMatrix(x_dim, 2);
-        y_interval = CMatrix(1, 2);
-        x_interval(0, 0) = 3;
-        x_interval(0, 1) = 16;
-        y_interval(0) = -1;
-        y_interval(1) = 1;
-      }
-      else if (name.compare("mix_gaus") == 0) {
-        // mixture of 10 Gaussians
-        x_dim = 1;
-        x_interval = CMatrix(x_dim, 2);
-        y_interval = CMatrix(1, 2);
-        x_interval(0, 0) = 3;
-        x_interval(0, 1) = 16;
-        y_interval(0) = -1;
-        y_interval(1) = 1;
-      }
-      else {
-          throw std::invalid_argument("Test function " + name + " not implemented. Current options: 'sin'");
-      }
-      assert(x_dim > 0);
-      assert(y_interval(1)>=y_interval(0));
-      assert(x_interval(1)>=x_interval(0));
-      y_sol = y_interval(1);
-    }
-    
-    CMatrix func(const CMatrix& x, bool add_noise=true) {
-      CMatrix y(x.getRows(), 1);
-
-      if (name.compare("sin") == 0) {
-        assert(x.getCols()==1);
-        for (int i = 0; i < x.getRows(); i++) {
-          y(i, 0) = sin(x.getVal(i, 0));
-        }
-      }
-      if (add_noise) {
-        for (int i = 0; i < x.getRows(); i++) {
-          y(i, 0) = y(i, 0) + dist(e);
-        }
-      }
-      return y;
-    }
-
-    double solution_error(const CMatrix& x_best) {
-      // solution error is relative error of the objective value at the search solution
-      // normalized by the output range
-      double error = (y_sol - func(x_best, false)(0, 0))/(y_interval(1) - y_interval(0));
-      return error;
-    }
-};
-
+#include "testBayesianSearch.h"
 
 class CClgptest : public CClctrl 
 {
@@ -128,14 +14,16 @@ int main(int argc, char* argv[])
   int fail = 0;
   try
   {
-    string kern_arg = "matern32";
-    string test_func_arg = "sin";
-    int n_runs=25;
+    // default test arguments
+    string kern_arg = "matern32";  // not currently used. Kernel is hard coded to matern32 + white
+    string test_func_arg = "hartmann4d";
+    int n_runs=50;
     int n_iters=250;
     int n_init_samples=10;
-    double noise_level=0.3;
-    double exp_bias_ratio=0.1;
-    int verbosity=3;
+    int x_dim = 1;
+    double noise_level=0.1;
+    double exp_bias_ratio=0.25;
+    int verbosity=0;
     bool plotting=false;
 
     // left in place if needed for future test arguments
@@ -163,6 +51,10 @@ int main(int argc, char* argv[])
           command.incrementArgument();
           n_init_samples = std::stoi(command.getCurrentArgument());
         }
+        if (command.isCurrentArg("-d", "--x_dim")) {
+          command.incrementArgument();
+          x_dim = std::stoi(command.getCurrentArgument());
+        }
         if (command.isCurrentArg("-n", "--noise_level")) {
           command.incrementArgument();
           noise_level = std::stod(command.getCurrentArgument());
@@ -180,16 +72,109 @@ int main(int argc, char* argv[])
         }
         command.incrementArgument();
       }
+      fail += testBayesianSearch(kern_arg, 
+                            test_func_arg,
+                            n_runs,
+                            n_iters,
+                            n_init_samples,
+                            x_dim,
+                            noise_level,
+                            exp_bias_ratio,
+                            verbosity,
+                            plotting);
     }
-    fail += testBayesianSearch(kern_arg, 
-                               test_func_arg,
-                               n_runs,
-                               n_iters,
-                               n_init_samples,
-                               noise_level,
-                               exp_bias_ratio,
-                               verbosity,
-                               plotting);
+    else {
+      fail += testBayesianSearch(kern_arg, 
+                                "sin",
+                                n_runs,
+                                n_iters,
+                                n_init_samples,
+                                x_dim,
+                                noise_level,
+                                exp_bias_ratio,
+                                verbosity,
+                                plotting);
+      fail += testBayesianSearch(kern_arg, 
+                                "quadratic",
+                                n_runs,
+                                n_iters,
+                                n_init_samples,
+                                x_dim,
+                                noise_level,
+                                exp_bias_ratio,
+                                verbosity,
+                                plotting);
+      fail += testBayesianSearch(kern_arg, 
+                                "quadratic_over_edge",
+                                n_runs,
+                                n_iters,
+                                n_init_samples,
+                                x_dim,
+                                noise_level,
+                                exp_bias_ratio,
+                                verbosity,
+                                plotting);
+      fail += testBayesianSearch(kern_arg, 
+                                "PS4_1",
+                                n_runs,
+                                n_iters,
+                                n_init_samples,
+                                x_dim,
+                                noise_level,
+                                exp_bias_ratio,
+                                verbosity,
+                                plotting);
+      fail += testBayesianSearch(kern_arg, 
+                                "PS4_2",
+                                n_runs,
+                                n_iters,
+                                n_init_samples,
+                                x_dim,
+                                noise_level,
+                                exp_bias_ratio,
+                                verbosity,
+                                plotting);
+      fail += testBayesianSearch(kern_arg, 
+                                "PS4_3",
+                                n_runs,
+                                n_iters,
+                                n_init_samples,
+                                x_dim,
+                                noise_level,
+                                exp_bias_ratio,
+                                verbosity,
+                                plotting);
+      fail += testBayesianSearch(kern_arg, 
+                                "PS4_4",
+                                n_runs,
+                                n_iters,
+                                n_init_samples,
+                                x_dim,
+                                noise_level,
+                                exp_bias_ratio,
+                                verbosity,
+                                plotting);
+      fail += testBayesianSearch(kern_arg,
+                                "schwefel",
+                                n_runs,
+                                n_iters,
+                                n_init_samples,
+                                x_dim,
+                                noise_level,
+                                exp_bias_ratio,
+                                verbosity,
+                                plotting);
+      fail += testBayesianSearch(kern_arg,
+                                "hartmann4d",
+                                n_runs,
+                                n_iters,
+                                n_init_samples,
+                                x_dim,
+                                noise_level,
+                                exp_bias_ratio,
+                                verbosity,
+                                plotting);
+    }
 
     cout << "Number of failures: " << fail << "." << endl;
     command.exitNormal();
@@ -215,6 +200,7 @@ int testBayesianSearch(string kernel,
                        int n_runs,
                        int n_iters,
                        int n_init_samples,
+                       int x_dim,
                        double noise_level,
                        double exp_bias_ratio,
                        int verbosity,
@@ -241,9 +227,19 @@ int testBayesianSearch(string kernel,
 
   int seed = 1234;
 
-  TestFunction test(test_func_str, seed, noise_level);
-  double exp_bias = exp_bias_ratio * (test.y_interval(1) - test.y_interval(0));
-  int x_dim = test.x_dim;
+  TestFunction test(test_func_str, seed, noise_level, x_dim, verbosity);
+
+  // for getting estimates of unknown function optima
+  test.verbosity = 1;
+  test.get_func_optimum(true);
+  test.get_func_optimum(false);
+  test.verbosity = verbosity;
+
+  double exp_bias = exp_bias_ratio;
+  // kind of cheating, won't know the observation noise ahead of time, but will know to some precision
+  double obsNoise = 0.5 * noise_level * (test.y_interval(1) - test.y_interval(0));
+
+  x_dim = test.x_dim;
 
   CMatrix search_rel_errors(n_runs, 1);
   // max error of search solution compared to global optimum for an individual run for a run to pass 
@@ -265,12 +261,14 @@ int testBayesianSearch(string kernel,
     kern.addKern(whitek);
     // getSklearnKernels(&kern, npz_dict, &X, true);
 
-    BayesianSearchModel BO(kern, &test.x_interval, exp_bias, n_init_samples, seed, verbosity);
+    BayesianSearchModel BO(kern, &test.x_interval, obsNoise, exp_bias, n_init_samples, seed, verbosity);
 
     CMatrix x;
     CMatrix y;
     if (x_dim == 1) {
-      x = linspace(test.x_interval(0, 0), test.x_interval(0, 1), n_plot);
+      double x_interval_len = test.x_interval(0, 1) - test.x_interval(0, 0);
+      x = linspace(test.x_interval(0, 0) - 0.0 * x_interval_len, 
+                   test.x_interval(0, 1) + 0.0 * x_interval_len, n_plot);
       y = test.func(x, false);
     }
     CMatrix y_pred(n_plot, 1);
@@ -290,7 +288,7 @@ int testBayesianSearch(string kernel,
       }
     }
 
-    // needed for now with janky way I'm deleting CGP gp and CNoise attributes to allow for updating with new 
+    // FIXME needed for now with janky way I'm deleting CGP gp and CNoise attributes to allow for updating with new 
     // samples
     CMatrix* x_sample = BO.get_next_sample();
     CMatrix* y_sample = new CMatrix(test.func(*x_sample));
@@ -316,61 +314,5 @@ int testBayesianSearch(string kernel,
     fail += 1;
   }
 
-  // TODO test acquisition functions in separate file
-  // TODO separate out acquisition functions with templates, virtual function implementation
-  
-  // TODO test optimization of acquisition function
-
   return fail;
-}
-
-void plot_BO_state(const BayesianSearchModel& BO, const CMatrix& x_plot, const CMatrix& y_plot, 
-                   const CMatrix& y_pred, const CMatrix& std_pred, 
-                   CMatrix* x_sample, CMatrix* y_sample) {
-  // plotting
-  int x_dim = BO.x_dim;
-  // 1D plotting
-  assert(x_dim == 1 && x_plot.getCols()==1);
-  int n_plot = x_plot.getRows();
-  CMatrix* x_sample_plot = x_sample;
-  CMatrix* y_sample_plot = y_sample;
-  vector<double> x_vec(x_plot.getVals(), x_plot.getVals() + n_plot);
-  vector<double> y_true_vec(y_plot.getVals(), y_plot.getVals() + n_plot);
-  std::vector<double> x_samples_vec(BO.x_samples->getVals(), BO.x_samples->getVals() + BO.num_samples);
-  std::vector<double> y_samples_vec(BO.y_samples->getVals(), BO.y_samples->getVals() + BO.num_samples);
-  std::vector<double> y_pred_vec(y_pred.getVals(), y_pred.getVals() + n_plot);
-  std::vector<double> y_pred_plus_std(y_pred_vec);
-  std::vector<double> y_pred_minus_std(y_pred_vec);
-  std::vector<double> std_pred_vec(std_pred.getVals(), std_pred.getVals() + n_plot);
-  std::vector<double> x_new_sample_vec(x_sample_plot->getVals(), x_sample_plot->getVals() + 1);
-  std::vector<double> y_new_sample_vec(y_sample_plot->getVals(), y_sample_plot->getVals() + 1);
-  CMatrix acq_func_plot(n_plot, 1);
-
-  for (int i = 0; i < n_plot; i++) {
-    y_pred_plus_std.at(i) = y_pred_plus_std.at(i) + std_pred.getVal(i, 0);
-    y_pred_minus_std.at(i) = y_pred_minus_std.at(i) - std_pred.getVal(i, 0);
-    std_pred_vec.at(i) = std_pred_vec.at(i) - 2.0;
-    CMatrix x_temp(1, x_dim, x_plot.getVals() + i * x_dim);
-    acq_func_plot.setVal(expected_improvement(x_temp, *(BO.gp), BO.y_best, BO.exploration_bias), i);
-  }
-  // rescale for visualization
-  acq_func_plot -= acq_func_plot.min();
-  if (acq_func_plot.max() != 0.0) {
-    acq_func_plot *= 1.0/acq_func_plot.max();
-  }
-  acq_func_plot -= 2;
-  std::vector<double> acq_func_plot_vec(acq_func_plot.getVals(), acq_func_plot.getVals() + n_plot);
-  plot(x_vec, y_true_vec, "k--",
-      x_samples_vec, y_samples_vec, "c*",
-      x_new_sample_vec, y_new_sample_vec, "rx",
-      x_vec, acq_func_plot_vec, "r",
-      x_vec, y_pred_vec, "g-",
-      x_vec, y_pred_plus_std, "b",
-      x_vec, y_pred_minus_std, "b",
-      x_vec, std_pred_vec, "b"
-      );
-  legend("True", "Samples", "New sample", "Acquisition", "y_{pred}", "y_{pred} +/- std", "std");
-  xlabel("x");
-  title("Bayesian Search");
-  show();
 }

@@ -1,16 +1,40 @@
 11/11/21
 TODO
+  // TODO test acquisition functions in separate file
+  // TODO separate out acquisition functions with templates, virtual function implementation
+  exception handling. if GP or global optimization fail, need to just sample uniform sample with 
+  logged error message
+  
+  // TODO test optimization of acquisition function
+
+
 unit tests, performance tests, runtime tests
     performance functions
         mixture of N gaussians test with random multidimensional mean 
             locations so long as means are decently distributed
         simple linear functions
-        negative QUADRATIC with peak at edge
+        DONE negative QUADRATIC with peak at edge
             tests whether DE has bias against testing edges with log-transforms
-        negative quadratic with peak before edge
+            GP/acquisition function seems to find/latch onto edge very quickly
+                might be due to high SNR, but ultimately, we don't want to cling to edges
+                might want to add noise to sampled values to prevent resampling edges
+                std estimate doesn't seem to shrink much from additional samples, likely because of high noise
+                could try lower noise levels as well
+            some sporadic fits are completely off from sampled points
+                strangely, the likelihood was not shot
+                bias may not have been learned properly
+        DONE negative quadratic with peak before edge
             tests case in which delta increases monotonically with amplitude
         functions with varying length scales
-    
+        function dependent on ||x||, e.g., sin(||x||), to test for feature independent effects
+            these kernels are mostly stationary, so these effects should be captured
+        schwefel test function
+            has both of the previous properties
+            model currently failing to find correct lengthscales and biases
+            length scale seem fixed to upper bound of 1
+
+
+
 find solid unit testing framework, look into what Elemem
 is using
 add observation noise to predictions

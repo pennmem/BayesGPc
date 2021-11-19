@@ -82,21 +82,22 @@ CMatrix* BayesianSearchModel::get_next_sample() {
         noiseInit->setParam(0.0, noiseInit->getOutputDim());
         
         int iters = 100;
-        bool outputScaleLearnt = true;
+        bool outputBiasScaleLearnt = true;
         int approxType = 0;
 
         gp = new CGp(kern, noiseInit, x_samples, approxType, -1, 3);
         gp->setBetaVal(1);
         gp->setScale(1.0);
         gp->setBias(0.0);
-        gp->setObsNoiseVar(0.45);
+        gp->setObsNoiseVar(obsNoise);
         gp->updateM();
 
         gp->setVerbosity(verbosity);
         gp->setDefaultOptimiser(CGp::BFGS);  //options: BFGS, SCG, CG, GD
         gp->setObjectiveTol(1e-6);
         gp->setParamTol(1e-6);
-        gp->setOutputScaleLearnt(outputScaleLearnt);
+        gp->setOutputBiasLearnt(outputBiasScaleLearnt);
+        gp->setOutputScaleLearnt(outputBiasScaleLearnt);
         gp->optimise(iters);
 
         // optimize acquisition function

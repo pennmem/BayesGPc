@@ -7,6 +7,21 @@ import sklearn.gaussian_process.kernels as kernels
 from sklearn.gaussian_process import GaussianProcessRegressor as GPR
 from functools import partial
 
+
+
+# x_fun = np.linspace(0, 1, 200)
+
+# def func(x):
+#     # return np.exp(-(x - 0.8) ** 2) + np.exp(-(x - 0.2) ** 2) - 0.5 * (x - 0.8) ** 3 - 2.0
+#     # return np.exp(-(x*10 - 2)**2) + np.exp(-(x*10 - 6)**2/10) + 1/ ((x*10)**2 + 1)
+# #    return 0.2*(np.exp(-(x-0.8)**2) + np.exp(-(x-0.2)**2) - 0.3*(x-0.8)**2 - 1.5) + 0.04
+#     # return np.sin(x*10)
+
+# #    return np.exp(-(x-0.8)**2) + np.exp(-(x-0.2)**2) - 0.3*(x-0.8)**2 - 1.5
+# y_fun = func(x_fun)
+# plt.plot(x_fun, y_fun)
+# plt.show()
+
 def dict_product(di, list_keys=None, prod_di=dict(), prod_list=list(), key_idx=0):
     """
     Implements itertools.product for dictionaries of lists
@@ -32,14 +47,14 @@ kerns["matern32"] = {"kern": partial(kernels.Matern, nu=1.5),
                    "hps": {"length_scale": [0.01, 0.5, 1.0, 2.0, 100.0]}}
 
 # test data sets
-range_interval = (1, -15)
-def test_func(x):
-    return (1-x**2).reshape(-1)
-
-# range_interval = (-1, 1)
-# for varying degrees of variation or smoothness over function domain
+# range_interval = (1, -15)
 # def test_func(x):
-#     return (np.sin(x**2)).reshape(-1)
+#     return (1-x**2).reshape(-1)
+
+range_interval = (-1, 1)
+# for varying degrees of variation or smoothness over function domain
+def test_func(x):
+    return (np.sin(x**2)).reshape(-1)
 
 noise_scale = 0.1
 def observation_noise(shape):
@@ -87,8 +102,8 @@ for kern_name, kern_dict in kerns.items():
         plt.xlabel("x")
 
     # fit hyperparameters
-    kern = kern_dict["kern"]()  # + kernels.WhiteKernel()
-    obs_noise = 0.05
+    kern = kern_dict["kern"]() + kernels.WhiteKernel()
+    obs_noise = 0.01
     gp = GPR(kern, alpha=obs_noise)
     gp.fit(X_train, y_train)
     pars = {k: v for k, v in gp.kernel_.get_params().items() if k in list(pars.keys())}
@@ -97,8 +112,8 @@ for kern_name, kern_dict in kerns.items():
     y_plot, std_plot = gp.predict(x_plot, return_std=True)
     plt.subplot(subplot_rows, subplot_cols, subplot)
     subplot += 1
-    plt.plot(x_plot, y_plot, label="Predicted mean", color="b")
-    # plt.plot(x_plot, y_plot, label="mu: " + str(list(pars.values()))[:5], color="b")
+    # plt.plot(x_plot, y_plot, label="Predicted mean", color="b")
+    plt.plot(x_plot, y_plot, label="mu: " + str(list(pars.values()))[:5], color="b")
     plt.fill_between(x_plot.reshape(-1), 
                         y_plot.reshape(-1)+std_plot, 
                         y_plot.reshape(-1)-std_plot, 
@@ -107,10 +122,10 @@ for kern_name, kern_dict in kerns.items():
     plt.scatter(X_train, y_train, marker='x', label="Samples", c='k')
     plt.plot(x_plot, test_func(x_plot), '--', label="True objective", c='g')
     plt.legend()
-    plt.title(f"GPR for observation noise level {obs_noise}")
-    # plt.title("GPR for " + kern_name + "\n" + \
-    #     "Param order: " + str(list(pars.keys()))+ \
-    #     "  logL: {:.4}".format(gp.log_marginal_likelihood_value_))
+    # plt.title(f"GPR for observation noise level {obs_noise}")
+    plt.title("GPR for " + kern_name + "\n" + \
+        "Param order: " + str(list(pars.keys()))+ \
+        "  logL: {:.4}".format(gp.log_marginal_likelihood_value_))
     plt.xlabel("x")
 
 plt.show()
