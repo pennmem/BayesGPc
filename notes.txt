@@ -2,7 +2,7 @@
 TODO
   // TODO test acquisition functions in separate file
   // TODO separate out acquisition functions with templates, virtual function implementation
-  exception handling. if GP or global optimization fail, need to just sample uniform sample with 
+  exception handling. if GP or global optimizations fail, need to just sample uniform sample with 
   logged error message
   
   // TODO test optimization of acquisition function
@@ -22,16 +22,18 @@ unit tests, performance tests, runtime tests
                 could try lower noise levels as well
             some sporadic fits are completely off from sampled points
                 strangely, the likelihood was not shot
-                bias may not have been learned properly
+                FIXED bias may not have been learned properly
         DONE negative quadratic with peak before edge
             tests case in which delta increases monotonically with amplitude
         functions with varying length scales
-        function dependent on ||x||, e.g., sin(||x||), to test for feature independent effects
-            these kernels are mostly stationary, so these effects should be captured
+        DONE function dependent on ||x||, e.g., sin(||x||), to test for feature independent effects
+            most of these kernels are stationary, so these effects should be captured
         schwefel test function
             has both of the previous properties
-            model currently failing to find correct lengthscales and biases
-            length scale seem fixed to upper bound of 1
+            FIXED model currently failing to find correct lengthscales and biases
+                length scale seem fixed to upper bound of 1
+                lengthscale is not arbitrarily fixed to upper bound of 1. with function 'sin', 
+                length scale grows above 1
 
 
 

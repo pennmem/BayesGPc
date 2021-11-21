@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
     int x_dim = 1;
     double noise_level=0.1;
     double exp_bias_ratio=0.25;
-    int verbosity=0;
+    int verbosity=1;
     bool plotting=false;
 
     // left in place if needed for future test arguments
@@ -223,11 +223,14 @@ int testBayesianSearch(string kernel,
   // TODO test integration of Bayesian search, all functions run
   // plot results for debugging
 
-  int n_plot = 200;
-
   int seed = 1234;
 
   TestFunction test(test_func_str, seed, noise_level, x_dim, verbosity);
+
+  int n_plot = 400;
+  if (test.x_dim == 1 && test.x_interval(1) - test.x_interval(0) > 100.0) {
+    n_plot = (int)(test.x_interval(1) - test.x_interval(0));
+  }
 
   // for getting estimates of unknown function optima
   test.verbosity = 1;
@@ -237,7 +240,7 @@ int testBayesianSearch(string kernel,
 
   double exp_bias = exp_bias_ratio;
   // kind of cheating, won't know the observation noise ahead of time, but will know to some precision
-  double obsNoise = 0.5 * noise_level * (test.y_interval(1) - test.y_interval(0));
+  double obsNoise = 0.5 * noise_level;
 
   x_dim = test.x_dim;
 
@@ -279,7 +282,7 @@ int testBayesianSearch(string kernel,
       CMatrix* y_sample = new CMatrix(test.func(*x_sample));
       BO.add_sample(*x_sample, *y_sample);
 
-      if (plotting && (verbosity >= 1) && (i > n_init_samples)) {
+      if (plotting && (verbosity >= 2) && (i > n_init_samples)) {
         BO.get_next_sample();
         if (x_dim == 1) {
           BO.gp->out(y_pred, std_pred, x);
@@ -309,7 +312,9 @@ int testBayesianSearch(string kernel,
   }
 
   double pass_prob = ((double)failures)/((double)n_runs);
+  double mean_rel_error_runs = meanCol(search_rel_errors).getVal(0);
   cout << "Proportion of runs passed for " << test_func_str << ": " << pass_prob << endl;
+  cout << "Mean relative error for " << n_runs << " runs: " << mean_rel_error_runs << endl << endl;
   if (pass_prob < min_pass_prob) {
     fail += 1;
   }

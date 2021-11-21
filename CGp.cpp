@@ -245,10 +245,29 @@ void CGp::initStoreage()
    
 }
 
+void CGp::updateBias() const
+{
+  setBias(meanCol(*py));
+  setMupToDate(false);
+}
+
+void CGp::updateScale() const
+{
+  // O(n) inefficiency with computation of mean twice
+  // and then subtraction of mean in stdCol as well as in updateM
+  // cleaner API however
+  setScale(stdCol(*py));
+  setMupToDate(false);
+}
+
 void CGp::updateM() const 
 {
   if(!isMupToDate()) 
   {
+    updateBias();
+    if (!isOutputScaleLearnt()) {
+      updateScale();
+    }
     for(unsigned int i=0; i<getOutputDim(); i++) 
     {
       m.copyColCol(i, *py, i);
@@ -258,6 +277,7 @@ void CGp::updateM() const
     setMupToDate(true);
   }
 }
+
 void CGp::initVals() 
 {
   setSpherical(true); // not implemented non-spherical stuff yet.
@@ -1605,6 +1625,7 @@ void CGp::display(ostream& os) const
   cout << "Optimiser: " << getDefaultOptimiserStr() << endl;
   cout << "Data Set Size: " << getNumData() << endl;
   cout << "Kernel Type: " << endl;
+  cout << "Bias learnt: " << isOutputBiasLearnt() << endl;
   cout << "Scales learnt: " << isOutputScaleLearnt() << endl;
   cout << "X learnt: " << isOptimiseX() << endl;
   cout << "Bias: " << bias << endl;

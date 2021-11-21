@@ -444,13 +444,13 @@ void plot_BO_state(const BayesianSearchModel& BO, const CMatrix& x_plot, const C
   acq_func_plot -= 2;
   std::vector<double> acq_func_plot_vec(acq_func_plot.getVals(), acq_func_plot.getVals() + n_plot);
   plot(x_vec, y_true_vec, "k--",
-      x_samples_vec, y_samples_vec, "c*",
-      x_new_sample_vec, y_new_sample_vec, "rx",
-      x_vec, acq_func_plot_vec, "r",
-      x_vec, y_pred_vec, "g-",
-      x_vec, y_pred_plus_std, "b",
-      x_vec, y_pred_minus_std, "b",
-      x_vec, std_pred_vec, "b"
+       x_samples_vec, y_samples_vec, "c*",
+       x_new_sample_vec, y_new_sample_vec, "rx",
+       x_vec, acq_func_plot_vec, "r",
+       x_vec, y_pred_vec, "g-",
+       x_vec, y_pred_plus_std, "b",
+       x_vec, y_pred_minus_std, "b",
+       x_vec, std_pred_vec, "b"
       );
   auto lgd = legend("True", "Samples", "New sample", "Acquisition", "y_{pred}", "y_{pred} +/- std", "std");
   lgd->location(legend::general_alignment::topleft);

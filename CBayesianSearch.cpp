@@ -82,7 +82,8 @@ CMatrix* BayesianSearchModel::get_next_sample() {
         noiseInit->setParam(0.0, noiseInit->getOutputDim());
         
         int iters = 100;
-        bool outputBiasScaleLearnt = true;
+        // bias is not actually learned currently (was not implemented in original CGp library)
+        bool outputBiasScaleLearnt = false;
         int approxType = 0;
 
         gp = new CGp(kern, noiseInit, x_samples, approxType, -1, 3);
@@ -118,8 +119,7 @@ CMatrix* BayesianSearchModel::get_next_sample() {
         }
 
         optim::algo_settings_t optim_settings;
-        optim_settings.print_level = verbosity;
-        if (verbosity > 0) optim_settings.print_level -= 1;
+        optim_settings.print_level = max(verbosity - 2, 0);
         optim_settings.vals_bound = true;
         // optim_settings.iter_max = 15;  // doesn't seem to control anything with DE
         optim_settings.rel_objfn_change_tol = 1e-05;
@@ -186,6 +186,9 @@ CMatrix* BayesianSearchModel::get_best_solution() {
 
     optim_settings.lower_bounds = lower_bounds;
     optim_settings.upper_bounds = upper_bounds;
+
+    optim_settings.de_settings.initial_lb = lower_bounds;
+    optim_settings.de_settings.initial_ub = upper_bounds;
 
     bool success;
 

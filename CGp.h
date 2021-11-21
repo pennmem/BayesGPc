@@ -58,6 +58,11 @@ public:
 
 
   virtual void updateX();
+  // update bias value of Y with mean
+  void updateBias() const;
+  // update scale value of Y with standard deviation
+  void updateScale() const;
+  // update descaled and debiased values of Y
   void updateM() const;
   // update K and dynK and all derived quantities if they are dirty.
   void updateK() const;
@@ -154,7 +159,11 @@ public:
     return outputBiasLearnt;
   }
   void setOutputBiasLearnt(const bool val) {
-    outputBiasLearnt=val;
+    if (val) {
+      cout << "Warning: learning the bias is not currently implemented. "
+           << "Setting outputBiasLearnt to false" << endl;
+    }
+    outputBiasLearnt=false;
   }
   double getScaleVal(unsigned int index) const {
     BOUNDCHECK(index<getOutputDim());
@@ -165,7 +174,7 @@ public:
     scale.setVal(val, 0, index);
     setMupToDate(false);
   }
-  void setScale(const CMatrix& scal) {
+  void setScale(const CMatrix& scal) const {
     DIMENSIONMATCH(scal.getRows()==1);
     DIMENSIONMATCH(scal.getCols()==getOutputDim());
     scale.deepCopy(scal);
@@ -186,7 +195,7 @@ public:
     bias.setVal(val, 0, index);
     setMupToDate(false);
   }
-  void setBias(const CMatrix& bia) {
+  void setBias(const CMatrix& bia) const {
     DIMENSIONMATCH(bia.getRows()==1);
     DIMENSIONMATCH(bia.getCols()==getOutputDim());
     bias.deepCopy(bia);
@@ -373,7 +382,7 @@ public:
 
   double obsNoiseVar;
 
-  mutable CMatrix m;  // scaled and biased Y
+  mutable CMatrix m;  // descaled and debiased Y
   mutable CMatrix Alpha; // SVM style 'alphas'.
   
 
@@ -406,10 +415,10 @@ public:
   
   CMatrix beta;
   CMatrix nu;
-  CMatrix scale;
-  CMatrix bias;
+  mutable CMatrix scale;  // scale of Y
+  mutable CMatrix bias;  // bias of Y
   
-  CMatrix g;
+  CMatrix g; // parameter gradients
   CKern* pkern;
   CNoise* pnoise;
   
@@ -432,6 +441,7 @@ public:
   mutable CMatrix covGrad;
   mutable CMatrix tempgX;
 
+  // Kernel matrix in ARD sparse methods
   mutable CMatrix K_uu;
   mutable CMatrix invK_uu;
   mutable double logDetK_uu;
