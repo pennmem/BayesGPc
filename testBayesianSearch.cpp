@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
     string test_func_arg = "hartmann4d";
     int n_runs=50;
     int n_iters=250;
-    int n_init_samples=10;
+    int n_init_samples=25;
     int x_dim = 1;
     double noise_level=0.1;
     double exp_bias_ratio=0.25;
@@ -84,46 +84,46 @@ int main(int argc, char* argv[])
                             plotting);
     }
     else {
-      fail += testBayesianSearch(kern_arg, 
-                                "sin",
-                                n_runs,
-                                n_iters,
-                                n_init_samples,
-                                x_dim,
-                                noise_level,
-                                exp_bias_ratio,
-                                verbosity,
-                                plotting);
-      fail += testBayesianSearch(kern_arg, 
-                                "quadratic",
-                                n_runs,
-                                n_iters,
-                                n_init_samples,
-                                x_dim,
-                                noise_level,
-                                exp_bias_ratio,
-                                verbosity,
-                                plotting);
-      fail += testBayesianSearch(kern_arg, 
-                                "quadratic_over_edge",
-                                n_runs,
-                                n_iters,
-                                n_init_samples,
-                                x_dim,
-                                noise_level,
-                                exp_bias_ratio,
-                                verbosity,
-                                plotting);
-      fail += testBayesianSearch(kern_arg, 
-                                "PS4_1",
-                                n_runs,
-                                n_iters,
-                                n_init_samples,
-                                x_dim,
-                                noise_level,
-                                exp_bias_ratio,
-                                verbosity,
-                                plotting);
+      // fail += testBayesianSearch(kern_arg, 
+      //                           "sin",
+      //                           n_runs,
+      //                           n_iters,
+      //                           n_init_samples,
+      //                           x_dim,
+      //                           noise_level,
+      //                           exp_bias_ratio,
+      //                           verbosity,
+      //                           plotting);
+      // fail += testBayesianSearch(kern_arg, 
+      //                           "quadratic",
+      //                           n_runs,
+      //                           n_iters,
+      //                           n_init_samples,
+      //                           x_dim,
+      //                           noise_level,
+      //                           exp_bias_ratio,
+      //                           verbosity,
+      //                           plotting);
+      // fail += testBayesianSearch(kern_arg, 
+      //                           "quadratic_over_edge",
+      //                           n_runs,
+      //                           n_iters,
+      //                           n_init_samples,
+      //                           x_dim,
+      //                           noise_level,
+      //                           exp_bias_ratio,
+      //                           verbosity,
+      //                           plotting);
+      // fail += testBayesianSearch(kern_arg, 
+      //                           "PS4_1",
+      //                           n_runs,
+      //                           n_iters,
+      //                           n_init_samples,
+      //                           x_dim,
+      //                           noise_level,
+      //                           exp_bias_ratio,
+      //                           verbosity,
+      //                           plotting);
       fail += testBayesianSearch(kern_arg, 
                                 "PS4_2",
                                 n_runs,
@@ -159,7 +159,27 @@ int main(int argc, char* argv[])
                                 n_runs,
                                 n_iters,
                                 n_init_samples,
-                                x_dim,
+                                2,
+                                noise_level,
+                                exp_bias_ratio,
+                                verbosity,
+                                plotting);
+      fail += testBayesianSearch(kern_arg,
+                                "schwefel",
+                                n_runs,
+                                n_iters,
+                                n_init_samples,
+                                3,
+                                noise_level,
+                                exp_bias_ratio,
+                                verbosity,
+                                plotting);
+      fail += testBayesianSearch(kern_arg,
+                                "schwefel",
+                                n_runs,
+                                n_iters,
+                                n_init_samples,
+                                4,
                                 noise_level,
                                 exp_bias_ratio,
                                 verbosity,
@@ -313,7 +333,7 @@ int testBayesianSearch(string kernel,
 
   double pass_prob = ((double)failures)/((double)n_runs);
   double mean_rel_error_runs = meanCol(search_rel_errors).getVal(0);
-  cout << "Proportion of runs passed for " << test_func_str << ": " << pass_prob << endl;
+  cout << "Proportion of runs passed for " << test_func_str << " with x_dim " << x_dim << ": " << pass_prob << endl;
   cout << "Mean relative error for " << n_runs << " runs: " << mean_rel_error_runs << endl << endl;
   if (pass_prob < min_pass_prob) {
     fail += 1;

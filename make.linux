@@ -22,10 +22,10 @@ NPYLINKFLAG =${NPYLIBS}
 # optim library
 OPTIMDIR =/Users/rdehaan/projects/dependencies/optim/header_only_version
 # OPTIMDIR =/usr/local/include/optim
-ARMADILLODIR =/usr/local/include/armadillo
+# ARMADILLODIR =/usr/local/include/armadillo
 OPTIMFLAG =-O3 -march=native -ffp-contract=fast -I${OPTIMDIR}
 # OPTIMFLAG =-O3 -march=native -ffp-contract=fast -I${ARMADILLODIR} -I${OPTIMDIR}
-# OPTIMLINKFLAG = -loptim
+# OPTIMLINKFLAG = -loptim  # not linking currently since linking would involve with current setup, linking to blas/lapack a second time, causing linker errors
 
 # matplotlibcpp library
 MATPLOTLIB_CPP_INCLUDE_DIRS =matplotlibcpp.h

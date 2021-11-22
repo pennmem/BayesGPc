@@ -1,9 +1,48 @@
+Installation notes:
+
+cnpy (for loading ndarrays from Python)
+    git clone git@github.com:rogersce/cnpy.git
+    follow installation instructions on github repo page
+    cd path/to/cnpy
+    cmake .
+    make 
+    make install
+boost (could be removed if we wanted, just using distribution libraries for now)
+    install (my Mac setup via Brew) or just use headers
+
+matplotplusplus (for plotting test results)
+    git clone git@github.com:alandefreitas/matplotplusplus.git
+    installation via vcpkg on linux/Windows and via brew on Mac
+    >> can't get to install on laptop, just using header files
+
+gfortran: 
+    must use gfortran-7 on Mac
+
+
+eigen (matrix algebra library; dependency of optim)
+    change line 107 in optim/include/misc/optim_options.hpp to
+        #include <[your eigen header library location here, should start with eigen[version number here] in e.g. /usr/local/include]/Eigen/Dense>
+    use header-only library, might consider finding way of using BLAS/OpenBLAS
+    without intefering with access of BLAS/LAPACK by CGp by pre-compiling for additional performance boost
+
+optim
+    git clone git@github.com:kthohr/optim.git
+    change line 
+    change line 99 of optim/src/unconstrained/de.cpp to 
+        X_next.row(i) = OPTIM_MATOPS_TRANSPOSE( par_initial_lb + OPTIM_MATOPS_HADAMARD_PROD( par_initial_ub - par_iniial_lb, OPTIM_MATOPS_RANDU_VEC(n_vals) ) );
+        (obvious bug fix, pull request not made yet)
+    ./configure --head-only-version
+
+
 11/11/21
 TODO
   // TODO test acquisition functions in separate file
   // TODO separate out acquisition functions with templates, virtual function implementation
   exception handling. if GP or global optimizations fail, need to just sample uniform sample with 
   logged error message
+    matrix non positive definite error obtained after (10) initial samples collected
+        error otherwise never obtained, probably just an unlucky sample
+        increased number of initial samples to 25
   
   // TODO test optimization of acquisition function
 
@@ -34,7 +73,8 @@ unit tests, performance tests, runtime tests
                 length scale seem fixed to upper bound of 1
                 lengthscale is not arbitrarily fixed to upper bound of 1. with function 'sin', 
                 length scale grows above 1
-
+        PS4_2 (multi-modal PS4 test)
+            DE failing to find global optimum, tests are artificially passing
 
 
 find solid unit testing framework, look into what Elemem

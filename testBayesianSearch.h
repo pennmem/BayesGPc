@@ -365,6 +365,9 @@ class TestFunction {
         optim_settings.lower_bounds = lower_bounds;
         optim_settings.upper_bounds = upper_bounds;
 
+        optim_settings.de_settings.initial_lb = lower_bounds;
+        optim_settings.de_settings.initial_ub = upper_bounds;
+
         bool success;
 
         funcOptimStruct opt_data = {this, false, !get_min};
