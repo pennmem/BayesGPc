@@ -275,6 +275,7 @@ int testBayesianSearch(string kernel,
   CMatrix run_times(n_runs, 1);
 
   for (int run = 0; run < n_runs; run++) {
+    cout << "Run " << run << endl;
     seed++;
 
     CCmpndKern kern(x_dim);

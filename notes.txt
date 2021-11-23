@@ -1,23 +1,54 @@
 Installation notes:
 
-cnpy (for loading ndarrays from Python)
+cnpy (for loading ndarrays from Python), could replace with h5
+    Linux, Mac: install from source
     git clone git@github.com:rogersce/cnpy.git
     follow installation instructions on github repo page
     cd path/to/cnpy
     cmake .
     make 
     make install
+
 boost (could be removed if we wanted, just using distribution libraries for now)
-    install (my Mac setup via Brew) or just use headers
+    Mac:
+    brew
+
+    Linux:
+    just use headers
 
 matplotplusplus (for plotting test results)
     git clone git@github.com:alandefreitas/matplotplusplus.git
-    installation via vcpkg on linux/Windows and via brew on Mac
-    >> can't get to install on laptop, just using header files
 
-gfortran: 
-    must use gfortran-7 on Mac
+    Linux:
+    install from source via cmake
 
+    $ mkdir build
+    $ cd build
+    $ cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O2"
+    $ sudo cmake --build . --parallel 2 --config Release
+    
+    To use x11 for graphic output, may need to run 
+    $ set term x11
+    before plotting with gnuplot (matplot uses gnuplot)
+    can test gnuplot with
+    $ gnuplot
+    > plot x,sin(x)
+    should open a window with sin(x) plot
+    
+    install cimg-dev, needed dependencies, in particular libtiff-dev
+    include matplot.h in source code and gcc command
+    link to the static libraries libmatplot.a and nodesoup.a in (separate subdirectories of) the build directory
+    link to the dependencies -lm -lpthread -lX11 -ltiff -ljpeg -lpng -lz
+    
+    Mac:
+    install via homebrew
+
+gfortran:
+    Mac:
+    must use gfortran-7, install downgraded version of gcc
+
+    Linux Ubuntu (WSL2):
+    gcc 9.3.0 worked
 
 eigen (matrix algebra library; dependency of optim)
     change line 107 in optim/include/misc/optim_options.hpp to
@@ -43,6 +74,9 @@ TODO
     matrix non positive definite error obtained after (10) initial samples collected
         error otherwise never obtained, probably just an unlucky sample
         increased number of initial samples to 25
+    handle every GPc ndl/optim error dependent on matrices being e.g. PD, nicely behaved, everything that can go wrong stochastically, 
+        likely with a random sample
+    catch every other error with a random sample
   
   // TODO test optimization of acquisition function
 
