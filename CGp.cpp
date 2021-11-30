@@ -491,6 +491,7 @@ void CGp::updateAlpha() const
 { 
   if(!isAlphaUpToDate())
   { 
+    if (getVerbosity() >= 2) { cout << "updateAlpha" << endl; }
     updateM();
     updateK();
     updateAD();  
@@ -595,6 +596,7 @@ void CGp::_posteriorMean(CMatrix& mu, const CMatrix& kX) const
 }
 void CGp::_posteriorVar(CMatrix& varSigma, CMatrix& kX, const CMatrix& Xin) const
 {
+  if (getVerbosity() >= 3) { cout << "_posteriorVar" << endl; }
   updateK();
   updateAD();
   DIMENSIONMATCH(varSigma.getRows()==kX.getCols());
@@ -803,25 +805,25 @@ void CGp::updateAD() const {
         A.deepCopy(K_uu);
         A.gemm(K_uf, K_uf, 1.0, 1.0/betaVal, "n", "t");
         A.setSymmetric(true);
-	double jit = LcholA.jitChol(A);
-	if(jit>1e-2)
-	  if(getVerbosity()>2)
-	    cout << "Warning: jitter of " << jit << " added to A in updateAD()." << endl;
+        double jit = LcholA.jitChol(A);
+        if(jit>1e-2)
+          if(getVerbosity()>2)
+            cout << "Warning: jitter of " << jit << " added to A in updateAD()." << endl;
 
-	logDetA = logDet(LcholA);
-	Ainv.setSymmetric(true);
+        logDetA = logDet(LcholA);
+        Ainv.setSymmetric(true);
         Ainv.pdinv(LcholA);
-	// Now stored as a lower cholesky.
+      	// Now stored as a lower cholesky.
         LcholA.trans();
-	if(getApproximationType()==DTCVAR)
-	{
-	  V.gemm(invK_uu, K_uf, 1.0, 0.0, "n", "n");
-	  V.dotMultiply(K_uf);
+        if(getApproximationType()==DTCVAR)
+        {
+          V.gemm(invK_uu, K_uf, 1.0, 0.0, "n", "n");
+          V.dotMultiply(K_uf);
 
-	  diagD.deepCopy(diagK);
-	  diagD.sumCol(V, -1.0, 1.0);
-	  diagD.scale(getBetaVal());
-	}	
+          diagD.deepCopy(diagK);
+          diagD.sumCol(V, -1.0, 1.0);
+          diagD.scale(getBetaVal());
+        }	
       }
       else 
       {
@@ -832,74 +834,74 @@ void CGp::updateAD() const {
     case FITC:  
       if (isSpherical()) 
       {
-// 	V.deepCopy(K_uf);
-// 	V.trsm(LcholK, 1.0, "l", "l", "n", "n");
-// 	V.trsm(LcholK, 1.0, "l", "l", "t", "n");
-// 	V.dotMultiply(K_uf);
-	V.gemm(invK_uu, K_uf, 1.0, 0.0, "n", "n");
-	V.dotMultiply(K_uf);
-	diagD.deepCopy(diagK);
-	diagD.negate();
-	diagD.sumCol(V, 1.0, 1.0);
-	diagD.scale(getBetaVal());
-	diagD.negate();
-	diagD.add(1.0);
-	
-	V.deepCopy(K_uf);
-	double d = 0.0;
-	scaledM.deepCopy(m);
-	for(unsigned int j=0; j<getNumData(); j++) 
-	{
-	  d = 1/diagD.getVal(j);
-	  V.scaleCol(j, d);
-	  scaledM.scaleRow(j, sqrt(d));
-	}
-	A.deepCopy(K_uu);
-	A.gemm(K_uf, V, 1.0, 1.0/getBetaVal(), "n", "t");
-	A.setSymmetric(true);
-	// This is initially an upper Cholesky.
-	double jit = LcholA.jitChol(A);
-	if(jit>1e-2)
-	  if(getVerbosity()>2)
-	    cout << "Warning: jitter of " << jit << " added to A in updateAD()." << endl;
+      // 	V.deepCopy(K_uf);
+      // 	V.trsm(LcholK, 1.0, "l", "l", "n", "n");
+      // 	V.trsm(LcholK, 1.0, "l", "l", "t", "n");
+      // 	V.dotMultiply(K_uf);
+        V.gemm(invK_uu, K_uf, 1.0, 0.0, "n", "n");
+        V.dotMultiply(K_uf);
+        diagD.deepCopy(diagK);
+        diagD.negate();
+        diagD.sumCol(V, 1.0, 1.0);
+        diagD.scale(getBetaVal());
+        diagD.negate();
+        diagD.add(1.0);
+        
+        V.deepCopy(K_uf);
+        double d = 0.0;
+        scaledM.deepCopy(m);
+        for(unsigned int j=0; j<getNumData(); j++) 
+        {
+          d = 1/diagD.getVal(j);
+          V.scaleCol(j, d);
+          scaledM.scaleRow(j, sqrt(d));
+        }
+        A.deepCopy(K_uu);
+        A.gemm(K_uf, V, 1.0, 1.0/getBetaVal(), "n", "t");
+        A.setSymmetric(true);
+        // This is initially an upper Cholesky.
+        double jit = LcholA.jitChol(A);
+        if(jit>1e-2)
+          if(getVerbosity()>2)
+            cout << "Warning: jitter of " << jit << " added to A in updateAD()." << endl;
 
-	logDetA = logDet(LcholA);
-	Ainv.setSymmetric(true);
-	Ainv.pdinv(LcholA);
-	// now make it a lower Cholesky.
-	LcholA.trans();
-	
-	V.deepCopy(K_uf);
-	V.trsm(LcholK, 1.0, "l", "l", "n", "n");
-	for(unsigned int j=0; j<getNumData(); j++)
-	  V.scaleCol(j, 1/sqrt(diagD.getVal(j)));
-	Am.diag(1/getBetaVal());
-	Am.gemm(V, V, 1.0, 1.0, "n", "t");
-	Am.setSymmetric(true);
+        logDetA = logDet(LcholA);
+        Ainv.setSymmetric(true);
+        Ainv.pdinv(LcholA);
+        // now make it a lower Cholesky.
+        LcholA.trans();
+        
+        V.deepCopy(K_uf);
+        V.trsm(LcholK, 1.0, "l", "l", "n", "n");
+        for(unsigned int j=0; j<getNumData(); j++)
+          V.scaleCol(j, 1/sqrt(diagD.getVal(j)));
+        Am.diag(1/getBetaVal());
+        Am.gemm(V, V, 1.0, 1.0, "n", "t");
+        Am.setSymmetric(true);
 
-	jit = Lm.jitChol(Am); // this will initially be upper triangular.
-	if(jit>1e-2)
-	  if(getVerbosity()>2)
-	    cout << "Warning: jitter of " << jit << " added to Am in updateAD()." << endl;
-	Lm.trans(); // now it is lower
+        jit = Lm.jitChol(Am); // this will initially be upper triangular.
+        if(jit>1e-2)
+          if(getVerbosity()>2)
+            cout << "Warning: jitter of " << jit << " added to Am in updateAD()." << endl;
+        Lm.trans(); // now it is lower
 
-	invLmV.deepCopy(V);
-	invLmV.trsm(Lm, 1.0, "l", "l", "n", "n");
-	bet.gemm(invLmV, scaledM, 1.0, 0.0, "n", "n");
+        invLmV.deepCopy(V);
+        invLmV.trsm(Lm, 1.0, "l", "l", "n", "n");
+        bet.gemm(invLmV, scaledM, 1.0, 0.0, "n", "n");
       }
       else 
       {
-	throw ndlexceptions::NotImplementedError("Non-spherical implementations not yet in place for FITC");
+      	throw ndlexceptions::NotImplementedError("Non-spherical implementations not yet in place for FITC");
       }
       break;
     case PITC:
       if (isSpherical()) 
       {
-	throw ndlexceptions::NotImplementedError("PITC approximation not yet implemented.");
+	      throw ndlexceptions::NotImplementedError("PITC approximation not yet implemented.");
       }
       else 
       {
-	throw ndlexceptions::NotImplementedError("Non-spherical implementations not yet in place for PITC");
+	      throw ndlexceptions::NotImplementedError("Non-spherical implementations not yet in place for PITC");
       }
       break;
     }
@@ -912,14 +914,21 @@ void CGp::_updateInvK(unsigned int dim) const
   double jit = 0.0;
   switch(getApproximationType()) {
   case FTC:
+    if (getVerbosity() >= 2) { 
+      cout << "jitChol K" << endl;
+      pnoise->display(cout);
+      pkern->display(cout);
+      cout << "K" << endl << K << endl;
+    }
     jit = LcholK.jitChol(K); // this will initially be upper triangular.
-    if(jit>1e-2)
+    if (jit>1e-2)
     {
-      if(getVerbosity()>2)
+      if (getVerbosity()>2)
       	cout << "Warning: jitter of " << jit << " added to K in _updateInvK()." << endl;
     }
     logDetK = logDet(LcholK);
     invK.setSymmetric(true);
+    if (getVerbosity() >= 2) { cout << "positive definite inverse from cholesky of K" << endl; }
     invK.pdinv(LcholK);
     LcholK.trans();
     break;
@@ -930,8 +939,7 @@ void CGp::_updateInvK(unsigned int dim) const
     jit = LcholK.jitChol(K_uu); // this will initially be upper triangular.
     if(jit>1e-2)
       if(getVerbosity()>2)
-	cout << "Warning: jitter of " << jit << " added to K_uu in _updateInvK()." << endl;
-
+      	cout << "Warning: jitter of " << jit << " added to K_uu in _updateInvK()." << endl;
 
     logDetK_uu = logDet(LcholK);
     invK_uu.setSymmetric(true);
@@ -946,6 +954,7 @@ void CGp::_updateInvK(unsigned int dim) const
 // compute the approximation to the log likelihood.
 double CGp::logLikelihood() const
 {
+  if (getVerbosity() >= 2) { cout << "logLikelihood" << endl; }
   updateK();
   updateAD();
   double L=0.0;
@@ -1117,7 +1126,8 @@ void CGp::updateG() const
     throw ndlexceptions::Error("updateG() called when M is not updated.");
   unsigned int numKernParams = pkern->getNumParams();
   unsigned int numParams = numKernParams;
-  
+
+  if (getVerbosity() >= 2) { cout << "updateG" << endl; }
   updateK();
   updateAD();
   // main grad

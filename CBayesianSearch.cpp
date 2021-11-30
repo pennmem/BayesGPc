@@ -125,8 +125,8 @@ CMatrix* BayesianSearchModel::get_next_sample() {
         optim_settings.rel_objfn_change_tol = 1e-05;
         optim_settings.rel_sol_change_tol = 1e-05;
 
-        optim_settings.de_settings.n_pop = 25;
-        optim_settings.de_settings.n_gen = 25;
+        optim_settings.de_settings.n_pop = 25 * x_dim;
+        optim_settings.de_settings.n_gen = 25 * x_dim;
 
         optim_settings.lower_bounds = lower_bounds;
         optim_settings.upper_bounds = upper_bounds;

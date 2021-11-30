@@ -1,3 +1,24 @@
+11/23/21
+
+decide on set of initial tests and metrics for tuning algorithm and for achieving an endpoint
+get better notetaking system in place
+get tests running on Rhino
+logging (use Elemem logger)
+
+finish testing/debugging
+get VS Code Git integration in place
+Windows build
+clean up deletion and recreation of models upon sampling new points
+test 1-sample update to Cholesky decomposition
+    will only work if hyperparameters are fixed between updates... may be okay, particularly once many samples are collected,
+    can also retune periodically and definitely at the very end for the selection of discrete locations
+implement discrete variable/location selection scheme, talk to Mike about it, look at other papers
+integration with Elemem
+Latin hypercube sampling, orthogonal sampling
+
+update slides for meeting with Dan
+
+
 Installation notes:
 
 cnpy (for loading ndarrays from Python), could replace with h5
@@ -66,17 +87,86 @@ optim
 
 
 11/11/21
+
 TODO
   // TODO test acquisition functions in separate file
   // TODO separate out acquisition functions with templates, virtual function implementation
   exception handling. if GP or global optimizations fail, need to just sample uniform sample with 
   logged error message
     matrix non positive definite error obtained after (10) initial samples collected
-        error otherwise never obtained, probably just an unlucky sample
-        increased number of initial samples to 25
-    handle every GPc ndl/optim error dependent on matrices being e.g. PD, nicely behaved, everything that can go wrong stochastically, 
-        likely with a random sample
-    catch every other error with a random sample
+        there might be an infinite loop in the Cholesky decomposition jittering?
+        in schwefel x_dim=3,4 hanging runs, matern32 length scale stuck at 1 and variance stuck (in both models) at 
+            0.81832 over multiple samples
+        schwefel x_dim=2 also hanging, but not on first run (completes 6 runs with decent success) 
+        and doesn't have similarly "stuck" parameters on hanging run
+        possible that hanging runs occur for poor condition numbers
+            check to what extent they drive longer compute times
+                can't find anything on this
+
+        CURRENTLY NOT ASSIGNING OPTIMAL PARAMETERS WITH LBFGS WITH IFLAG = 0?
+
+        what would lead to non-PD matrices, which hartmann4d (which has standardized input range) run finally led to?
+            numerical error
+                exacerbated by small parameter values leading to small kernel matrices?
+                jitter attempts failed in hartmann4d
+                    max diagonal value added is multiple of trace, in one case with hartmann4d, was 4e10
+                    parameters explode on some parameter optimization runs, leads to large kernel values
+                    final exploded log parameters are huge, lead to incorrect linear param values >> linear params limited internally
+                    seems like we need a different optimization algorithm with bounds
+                    try sklearn's FORTRAN routine instead, has bounds built in
+                    seems like these issues could result with poor noise samples leading to loss surfaces where 
+                    divergent parameters trivially improve loss
+                    could regularize rather than use bounds? could just apply L2 to kernel variances with low weight?
+                        don't really want spherical regularization, although it would prevent the observed imbalance in 
+                        variances between the white kernel and the non-trivial kernel
+            logical errors
+            optimization sometimes explodes
+
+        check error messages, see which matrices are breaking down
+            potrf, jitter tries failed, non-PD
+                with sin and quadratic funcs, kernel HPs not vanishing, 
+                hartmann4d matern variance vanishing, white kernel var not vanishing
+                    hartmann4d fails on first run with noise level = 0.3, maybe noise worsens issues
+            symmetry error = 0 in hartmann4d
+
+            potri also returns non-PD matrix error later, potentially implying that potrf succeeded and then potri failed
+            additional LFBGS errors in MCSTEP search found, none sounds fatal, just numerical stuff
+        also try different kernels in CGp, might be issue with matern32 specifically
+            unlikely, but should still try
+        check if I'm directly assigning CMatrix vals arrays assuming row-major order while they actually have column-major order
+        error in relative error calculation, some cases observed (in deleted file) where max found = 1.4, BO opt = <~1.4 and
+            rel err = -12
+
+                check covariance matrices, other matrices that are being Cholesky decomposed
+            which matrices are being decomposed specifically?
+            check values of matrices, might be the case that matrices are collapsing when matern32 length scale/variance
+            grows too small, which happened in some of the cases but not all
+            check that symmetry is being asserted
+                is being asserted, but not numerically checked, now being numerically checked
+            check condition numbers
+                different condition numbers, not sure at this point
+        try increasing alpha/CNoise model values to improve conditioning numbers? try forcefully preventing non-PD errors
+        can also try fixing a minimum value for the main kernel variances
+        check whether test functions are non-isometric, i.e., whether the intrinsic length scale varies directionally
+        check where exactly CNoise values came into play
+        get 2D plotting in place
+        try standardizing schwefel x domain? hartmann4d is standardized, also hangs
+        
+        handle every GPc ndl/optim error dependent on matrices being e.g. PD, nicely behaved, everything that can go wrong stochastically, 
+            likely with a random sample
+        catch every other error with a random sample
+
+        
+        DONE increase computational resources devoted to global search for higher dimensional functions
+        DONE confirm sklearn comparison tests are still similarly passing and that I didn't break something
+            kernel tests passing
+            GPR tests passing to same degree they were before as far as I can remember (some failures, but still optimizing, seems more like some kind of disalignment of values)
+        DONE try to get these failures to occur for 1D test functions
+            broke for schwefel 1D... never happened before...
+            quadratic also just failed after ~65 runs, no error message, just exited, later failed with error message
+        DONE try to reproduce these failures in the debugger? tricky, can't break into catch statements, could set conditional 
+        breakpoints
+            seeding appears to produce reproducibility as of 11/26/21
   
   // TODO test optimization of acquisition function
 
@@ -103,6 +193,12 @@ unit tests, performance tests, runtime tests
             most of these kernels are stationary, so these effects should be captured
         schwefel test function
             has both of the previous properties
+            x_dim 1: passing at noise level of 0.1
+            x_dim 2: failing everything, finding exact same local minimum over and over, matern32 variance collapsing to zero
+            x_dim 3: not completely failing, but not optimal either
+            x_dim 4: failing, along with hartmann4d
+            all initial samples for test functions with even number of dimensions are along edges of input space
+            
             FIXED model currently failing to find correct lengthscales and biases
                 length scale seem fixed to upper bound of 1
                 lengthscale is not arbitrarily fixed to upper bound of 1. with function 'sin', 

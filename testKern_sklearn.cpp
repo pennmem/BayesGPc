@@ -15,12 +15,12 @@ int main()
     // fail += testType("white");
     // // fail += testType("bias");
 
-    // fail += testType("matern32");
-    // fail += testType("matern52");
+    fail += testType("matern32");
+    fail += testType("matern52");
 
-    // fail += testType("rbf");
-    // fail += testType("ratquad");
-    fail += testType("poly");  // TODO not currently matching sklearn
+    fail += testType("rbf");
+    fail += testType("ratquad");
+    // fail += testType("poly");  // TODO not currently matching sklearn
 
     // // fail += testType("lin");
 
@@ -312,9 +312,11 @@ int testKern(CKern* kern, const string fileName)
     fail++;
   }
 
-  // TODO what is the covariance gradient? GCp doesn't seem to have a simple algorithm for computing d-kernel_params/dK
-  // TODO just compare gradients wrt parameters, that would be simplest, need to do 
-  // // test kernel gradients match
+  // TODO would like to compare covariance gradients, 
+  // however GCp doesn't seem to have a simple algorithm for computing d-kernel_params/dK
+  // following code gives partial attempt at doing this, gradients needed as mentioned aren't currently computed
+  // gradients can be tested with full GPR model, which is done in testGp_sklearn.cpp
+
   // CMatrix covGrad(npz["gKX"].data<double>(), npz["gKX"].shape[0], npz["gKX"].shape[1]);
   // // covGrad.readMatlabFile(fileName, "covGrad");
   // covGrad.setSymmetric(true);

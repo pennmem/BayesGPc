@@ -375,7 +375,10 @@ void CMatrix::potrf(const char* type)
   dpotrf_(type, nrows, vals, ncols, info);
   setSymmetric(false);
   setTriangular(true);
-  if(info!=0) throw ndlexceptions::MatrixNonPosDef();
+  if(info!=0) {
+    cout << "testing potrf" << endl;
+    throw ndlexceptions::MatrixNonPosDef();
+  }
 }
 void CMatrix::chol(const char* type)
 {
@@ -385,13 +388,13 @@ void CMatrix::chol(const char* type)
   switch((int)type[0]) {
   case 'L':
       for(unsigned int j=0; j<ncols; j++)
-	for(unsigned int i=0; i<j; i++)
-	  vals[i + nrows*j] = 0.0;
+        for(unsigned int i=0; i<j; i++)
+          vals[i + nrows*j] = 0.0;
     break;
   case 'U':
       for(unsigned int i=0; i<nrows; i++)
-	for(unsigned int j=0; j<i; j++)
-	  vals[i + nrows*j] = 0.0;
+        for(unsigned int j=0; j<i; j++)
+          vals[i + nrows*j] = 0.0;
     break;
   }
   setTriangular(true);    
@@ -416,7 +419,10 @@ void CMatrix::potri(const char* type)
   MATRIXPROPERTIES(isSquare());
   int info;
   dpotri_(type, nrows, vals, ncols, info);
-  if(info!=0) throw ndlexceptions::MatrixNonPosDef();
+  if(info!=0) {
+    cout << "testing potri" << endl;
+    throw ndlexceptions::MatrixNonPosDef();
+  }
 }
 void CMatrix::pdinv(const CMatrix& U)
 {
@@ -804,6 +810,7 @@ double CMatrix::jitChol(CMatrix& A, unsigned int maxTries)
   MATRIXPROPERTIES(A.isSymmetric());
   
   double jitter = 1e-6*A.trace()/(double)A.getRows();
+  CMatrix Acopy(A);
   bool success = false;
   unsigned int tries = 0;
   while(!success && tries<maxTries)
@@ -818,8 +825,17 @@ double CMatrix::jitChol(CMatrix& A, unsigned int maxTries)
       A.addDiag(jitter);
       jitter*=10;
       tries++;
-      if(jitter>10)
-      throw ndlexceptions::MatrixNonPosDef();
+      cout << "jitChol() failed jit chol tries " << tries << " with jitter " << jitter << endl;
+      if(jitter>10) {
+        // check error in matrix symmetry
+        cout << "A original" << endl;
+        cout << Acopy << endl;
+        cout << "A after jitter added to diagonal" << endl;
+        cout << A;
+        A.checkSymmetric(true);
+        cout << "testing jitter 2, jitter = " << jitter << " > 10" << endl;
+        throw ndlexceptions::MatrixNonPosDef();
+      }
     }
     catch(...)
     {
@@ -841,10 +857,11 @@ ostream& operator<<(ostream& out, const CMatrix& A)
 {
   for(unsigned int i = 0; i < A.getRows(); i++){
     for(unsigned int j = 0; j < A.getCols(); j++){
-      if (A.getVal(i, j) > ndlutil::DISPEPS || A.getVal(i, j) < -ndlutil::DISPEPS)
-        out << A.getVal(i, j) << " ";
-      else
-        out << 0 << " ";
+      out << A.getVal(i, j) << " ";
+      // if (A.getVal(i, j) > ndlutil::DISPEPS && A.getVal(i, j) < -ndlutil::DISPEPS)
+      //   out << A.getVal(i, j) << " ";
+      // else
+      //   out << 0 << " ";
     }
     out << endl;
   }
@@ -893,25 +910,28 @@ double jitChol(CMatrix& outMatrix, const CMatrix& inMatrix, unsigned int maxTrie
     {
       if(jitter==0)
       {
-	jitter = 1e-6*abs(inMatrix.trace()/inMatrix.getRows());
-	outMatrix.chol("U");
-	return jitter;
+        jitter = 1e-6*abs(inMatrix.trace()/inMatrix.getRows());
+        outMatrix.chol("U");
+        return jitter;
       }
       else
       {
-	cout << "Warning, matrix is not positive definite in jitChol, adding " << jitter << " jitter";
-	outMatrix.copy(inMatrix);
-	outMatrix.addDiag(jitter);
-	outMatrix.chol("U");
-	return jitter;
+        cout << "Warning, matrix is not positive definite in jitChol, adding " << jitter << " jitter";
+        outMatrix.copy(inMatrix);
+        outMatrix.addDiag(jitter);
+        outMatrix.chol("U");
+        return jitter;
       }
     }
     catch(ndlexceptions::MatrixNonPosDef& e)
     {
       bool nonPosDef = true;
       jitter *= 10.0;
-      if(i==maxTries)
-	throw ndlexceptions::MatrixNonPosDef();
+      if(i==maxTries) {
+        cout << "max tries for adding jitter exceeded" << endl;
+        outMatrix.checkSymmetric(true);
+      	throw ndlexceptions::MatrixNonPosDef();
+      }
     }
     catch(...)
     {

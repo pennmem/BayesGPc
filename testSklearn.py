@@ -37,14 +37,14 @@ sigma_0 = 1.0
 noise_level = 1.0
 
 # generate test of either model with arbitrary hyperparameters or trained model
-train = True
+train = False
 
 if train:
     # for generating tests of GPR, uncomment white kernel and one of the non-trivial kernels
     kern = gp.kernels.WhiteKernel(noise_level=noise_level)
 
-    kern += gp.kernels.Matern() * gp.kernels.ConstantKernel(); kern_name = "matern32"
-    param_permutation = np.arange(3)
+    # kern += gp.kernels.Matern() * gp.kernels.ConstantKernel(); kern_name = "matern32"
+    # param_permutation = np.arange(3)
 
     # kern += gp.kernels.Matern(nu=2.5) * gp.kernels.ConstantKernel(); kern_name = "matern52"
     # param_permutation = np.arange(3)
@@ -116,9 +116,10 @@ logL_rand, gradTheta_rand = gpr.log_marginal_likelihood(kern_rand.theta, eval_gr
 # TODO permute gradTheta_rand as needed for particular kernels
 logL, gradTheta = gpr.log_marginal_likelihood(gpr.kernel_.theta, eval_gradient=True)
 # convert gradients for GCp implementation which uses inverse_width = 1/length_scale^2
-if kern_name == "rbf":
-    gradTheta_rand[1] *= -0.5
-    gradTheta[1] *= -0.5
+if train:
+    if kern_name == "rbf":
+        gradTheta_rand[1] *= -0.5
+        gradTheta[1] *= -0.5
 
 print("Kernel:\n", gpr.kernel_)
 print(f"theta log-marginal likelihood: {gpr.log_marginal_likelihood_value_:.3f}")
@@ -143,11 +144,22 @@ if m == 1:
     plt.legend(loc="best",  scatterpoints=1, prop={'size': 8})
     plt.show()
 
-print()
-print(gradTheta_rand)
-param_permutation = np.array([0,2,1])
-print(gradTheta_rand[param_permutation])
-print()
+
+if train:
+    print()
+    print("log-likelihood ", logL)
+    print()
+    print("parameter gradient ", gradTheta)
+    param_permutation = np.array([0,2,1])
+    print("permuted parameter gradient (to align with CGp order) ", gradTheta[param_permutation])
+
+    print()
+    print("log-likelihood random params ", logL_rand)
+    print()
+    print("gradient random parameters ", gradTheta_rand)
+    param_permutation = np.array([0,2,1])
+    print("permuted gradient random parameters (to align with CGp order) ", gradTheta_rand[param_permutation])
+    print()
 
 output_dict = {"test:"+("fit" if train else "inference"): np.array([0]), "X": X,"X2": X2, "y": y, "X_pred": X_pred, 
                "y_pred": y_pred, "std_pred": std_pred, "bias": 0, "scale": 1, "numActive": -1, "approxInt": 0, 

@@ -259,7 +259,7 @@ int testBayesianSearch(string kernel,
   test.verbosity = verbosity;
 
   double exp_bias = exp_bias_ratio;
-  // kind of cheating, won't know the observation noise ahead of time, but will know to some precision
+  // assume we know observation noise to some precision
   double obsNoise = 0.5 * noise_level;
 
   x_dim = test.x_dim;

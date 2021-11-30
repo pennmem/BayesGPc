@@ -385,6 +385,34 @@ public:
     MATRIXPROPERTIES((val && isSquare()) || !val);	
     triangular=val;
   }
+  // Explicitly checks (and returns true) if the matrix is symmetric.
+  inline const bool checkSymmetric(bool verbose=false) const
+  {
+    MATRIXPROPERTIES(isSquare());
+    double error = 0;
+    double mean_err = 0;
+    double max_err = 0;
+    double lim = 0.0;
+    for (int i = 0; i < nrows; i++) {
+      for (int j = i + 1; j < ncols; j++) {
+        error = abs(this->getVal(i, j) - this->getVal(j, i));
+        if ( error > lim ) {
+          if (!verbose) { return false; }
+          else {
+            mean_err += error;
+            if (error > max_err) max_err = error;
+          }
+        }
+      }
+    }
+    if (verbose) {
+      mean_err /= (nrows * nrows - nrows)/2;
+      cout << "Max error in symmetry: " << mean_err << endl;
+      cout << "Mean error in symmetry: " << mean_err << endl;
+      if (max_err > lim) return false;
+    }
+    return true;
+  }
   // Returns true if the matrix is symmetric.
   inline const bool isSymmetric() const
   {
@@ -393,7 +421,7 @@ public:
   // Sets whether or not matrix is symmetric.
   inline void setSymmetric(const bool val) 
   {
-    MATRIXPROPERTIES((val && isSquare()) || !val);	
+    MATRIXPROPERTIES((val && isSquare()) || !val);
     symmetric=val;
   }
   // Returns true if the matrix A has the same dimensions as the matrix.
@@ -947,7 +975,7 @@ public:
 
   double& operator()(int i, int j) {
     BOUNDCHECK(i < getRows() && j < getCols());
-    return getVals()[i * getCols() + j];
+    return getVals()[i + getRows() * j];
   }
 
   double& operator()(int i) {

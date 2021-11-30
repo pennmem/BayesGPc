@@ -204,6 +204,8 @@ ndlassert.o: ndlassert.cpp ndlassert.h ndlexceptions.h
 ndlfortran.o: ndlfortran.f
 	$(FC) -c ndlfortran.f -o ndlfortran.o $(FCFLAGS)
 
+ndlfortran_lbfgsb.o: ndlfortran_lbfgsb.f ndlfortran_linpack.f ndlfortran_timer.f
+	$(FC) -c ndlfortran_lbfgsb.f -o ndlfortran_lbfgsb.o $(FCFLAGS)
 
 clean:
 	rm *.o

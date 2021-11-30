@@ -215,32 +215,45 @@ void COptimisable::lbfgsOptimise()
     {
       if(iflag==-1)
       {
-	cout << "Warning: lbfgsOptimise: linesearch failed." << endl;
-	break;
+        cout << "Warning: lbfgsOptimise: linesearch failed." << endl;
+        break;
       }
       else if(iflag == -2)
       {
-	throw ndlexceptions::Error("An element of the inverse Hessian provided is not positive.");
+      	throw ndlexceptions::Error("An element of the inverse Hessian provided is not positive.");
       }
       else if(iflag == -3)
       {
-	throw ndlexceptions::Error("Inproper input to lbfgs_.");
+	      throw ndlexceptions::Error("Inproper input to lbfgs_.");
       }
     }
     else if(iflag==0)
     {
+      cout << "iflag = 0, opt params not assigned!" << endl;
+      // X.fromArray(Xvals);
+      // setOptParams(X);
       break;
     }
     else if(iflag==1)
     {
       X.fromArray(Xvals);
       setOptParams(X);
+      cout << "log params" << endl << X << endl;
+      cout << "grads" << endl << g << endl;
       funcEval++;
     }
     else
     {
       throw ndlexceptions::Error("Unhandled iflag.");
     }
+  }
+  cout << "log params" << endl << X << endl;
+  if (max(X) > log(1e10)) {
+    cout << "params massive " << endl << X << endl;
+    cout << "grads " << endl << g << endl;
+    cout << "testing" << endl;
+    int asd = 0;
+    asd += 1;
   }
 }
 void COptimisable::scgOptimise()
