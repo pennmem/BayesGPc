@@ -182,6 +182,192 @@ double COptimisable::oneDObjectiveVal(const double val)
   setOptParams(paramStoreOne);
   return objective;
 }
+void COptimisable::lbfgs_b_Optimise()
+{
+  assert(bounds_set);
+  if(getVerbosity()>2)
+  {
+    cout << "Limited Memory Bounded BFGS Optimisation." << endl;
+  }
+  int iters = 0;
+  int maxiters = 1000;
+  int funcEval = 0;
+  int maxFuncEval = 1000;
+  
+  int nParams = getOptNumParams();
+  int iflag = 0;
+  int memSize = 10;  // number of corrections
+  
+  double* Xvals = new double[nParams];
+  double f = 0.0; // function value, not clear whether this is modified within lbgsb
+  double* gvals = new double[nParams]; // gradient, not clear whether this is modified within lbgsb
+  int* nbd = new int[nParams];
+  for (int i = 0; i < nParams; i++) {
+    nbd[i] = 2;
+  }
+  double factr = 1e7; // solution accuracy based on function values
+  double pgtol = 1e-7; // solution accuracy based on gradient values
+  double* work = new double[nParams*(2*memSize + 5) + 12*(memSize + 1)*memSize];  // (2mmax + 5)nmax + 12mmax^2 + 12mmax
+  int* iwa = new int[3*nParams];  // length 3nmax
+  char* task = new char[61];  // length 60, add one character since FORTRAN doesn't null-terminate
+  int iprint;  // verbosity
+  if (getVerbosity() < 2) {iprint = -1;}
+  else if (getVerbosity() <= 3) {iprint = 0;}  // print output info only on the last iteration
+  else if (getVerbosity() <= 5) {iprint = 5;}  // print output info every 5 iterations
+  else if (getVerbosity() > 5) {iprint = 101;}  // print output info on every iteration
+  char* csave = new char[61]; // message, add one character since FORTRAN doesn't null-terminate
+  for (int i = 0; i < 60; i++) {
+    task[i] = ' ';
+    csave[i] = ' ';
+  }
+  task[60] = '\0';
+  csave[60] = '\0';
+  strcpy(task, "START");
+  task[5] = ' ';
+  bool* lsave = new bool[4]; // flags for controlling constraints and other algorithm settings
+  int* isave = new int[44]; // integer array of length 44, contains diagnostic info
+  double* dsave = new double[29]; // working array, length 29
+  int maxls = 20;  // max number of line search iterations
+
+  CMatrix X(1, nParams);
+  CMatrix g(1, nParams);
+  getOptParams(X);
+  f = computeObjectiveGradParams(g);
+  X.toArray(Xvals);
+  g.toArray(gvals);
+  while(true)
+  {
+    setulb_( //how to properly pass arrays to fortran from cpp? when should they be passed by reference vs. with a pointer?
+			nParams,
+			memSize,  // number of corrections
+			Xvals, // length n
+			lower_bounds.getVals(), // length n
+			upper_bounds.getVals(), // length n
+			nbd, // length n, integer flags coding bounds (0: none, 1: lower, 2: both, 3: upper) for each variable
+			f, // function value, not clear whether this is modified within lbgsb
+			gvals, // gradient, not clear whether this is modified within lbgsb
+			factr, // solution accuracy based on function values
+			pgtol, // solution accuracy based on gradient values
+			work, // length (2mmax + 5)nmax + 12mmax^2 + 12mmax
+			iwa, // length 3nmax
+			task,  // length 60
+			iprint,  // verbosity
+			csave, // message
+			lsave, // flags for controlling constraints and other algorithm settings
+			isave, // integer array of length 44, contains diagnostic info
+			dsave, // working array, length 29
+			maxls  // max number of line search iterations
+		);
+    if (getVerbosity() >= 2) { cout << "task " << task << endl; }
+    
+    if (strncmp(task, "FG", 2) == 0) {
+      X.fromArray(Xvals);
+      setOptParams(X);
+      f = computeObjectiveGradParams(g);
+      g.toArray(gvals);
+      funcEval++;
+    }
+    else if (strncmp(task, "NEW_X", 5) == 0) {
+      X.fromArray(Xvals);
+      setOptParams(X);
+      // cout << "log params" << endl << X << endl;
+      // cout << "grads" << endl << g << endl;
+      iters++;
+
+      if (iters >= maxIters) {
+        memset(task, ' ', 60);
+        strcpy(task, "STOP: TOTAL NO. of ITERATIONS REACHED LIMIT");
+      }
+      else if (funcEval >= maxFuncEval) {
+        memset(task, ' ', 60);
+        strcpy(task, "STOP: TOTAL NO. of f AND g EVALUATIONS EXCEEDS LIMIT");
+      }
+    }
+    else if (strncmp(task, "ABNORMAL_TERMINATION_IN_LNSRCH", 30) == 0) {
+      X.fromArray(Xvals);
+      setOptParams(X);
+      // cout << "log params" << endl << X << endl;
+      // cout << "grads" << endl << g << endl;
+      iters++;
+
+      if (iters >= maxIters) {
+        memset(task, ' ', 60);
+        strcpy(task, "STOP: TOTAL NO. of ITERATIONS REACHED LIMIT");
+      }
+      else if (funcEval >= maxFuncEval) {
+        memset(task, ' ', 60);
+        strcpy(task, "STOP: TOTAL NO. of f AND g EVALUATIONS EXCEEDS LIMIT");
+      }
+    }
+    else {
+      break;
+    }
+
+    // TODO implement remaining errors below
+    // from lbfgsOptimise() below this function
+    // if(iflag<=0)
+    // {
+    //   if(iflag==-1)
+    //   {
+    //     cout << "Warning: lbfgsOptimise: linesearch failed." << endl;
+    //     break;
+    //   }
+    //   else if(iflag == -2)
+    //   {
+    //   	throw ndlexceptions::Error("An element of the inverse Hessian provided is not positive.");
+    //   }
+    //   else if(iflag == -3)
+    //   {
+	  //     throw ndlexceptions::Error("Inproper input to lbfgs_.");
+    //   }
+    // }
+    // else if(iflag==0)
+    // {
+    //   cout << "iflag = 0, opt params not assigned!" << endl;
+    //   // X.fromArray(Xvals);
+    //   // setOptParams(X);
+    //   break;
+    // }
+    // else if(iflag==1)
+    // {
+    //   X.fromArray(Xvals);
+    //   setOptParams(X);
+    //   // cout << "log params" << endl << X << endl;
+    //   // cout << "grads" << endl << g << endl;
+    //   funcEval++;
+    // }
+    // else
+    // {
+    //   throw ndlexceptions::Error("Unhandled iflag.");
+    // }
+  }
+  if (strncmp(task, "CONV", 4) == 0) {
+    iflag = 0;
+  }
+  else if (iters >= maxIters || funcEval >= maxFuncEval) {
+    iflag = 1;
+  }
+  else {
+    cout << "setulb error: " << endl << task << endl;
+    throw ndlexceptions::Error("Unhandled error in lfbgsb.");
+  }
+
+  if (max(X) > log(1e10)) {
+    cout << "large log params " << endl << X << endl;
+    cout << "grads " << endl << g << endl;
+  }
+
+  delete[] Xvals;
+  delete[] nbd;
+  delete[] gvals;
+  delete[] work;
+  delete[] iwa;
+  delete[] task;
+  delete[] csave;
+  delete[] lsave;
+  delete[] isave;
+  delete[] dsave;
+}
 void COptimisable::lbfgsOptimise()
 {
   if(getVerbosity()>2)
@@ -247,8 +433,8 @@ void COptimisable::lbfgsOptimise()
       throw ndlexceptions::Error("Unhandled iflag.");
     }
   }
-  cout << "log params" << endl << X << endl;
   if (max(X) > log(1e10)) {
+    cout << "log params" << endl << X << endl;
     cout << "params massive " << endl << X << endl;
     cout << "grads " << endl << g << endl;
     cout << "testing" << endl;

@@ -10,6 +10,7 @@
 #include "CMatrix.h"
 #include "ndlutil.h"
 #include "ndlfortran.h"
+#include "ndlfortran_lbfgsb.h"
 
 // abstract base class for making a class optimisable.
 class COptimisable {
@@ -21,7 +22,8 @@ class COptimisable {
     SCG, 
     GD, 
     BFGS,
-    LBFGS
+    LBFGS,
+    LBFGS_B
   };
   COptimisable()
   {
@@ -72,6 +74,7 @@ class COptimisable {
   void gdPullbackOptimise();
   //void netlabScgOptimise();
   void lbfgsOptimise();
+  void lbfgs_b_Optimise();
   void scgOptimise();
   void cgOptimise();
   //void lineMinimisation(const CMatrix& direction);
@@ -150,12 +153,30 @@ class COptimisable {
   {
     return defaultOptimiser;
   }
+
+  // bounded L-BFGS
+  void setBounds(CMatrix bounds_in) {
+    DIMENSIONMATCH(bounds_in.getCols()==2);
+    bounds_set = true;
+    // shape (n_params, 2) of parameter lower bounds in first column, upper in second
+    bounds.deepCopy(bounds_in);
+    lower_bounds = CMatrix(bounds.getRows(), 1);
+    lower_bounds.copyColCol(0, bounds, 0);
+    upper_bounds = CMatrix(bounds.getRows(), 1);
+    upper_bounds.copyColCol(0, bounds, 1);
+  }
+  CMatrix getbounds() {
+    return bounds;
+  }
+
   void setDefaultOptimiserStr(string val)
   {
     if(val == "conjgrad")
       defaultOptimiser = CG;
     else if(val == "scg")
       defaultOptimiser = SCG;
+    else if(val == "bounded_quasinew")
+      defaultOptimiser = LBFGS_B;
     else if(val == "quasinew")
       defaultOptimiser = BFGS;
     else if(val == "graddesc")
@@ -171,6 +192,8 @@ class COptimisable {
       return "conjgrad";
     case SCG:
       return "scg";
+    case LBFGS_B:
+      return "bounded quasinew";
     case BFGS:
       return "quasinew";
     case GD:
@@ -190,6 +213,9 @@ class COptimisable {
     case SCG:
       scgOptimise();
       break;
+    case LBFGS_B:
+      lbfgs_b_Optimise();
+      break;
     case BFGS:
       lbfgsOptimise();
       break;
@@ -198,7 +224,6 @@ class COptimisable {
       break;
     default:
       throw ndlexceptions::NotImplementedError("Unknown optimisation.");
-      
     }
   }
  private:
@@ -236,6 +261,12 @@ class COptimisable {
   CMatrix direction; // direction for 1-D optimisation.
   CMatrix paramStoreOne;
   CMatrix paramStoreTwo;
+
+  // L-BFGS-B
+  bool bounds_set = false;
+  CMatrix bounds;
+  CMatrix upper_bounds;
+  CMatrix lower_bounds;
 }; 
 
 class CProbabilisticOptimisable : public COptimisable

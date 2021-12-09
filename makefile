@@ -5,7 +5,7 @@
 #  Dec 23, 2008
 # dependencies created with gcc -MM XXX.cpp
 	
-include make.linux
+include make.osx
 
 all: gplvm ivm gp libgp$(LIBSEXT) libgp$(LIBDEXT)
 
@@ -73,7 +73,7 @@ testGp_sklearn.o: testGp_sklearn.cpp CKern.h ndlassert.h ndlexceptions.h CTransf
   CClctrl.h sklearn_util.h
 	$(CC) -c testGp_sklearn.cpp -o testGp_sklearn.o $(CCFLAGS)
 
-testKern_sklearn: testKern_sklearn.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o
+testKern_sklearn: testKern_sklearn.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o
 	$(LD) ${XLINKERFLAGS} -o testKern_sklearn  testKern_sklearn.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o $(LDFLAGS)
 
 testKern_sklearn.o: testKern_sklearn.cpp CKern.h ndlassert.h ndlexceptions.h CTransform.h \
@@ -82,11 +82,11 @@ testKern_sklearn.o: testKern_sklearn.cpp CKern.h ndlassert.h ndlexceptions.h CTr
   CClctrl.h sklearn_util.h
 	$(CC) -c testKern_sklearn.cpp -o testKern_sklearn.o $(CCFLAGS)
 
-testBayesianSearch: testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o ndlassert.o
-	$(LD) ${XLINKERFLAGS} -o testBayesianSearch testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o $(LDFLAGS)
+testBayesianSearch: testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o ndlassert.o
+	$(LD) ${XLINKERFLAGS} -o testBayesianSearch testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o $(LDFLAGS)
 
 testBayesianSearch.o: testBayesianSearch.cpp testBayesianSearch.h CBayesianSearch.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \
-  CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h \
+  CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h ndlfortran_lbfgsb.h \
   lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
   CClctrl.h sklearn_util.h
 	$(CC) -c testBayesianSearch.cpp -o testBayesianSearch.o $(CCFLAGS)
@@ -160,7 +160,7 @@ CTransform.o: CTransform.cpp CTransform.h CMatrix.h ndlassert.h \
 
 COptimisable.o: COptimisable.cpp COptimisable.h CMatrix.h ndlassert.h \
   ndlexceptions.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h \
-  lapack.h
+  lapack.h ndlfortran_lbfgsb.h
 	$(CC) -c COptimisable.cpp -o COptimisable.o $(CCFLAGS)
 
 CDist.o: CDist.cpp CDist.h CMatrix.h ndlassert.h ndlexceptions.h \
@@ -204,8 +204,22 @@ ndlassert.o: ndlassert.cpp ndlassert.h ndlexceptions.h
 ndlfortran.o: ndlfortran.f
 	$(FC) -c ndlfortran.f -o ndlfortran.o $(FCFLAGS)
 
-ndlfortran_lbfgsb.o: ndlfortran_lbfgsb.f ndlfortran_linpack.f ndlfortran_timer.f
+ndlfortran_timer.o: ndlfortran_timer.f
+	$(FC) -c ndlfortran_timer.f -o ndlfortran_timer.o $(FCFLAGS)
+
+ndlfortran_linpack.o: ndlfortran_linpack.f
+	$(FC) -c ndlfortran_linpack.f -o ndlfortran_linpack.o $(FCFLAGS)
+
+# ndlfortran_linpack.f ndlfortran_timer.f
+ndlfortran_lbfgsb.o: ndlfortran_lbfgsb.f
 	$(FC) -c ndlfortran_lbfgsb.f -o ndlfortran_lbfgsb.o $(FCFLAGS)
 
+# compile these fortran files after make clean since they aren't compiling with 
+# other make commands as expected, might be that including a header file [header.h]
+# only signals to link with [head.o] which I'm not currently including for these 
+# fortran files?
 clean:
 	rm *.o
+	make ndlfortran_timer.o
+	make ndlfortran_linpack.o
+

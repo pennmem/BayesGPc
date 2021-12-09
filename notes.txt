@@ -18,8 +18,15 @@ Latin hypercube sampling, orthogonal sampling
 
 update slides for meeting with Dan
 
+got L-BFGS-B in place, testing
+random testBayesianSearch processes running in background, don't seem like additional processes?
+
 
 Installation notes:
+
+Mac build requires Xcode version 12.05 (newer versions broke the build)
+
+look into version packaging for reproducibility
 
 cnpy (for loading ndarrays from Python), could replace with h5
     Linux, Mac: install from source

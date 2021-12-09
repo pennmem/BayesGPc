@@ -71,8 +71,8 @@ class TestFunction {
         // gives two global maxima (peaks with equal heights)
         if (x_dim != 1) {
           cout << "Warning: 'sin' test function requires x_dim=1. Overriding user given value." << endl;
+            x_dim = 1;
         }
-        x_dim = 1;
         x_interval = CMatrix(x_dim, 2);
         y_interval = CMatrix(1, 2);
         x_interval(0, 0) = 3;
@@ -119,8 +119,8 @@ class TestFunction {
         // Test functions used in PS4
         if (x_dim != 1) {
           cout << "Warning: 'PS4_X' test functions require x_dim=1. Overriding user given value." << endl;
+            x_dim = 1;
         }
-        x_dim = 1;
         x_interval = CMatrix(x_dim, 2);
         y_interval = CMatrix(1, 2);
         for (int i=0; i<x_dim; i++) {
@@ -185,8 +185,8 @@ class TestFunction {
       else if (name.compare("hartmann4d") == 0) {
         if (x_dim != 4) {
           cout << "Warning: 'hartmann4d' test function requires x_dim=4. Overriding user given value." << endl;
+          x_dim = 4;
         }
-        x_dim = 4;
         x_interval = CMatrix(x_dim, 2);
         y_interval = CMatrix(1, 2);
         for (int i=0; i<x_dim; i++) {
