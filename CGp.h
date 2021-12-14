@@ -381,6 +381,7 @@ public:
   bool backConstrained;
 
   double obsNoiseVar;
+  mutable double obsNoiseVarScaled;  // descaled observation noise variance
 
   mutable CMatrix m;  // descaled and debiased Y
   mutable CMatrix Alpha; // SVM style 'alphas'.

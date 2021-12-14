@@ -73,8 +73,6 @@ CMatrix* BayesianSearchModel::get_next_sample() {
         if (gp != nullptr) {delete gp;}
         // want persistent access to model after fitting and getting next sample in order to fit new model
 
-        // will this object be persistent? will it be destroyed?
-
         // TODO move model set up to separate function, only set up function once after first sample
         if (noiseInit != nullptr) {delete noiseInit;}
         noiseInit = new CGaussianNoise(y_samples);

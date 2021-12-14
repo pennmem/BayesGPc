@@ -4,10 +4,49 @@ decide on set of initial tests and metrics for tuning algorithm and for achievin
 get better notetaking system in place
 get tests running on Rhino
 logging (use Elemem logger)
+    make full logger and logger with just test results, 
+    put arguments on top of both and/or , 
+    make separate directory for each test, standard file structure inside
+    put main arguments in directory name, others put in files and in arg config file
+add timing tests
+clean up getNextSample(), remove use of "new" if possible (I couldn't tell James why I did this, but I think
+    I remember something in CGp failing when I tried that more direct approach)
+implement one-sample update function, test runtime
+
+need to deal with degenerate fitting scenarios, either select kernel HP ranges that won't result in trivial values
+    (maybe a bad idea?), take best estimate (one with highest "reasonable" max) over final five sample updates, or
+    perturb the samples with noise to try to shake out of degenerate local optima
+
+get standard run scripts in place for running core experiments with all functions (with appropriate numbers of runs)
+    all noise levels of interest, all main hyperparameter settings
+
+observation noise is currently entered into BayesianSearchModel scaled down by range of input function
+    while rest of API assumes that rescaling is handled internally
+
+find another implementation to compare performance against
+    also compare against L-BFGS without bounding, which seemed potentially qualitatively different, 
+        could handle errors differently if needed
+
+    add metrics of sample density, seems like current Bayesian search scheme fixates too early
+        might have issues with current best being driven by noise? might want to look into Ax scheme for handling this,
+        although it used Monte Carlo sampling which we likely can't rely on for computational reasons
+    
+    tune the kernel hyperparameters with a standard script
+
+    get two more standard optimization benchmark functions
+
+    check what sciopt implementation is doing, might be suboptimal
+
+    add uniform random sampling search process on top of GP for comparison
+    get standard implementation of Bayesian search
+    try differential evolution and other global optimization algorithms that handle noisy observations
+
+
+
 
 finish testing/debugging
 get VS Code Git integration in place
-Windows build
+Windows build, check in with Ryan about Windows 10 compatibility
 clean up deletion and recreation of models upon sampling new points
 test 1-sample update to Cholesky decomposition
     will only work if hyperparameters are fixed between updates... may be okay, particularly once many samples are collected,
@@ -15,6 +54,10 @@ test 1-sample update to Cholesky decomposition
 implement discrete variable/location selection scheme, talk to Mike about it, look at other papers
 integration with Elemem
 Latin hypercube sampling, orthogonal sampling
+    could just use Bayesian search with observation values set to zero on top of a 
+    small initial set of random samples (like 3 samples) or else with some small random sampling perturbation
+    then sampling would be biased toward regions with low sample density, producing uniform samples with less
+    clustering of samples
 
 update slides for meeting with Dan
 

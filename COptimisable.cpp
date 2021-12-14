@@ -286,18 +286,11 @@ void COptimisable::lbfgs_b_Optimise()
     else if (strncmp(task, "ABNORMAL_TERMINATION_IN_LNSRCH", 30) == 0) {
       X.fromArray(Xvals);
       setOptParams(X);
-      // cout << "log params" << endl << X << endl;
-      // cout << "grads" << endl << g << endl;
+      cout << endl << task << endl << "Numbers of iterations: " << iters << endl;
+      cout << "log params" << endl << X << endl;
+      cout << "grads" << endl << g << endl << endl;
       iters++;
-
-      if (iters >= maxIters) {
-        memset(task, ' ', 60);
-        strcpy(task, "STOP: TOTAL NO. of ITERATIONS REACHED LIMIT");
-      }
-      else if (funcEval >= maxFuncEval) {
-        memset(task, ' ', 60);
-        strcpy(task, "STOP: TOTAL NO. of f AND g EVALUATIONS EXCEEDS LIMIT");
-      }
+      break;
     }
     else {
       break;
@@ -346,6 +339,9 @@ void COptimisable::lbfgs_b_Optimise()
   }
   else if (iters >= maxIters || funcEval >= maxFuncEval) {
     iflag = 1;
+  }
+  else if (strncmp(task, "ABNORMAL_TERMINATION_IN_LNSRCH", 30) == 0) {
+    iflag = 2;
   }
   else {
     cout << "setulb error: " << endl << task << endl;

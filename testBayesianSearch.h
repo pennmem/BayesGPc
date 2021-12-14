@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include "CBayesianSearch.h"
 #include <cmath>
+#include <ctime>
 #include <random>
 #include <cassert>
 #include <matplot/matplot.h>
@@ -33,6 +34,7 @@ int testBayesianSearch(string kernel,
                        double noise_level=0.3,
                        double exp_bias_ratio=0.1,
                        int verbosity=0,
+                       bool full_time_test=false,
                        bool plotting=false);
 
 class TestFunction {
@@ -44,6 +46,7 @@ class TestFunction {
     CMatrix x_interval;
     CMatrix y_interval;
     double noise_level = 0.3;
+    double noise_std;
     double y_sol;
     int verbosity;
 
@@ -62,7 +65,8 @@ class TestFunction {
       x_dim = x_dim_temp;
       default_random_engine e(seed);
       _init();
-      dist = normal_distribution(0.0, noise_level * (y_interval(1) - y_interval(0)));
+      noise_std = noise_level * (y_interval(1) - y_interval(0));
+      dist = normal_distribution(0.0, noise_std);
     }
 
     void _init() {
@@ -138,17 +142,17 @@ class TestFunction {
         }
         // multi-modal with different length scales of 
         // underlying functions: clear modes with long-term trend across domain
-        else if (name.compare("PS4_2")) {
+        else if (name.compare("PS4_2") == 0) {
           y_interval(0) = 0.211798;
           y_interval(1) = 1.4019;
         }
         // small-scale quadratic
-        else if (name.compare("PS4_3")) {
+        else if (name.compare("PS4_3") == 0) {
           y_interval(0) = -0.000783627;
           y_interval(1) = 0.101074;
         }
         // sin(10x)
-        else if (name.compare("PS4_4")) {
+        else if (name.compare("PS4_4") == 0) {
           y_interval(0) = -1;
           y_interval(1) = 1;
         }
@@ -318,6 +322,11 @@ class TestFunction {
     double solution_error(const CMatrix& x_best) {
       // solution error is relative error of the objective value at the search solution
       // normalized by the output range
+    //   cout << "x_best: " << endl << x_best << endl;
+    //   cout << "func val: " << func(x_best, false)(0, 0) << endl;
+    //   cout << "func val: " << func(x_best, false) << endl;
+    //   cout << "numerator: " << y_sol - func(x_best, false)(0, 0) << endl;
+    //   cout << "denominator: " << y_interval(1) - y_interval(0) << endl;
       double error = (y_sol - func(x_best, false)(0, 0))/(y_interval(1) - y_interval(0));
       return error;
     }
@@ -356,8 +365,8 @@ class TestFunction {
         if (verbosity >= 1) optim_settings.print_level -= 1;
         optim_settings.vals_bound = true;
         // optim_settings.iter_max = 15;  // doesn't seem to control anything with DE
-        optim_settings.rel_objfn_change_tol = 1e-05;
-        optim_settings.rel_sol_change_tol = 1e-05;
+        optim_settings.rel_objfn_change_tol = 1e-06;
+        optim_settings.rel_sol_change_tol = 1e-06;
 
         optim_settings.de_settings.n_pop = 1000 * x_dim;
         optim_settings.de_settings.n_gen = 1000 * x_dim;
@@ -459,5 +468,20 @@ void plot_BO_state(const BayesianSearchModel& BO, const CMatrix& x_plot, const C
   lgd->location(legend::general_alignment::topleft);
   xlabel("x");
   title("Bayesian Search");
+  show();
+}
+
+void plot_BO_sample_times(const CMatrix sample_times, const string func_name) {
+  // CMatrix(n_runs, n_iterations) sample_times contains update times for each 
+  // sample for each search run of function func_name
+  CMatrix mean_sample_times = meanCol(sample_times);
+  DIMENSIONMATCH(mean_sample_times.getRows() == 1);
+  std::vector<double> sample_times_vec(mean_sample_times.getVals(), 
+                                       mean_sample_times.getVals() + mean_sample_times.getNumElements());
+  plot(sample_times_vec, "b");
+  xlabel("Sample iteration");
+  ylabel("Sample update runtime (s)");
+  title("Sample update times for function " + func_name + 
+        " with " + to_string(sample_times.getRows()) + " runs");
   show();
 }

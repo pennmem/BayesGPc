@@ -16,14 +16,15 @@ int main(int argc, char* argv[])
   {
     // default test arguments
     string kern_arg = "matern32";  // not currently used. Kernel is hard coded to matern32 + white
-    string test_func_arg = "hartmann4d";
-    int n_runs=50;
+    string test_func_arg = "all";
+    int n_runs=25;
     int n_iters=250;
     int n_init_samples=25;
     int x_dim = 1;
     double noise_level=0.1;
     double exp_bias_ratio=0.25;
     int verbosity=1;
+    bool full_time_test=false;
     bool plotting=false;
 
     // left in place if needed for future test arguments
@@ -47,7 +48,7 @@ int main(int argc, char* argv[])
           command.incrementArgument();
           n_iters = std::stoi(command.getCurrentArgument());
         }
-        if (command.isCurrentArg("-t", "--init_samples")) {
+        if (command.isCurrentArg("-s", "--init_samples")) {
           command.incrementArgument();
           n_init_samples = std::stoi(command.getCurrentArgument());
         }
@@ -63,6 +64,10 @@ int main(int argc, char* argv[])
           command.incrementArgument();
           exp_bias_ratio = std::stod(command.getCurrentArgument());
         }
+        // whether to plot timing results (and to not plot BO state) if plotting is on
+        if (command.isCurrentArg("-t", "--timed")) {
+          full_time_test = true;
+        }
         if (command.isCurrentArg("-v", "--verbosity")) {
           command.incrementArgument();
           verbosity = std::stoi(command.getCurrentArgument());
@@ -72,18 +77,21 @@ int main(int argc, char* argv[])
         }
         command.incrementArgument();
       }
-      fail += testBayesianSearch(kern_arg, 
-                            test_func_arg,
-                            n_runs,
-                            n_iters,
-                            n_init_samples,
-                            x_dim,
-                            noise_level,
-                            exp_bias_ratio,
-                            verbosity,
-                            plotting);
+      if (test_func_arg.compare("all") != 0) {
+        fail += testBayesianSearch(kern_arg, 
+                              test_func_arg,
+                              n_runs,
+                              n_iters,
+                              n_init_samples,
+                              x_dim,
+                              noise_level,
+                              exp_bias_ratio,
+                              verbosity,
+                              full_time_test,
+                              plotting);
+      }
     }
-    else {
+    if (test_func_arg.compare("all") == 0) {
       // fail += testBayesianSearch(kern_arg, 
       //                           "sin",
       //                           n_runs,
@@ -93,6 +101,7 @@ int main(int argc, char* argv[])
       //                           noise_level,
       //                           exp_bias_ratio,
       //                           verbosity,
+      //                           full_time_test,
       //                           plotting);
       // fail += testBayesianSearch(kern_arg, 
       //                           "quadratic",
@@ -103,6 +112,7 @@ int main(int argc, char* argv[])
       //                           noise_level,
       //                           exp_bias_ratio,
       //                           verbosity,
+      //                           full_time_test,
       //                           plotting);
       // fail += testBayesianSearch(kern_arg, 
       //                           "quadratic_over_edge",
@@ -113,6 +123,7 @@ int main(int argc, char* argv[])
       //                           noise_level,
       //                           exp_bias_ratio,
       //                           verbosity,
+      //                           full_time_test,
       //                           plotting);
       // fail += testBayesianSearch(kern_arg, 
       //                           "PS4_1",
@@ -123,6 +134,7 @@ int main(int argc, char* argv[])
       //                           noise_level,
       //                           exp_bias_ratio,
       //                           verbosity,
+      //                           full_time_test,
       //                           plotting);
       fail += testBayesianSearch(kern_arg, 
                                 "PS4_2",
@@ -133,6 +145,7 @@ int main(int argc, char* argv[])
                                 noise_level,
                                 exp_bias_ratio,
                                 verbosity,
+                                full_time_test,
                                 plotting);
       fail += testBayesianSearch(kern_arg, 
                                 "PS4_3",
@@ -143,6 +156,7 @@ int main(int argc, char* argv[])
                                 noise_level,
                                 exp_bias_ratio,
                                 verbosity,
+                                full_time_test,
                                 plotting);
       fail += testBayesianSearch(kern_arg, 
                                 "PS4_4",
@@ -153,6 +167,18 @@ int main(int argc, char* argv[])
                                 noise_level,
                                 exp_bias_ratio,
                                 verbosity,
+                                full_time_test,
+                                plotting);
+      fail += testBayesianSearch(kern_arg,
+                                "schwefel",
+                                n_runs,
+                                n_iters,
+                                n_init_samples,
+                                1,
+                                noise_level,
+                                exp_bias_ratio,
+                                verbosity,
+                                full_time_test,
                                 plotting);
       fail += testBayesianSearch(kern_arg,
                                 "schwefel",
@@ -163,6 +189,7 @@ int main(int argc, char* argv[])
                                 noise_level,
                                 exp_bias_ratio,
                                 verbosity,
+                                full_time_test,
                                 plotting);
       fail += testBayesianSearch(kern_arg,
                                 "schwefel",
@@ -173,6 +200,7 @@ int main(int argc, char* argv[])
                                 noise_level,
                                 exp_bias_ratio,
                                 verbosity,
+                                full_time_test,
                                 plotting);
       fail += testBayesianSearch(kern_arg,
                                 "schwefel",
@@ -183,6 +211,7 @@ int main(int argc, char* argv[])
                                 noise_level,
                                 exp_bias_ratio,
                                 verbosity,
+                                full_time_test,
                                 plotting);
       fail += testBayesianSearch(kern_arg,
                                 "hartmann4d",
@@ -193,6 +222,7 @@ int main(int argc, char* argv[])
                                 noise_level,
                                 exp_bias_ratio,
                                 verbosity,
+                                full_time_test,
                                 plotting);
     }
 
@@ -224,6 +254,7 @@ int testBayesianSearch(string kernel,
                        double noise_level,
                        double exp_bias_ratio,
                        int verbosity,
+                       bool full_time_test,
                        bool plotting
 )
 {
@@ -260,7 +291,7 @@ int testBayesianSearch(string kernel,
 
   double exp_bias = exp_bias_ratio;
   // assume we know observation noise to some precision
-  double obsNoise = 0.5 * noise_level;
+  double obsNoise = 0.5 * test.noise_std;
 
   x_dim = test.x_dim;
 
@@ -285,7 +316,7 @@ int testBayesianSearch(string kernel,
     kern.addKern(whitek);
     // getSklearnKernels(&kern, npz_dict, &X, true);
 
-    BayesianSearchModel BO(kern, &test.x_interval, obsNoise, exp_bias, n_init_samples, seed, verbosity);
+    BayesianSearchModel BO(kern, &test.x_interval, obsNoise * obsNoise, exp_bias, n_init_samples, seed, verbosity);
 
     CMatrix x;
     CMatrix y;
@@ -298,10 +329,14 @@ int testBayesianSearch(string kernel,
     CMatrix y_pred(n_plot, 1);
     CMatrix std_pred(n_plot, 1);
 
+    clock_t start = clock();
+    clock_t sample_update_start;
     for (int i = 0; i<n_iters; i++) {
+      sample_update_start = clock();
       CMatrix* x_sample = BO.get_next_sample();
       CMatrix* y_sample = new CMatrix(test.func(*x_sample));
       BO.add_sample(*x_sample, *y_sample);
+      sample_times(run, i) = (double)(clock() - sample_update_start)/CLOCKS_PER_SEC;
 
       if (plotting && (verbosity >= 2) && (i > n_init_samples)) {
         BO.get_next_sample();
@@ -311,8 +346,9 @@ int testBayesianSearch(string kernel,
         }
       }
     }
+    run_times(run) = (double)(clock() - start)/CLOCKS_PER_SEC;
 
-    // FIXME needed for now with janky way I'm deleting CGP gp and CNoise attributes to allow for updating with new 
+    // FIXME needed for now with janky way I'm deleting CGp gp and CNoise attributes to allow for updating with new 
     // samples
     CMatrix* x_sample = BO.get_next_sample();
     CMatrix* y_sample = new CMatrix(test.func(*x_sample));
@@ -321,12 +357,13 @@ int testBayesianSearch(string kernel,
     CMatrix* x_best = BO.get_best_solution();
     search_rel_errors(run) = test.solution_error(*x_best);
     cout << "Relative error for run " << run << ": " << search_rel_errors(run) << endl;
+    cout << "Run time (s): " << run_times(run) << endl;
     if (search_rel_errors(run) < max_pass_error) {
       failures += 1;
     }
 
     // plotting
-    if (plotting && x_dim == 1) {
+    if (plotting && x_dim == 1 && !full_time_test) {
       BO.gp->out(y_pred, std_pred, x);
       plot_BO_state(BO, x, y, y_pred, std_pred, x_sample, y_sample);
     }
@@ -335,7 +372,13 @@ int testBayesianSearch(string kernel,
   double pass_prob = ((double)failures)/((double)n_runs);
   double mean_rel_error_runs = meanCol(search_rel_errors).getVal(0);
   cout << "Proportion of runs passed for " << test_func_str << " with x_dim " << x_dim << ": " << pass_prob << endl;
-  cout << "Mean relative error for " << n_runs << " runs: " << mean_rel_error_runs << endl << endl;
+  cout << "Mean relative error for " << n_runs << " runs: " << mean_rel_error_runs << endl;
+  cout << "Average run time (s): " << meanCol(run_times)(0) << endl;
+  cout << "Average max sample update time (s): " << meanCol(sample_times)(sample_times.getCols() - 1) << endl;
+  cout << endl;
+
+  if (full_time_test && plotting) { plot_BO_sample_times(sample_times, test_func_str); }
+
   if (pass_prob < min_pass_prob) {
     fail += 1;
   }

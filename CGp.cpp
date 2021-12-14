@@ -262,7 +262,7 @@ void CGp::updateScale() const
 
 void CGp::updateM() const 
 {
-  if(!isMupToDate()) 
+  if(!isMupToDate())
   {
     updateBias();
     if (!isOutputScaleLearnt()) {
@@ -274,6 +274,10 @@ void CGp::updateM() const
       m.addCol(i, -bias.getVal(i));
       m.scaleCol(i, 1/scale.getVal(i));
     }
+    if (getOutputDim() > 1) {
+      cout << "Warning: observation noise scaling performed with output dimension 0 for multi-dimensional outputs." << endl;
+    }
+    obsNoiseVarScaled = obsNoiseVar/(scale.getVal(0) * scale.getVal(0));
     setMupToDate(true);
   }
 }
@@ -735,7 +739,7 @@ void CGp::_updateK() const
       // could be made multi-threaded.
       for(unsigned int i=0; i<getNumData(); i++) 
       {
-        K.setVal(pkern->diagComputeElement(*pX, i) + obsNoiseVar, i, i);
+        K.setVal(pkern->diagComputeElement(*pX, i) + obsNoiseVarScaled, i, i);
         for(unsigned int j=0; j<i; j++) 
         {
           kVal=pkern->computeElement(*pX, i, *pX, j);
@@ -753,7 +757,7 @@ void CGp::_updateK() const
       // could be made multi-threaded.
       for(unsigned int i=0; i<numActive; i++) 
       {
-        K_uu.setVal(pkern->diagComputeElement(X_u, i) + obsNoiseVar, i, i);
+        K_uu.setVal(pkern->diagComputeElement(X_u, i) + obsNoiseVarScaled, i, i);
         for(unsigned int j=0; j<i; j++) 
         {
           kVal=pkern->computeElement(X_u, i, X_u, j);
