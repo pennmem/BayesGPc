@@ -289,8 +289,11 @@ int testBayesianSearch(string kernel,
   test.get_func_optimum(false);
   test.verbosity = verbosity;
 
-  double exp_bias = exp_bias_ratio;
-  // assume we know observation noise to some precision
+  // normalize exploration bias by output range of test function
+  // output range unknown for clinical use case but can be bounded and estimated
+  double exp_bias = exp_bias_ratio * test.range;
+
+  // assume we know observation noise to some precision; white noise kernel able to adjust for additional noise
   double obsNoise = 0.5 * test.noise_std;
 
   x_dim = test.x_dim;

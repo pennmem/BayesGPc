@@ -16,18 +16,16 @@ implement one-sample update function, test runtime
 need to deal with degenerate fitting scenarios, either select kernel HP ranges that won't result in trivial values
     (maybe a bad idea?), take best estimate (one with highest "reasonable" max) over final five sample updates, or
     perturb the samples with noise to try to shake out of degenerate local optima
+    seems like algorithm either grabs onto an optimum early and converges to a non-trivial HP set or else just finds a degenerate HP set and randomly samples everywhere
 
 get standard run scripts in place for running core experiments with all functions (with appropriate numbers of runs)
     all noise levels of interest, all main hyperparameter settings
-
-observation noise is currently entered into BayesianSearchModel scaled down by range of input function
-    while rest of API assumes that rescaling is handled internally
 
 find another implementation to compare performance against
     also compare against L-BFGS without bounding, which seemed potentially qualitatively different, 
         could handle errors differently if needed
 
-    add metrics of sample density, seems like current Bayesian search scheme fixates too early
+    add metrics of sample density/entropy, seems like current Bayesian search scheme fixates too early
         might have issues with current best being driven by noise? might want to look into Ax scheme for handling this,
         although it used Monte Carlo sampling which we likely can't rely on for computational reasons
     
@@ -41,7 +39,7 @@ find another implementation to compare performance against
     get standard implementation of Bayesian search
     try differential evolution and other global optimization algorithms that handle noisy observations
 
-
+confirm whether "new sample" should be "new sample" or actually "next sample" 
 
 
 finish testing/debugging

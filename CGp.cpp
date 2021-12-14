@@ -97,6 +97,7 @@ void CGp::_init()
   setName("Gaussian process");
   setOutputScaleLearnt(false);
   setOutputBiasLearnt(false);
+  setObsNoiseVar(0.0);
   jitter = 1e-6;
   inducingFixed=false;
   spherical=true;
@@ -1642,8 +1643,10 @@ void CGp::display(ostream& os) const
   cout << "Bias learnt: " << isOutputBiasLearnt() << endl;
   cout << "Scales learnt: " << isOutputScaleLearnt() << endl;
   cout << "X learnt: " << isOptimiseX() << endl;
-  cout << "Bias: " << bias << endl;
-  cout << "Scale: " << scale << endl;
+  cout << "Bias: " << bias;
+  cout << "Scale: " << scale;
+  cout << "Observation noise: " << obsNoiseVar << endl;
+  cout << "Scaled observation noise: " << obsNoiseVarScaled << endl;
   pnoise->display(os);
   pkern->display(os);
   if(isSparseApproximation()) {
@@ -1652,6 +1655,7 @@ void CGp::display(ostream& os) const
   }
   if(py && pX)
     cout << "Log likelihood: " << logLikelihood() << endl;
+  cout << endl;
 }
 
 void CGp::readParamsFromStream(istream& in)

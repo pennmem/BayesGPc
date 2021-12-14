@@ -45,6 +45,7 @@ class TestFunction {
     int x_dim;
     CMatrix x_interval;
     CMatrix y_interval;
+    double range;
     double noise_level = 0.3;
     double noise_std;
     double y_sol;
@@ -65,7 +66,7 @@ class TestFunction {
       x_dim = x_dim_temp;
       default_random_engine e(seed);
       _init();
-      noise_std = noise_level * (y_interval(1) - y_interval(0));
+      noise_std = noise_level * range;
       dist = normal_distribution(0.0, noise_std);
     }
 
@@ -215,6 +216,7 @@ class TestFunction {
       assert(y_interval(1)>=y_interval(0));
       assert(x_interval(1)>=x_interval(0));
       y_sol = y_interval(1);
+      range = y_interval(1) - y_interval(0);
     }
     
     CMatrix func(const CMatrix& x, bool add_noise=true) {
@@ -322,12 +324,7 @@ class TestFunction {
     double solution_error(const CMatrix& x_best) {
       // solution error is relative error of the objective value at the search solution
       // normalized by the output range
-    //   cout << "x_best: " << endl << x_best << endl;
-    //   cout << "func val: " << func(x_best, false)(0, 0) << endl;
-    //   cout << "func val: " << func(x_best, false) << endl;
-    //   cout << "numerator: " << y_sol - func(x_best, false)(0, 0) << endl;
-    //   cout << "denominator: " << y_interval(1) - y_interval(0) << endl;
-      double error = (y_sol - func(x_best, false)(0, 0))/(y_interval(1) - y_interval(0));
+      double error = (y_sol - func(x_best, false)(0, 0))/range;
       return error;
     }
 
