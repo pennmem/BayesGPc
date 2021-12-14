@@ -153,6 +153,9 @@ class COptimisable {
   {
     return defaultOptimiser;
   }
+  int getIter() const {
+    return iter;
+  }
 
   // bounded L-BFGS
   void setBounds(CMatrix bounds_in) {

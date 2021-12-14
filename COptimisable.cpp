@@ -189,10 +189,10 @@ void COptimisable::lbfgs_b_Optimise()
   {
     cout << "Limited Memory Bounded BFGS Optimisation." << endl;
   }
-  int iters = 0;
-  int maxiters = 1000;
+
+  int maxiters = 50;
   int funcEval = 0;
-  int maxFuncEval = 1000;
+  int maxFuncEval = 10000;
   
   int nParams = getOptNumParams();
   int iflag = 0;
@@ -272,9 +272,9 @@ void COptimisable::lbfgs_b_Optimise()
       setOptParams(X);
       // cout << "log params" << endl << X << endl;
       // cout << "grads" << endl << g << endl;
-      iters++;
+      iter++;
 
-      if (iters >= maxIters) {
+      if (iter >= maxIters) {
         memset(task, ' ', 60);
         strcpy(task, "STOP: TOTAL NO. of ITERATIONS REACHED LIMIT");
       }
@@ -286,10 +286,10 @@ void COptimisable::lbfgs_b_Optimise()
     else if (strncmp(task, "ABNORMAL_TERMINATION_IN_LNSRCH", 30) == 0) {
       X.fromArray(Xvals);
       setOptParams(X);
-      cout << endl << task << endl << "Numbers of iterations: " << iters << endl;
+      cout << endl << task << endl << "Numbers of iterations: " << iter << endl;
       cout << "log params" << endl << X << endl;
       cout << "grads" << endl << g << endl << endl;
-      iters++;
+      iter++;
       break;
     }
     else {
@@ -337,7 +337,7 @@ void COptimisable::lbfgs_b_Optimise()
   if (strncmp(task, "CONV", 4) == 0) {
     iflag = 0;
   }
-  else if (iters >= maxIters || funcEval >= maxFuncEval) {
+  else if (iter >= maxIters || funcEval >= maxFuncEval) {
     iflag = 1;
   }
   else if (strncmp(task, "ABNORMAL_TERMINATION_IN_LNSRCH", 30) == 0) {

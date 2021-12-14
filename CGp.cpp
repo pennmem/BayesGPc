@@ -1638,6 +1638,7 @@ void CGp::display(ostream& os) const
   else
     cout << "Standard GP Model: " << endl;
   cout << "Optimiser: " << getDefaultOptimiserStr() << endl;
+  cout << "Number of kernel fitting iterations: " << getIter() << endl;
   cout << "Data Set Size: " << getNumData() << endl;
   cout << "Kernel Type: " << endl;
   cout << "Bias learnt: " << isOutputBiasLearnt() << endl;
