@@ -8,7 +8,8 @@ logging (use Elemem logger)
     put arguments on top of both and/or , 
     make separate directory for each test, standard file structure inside
     put main arguments in directory name, others put in files and in arg config file
-add timing tests
+add warm starts
+add intelligent choices of initializations for kernel HP tuning process
 clean up getNextSample(), remove use of "new" if possible (I couldn't tell James why I did this, but I think
     I remember something in CGp failing when I tried that more direct approach)
 implement one-sample update function, test runtime
