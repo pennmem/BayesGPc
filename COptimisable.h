@@ -11,6 +11,7 @@
 #include "ndlutil.h"
 #include "ndlfortran.h"
 #include "ndlfortran_lbfgsb.h"
+#include <cstring>
 
 // abstract base class for making a class optimisable.
 class COptimisable {

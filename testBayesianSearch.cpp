@@ -1,5 +1,6 @@
 #include "testBayesianSearch.h"
 
+
 class CClgptest : public CClctrl 
 {
  public:
@@ -12,26 +13,33 @@ int main(int argc, char* argv[])
 {
   CClgptest command(argc, argv);
   int fail = 0;
+  CML::EventLog log;
+  string results_dir = "results";
   try
   {
     // default test arguments
-    string kern_arg = "matern32";  // not currently used. Kernel is hard coded to matern32 + white
-    string test_func_arg = "all";
-    int n_runs=25;
-    int n_iters=250;
-    int n_init_samples=25;
-    int x_dim = 1;
-    double noise_level=0.1;
-    double exp_bias_ratio=0.25;
-    int verbosity=1;
-    bool full_time_test=false;
-    bool plotting=false;
+    string tag_arg        = "test";
+    string kern_arg       = "matern32";  // not currently used. Kernel is hard coded to matern32 + white
+    string test_func_arg  = "all";
+    int n_runs            = 25;
+    int n_iters           = 250;
+    int n_init_samples    = 25;
+    int x_dim             = 1;
+    double noise_level    = 0.1;
+    double exp_bias_ratio = 0.25;
+    int verbosity         = 1;
+    bool full_time_test   = false;
+    bool plotting         = false;
+    bool debug            = false;
 
     // left in place if needed for future test arguments
     if (argc > 1) {
       command.setFlags(true);
       while (command.isFlags()) {
         string arg = command.getCurrentArgument();
+        if (command.isCurrentArg("-tag", "--tag")) {
+          tag_arg = command.getCurrentArgument();
+        }
         if (command.isCurrentArg("-k", "--kernel")) {
           command.incrementArgument();
           kern_arg = command.getCurrentArgument();
@@ -75,24 +83,59 @@ int main(int argc, char* argv[])
         if (command.isCurrentArg("-p", "--plot")) {
           plotting = true;
         }
+        if (command.isCurrentArg("-debug", "--debug")) {
+          debug = true;
+        }
         command.incrementArgument();
       }
-      if (test_func_arg.compare("all") != 0) {
-        fail += testBayesianSearch(kern_arg, 
-                              test_func_arg,
-                              n_runs,
-                              n_iters,
-                              n_init_samples,
-                              x_dim,
-                              noise_level,
-                              exp_bias_ratio,
-                              verbosity,
-                              full_time_test,
-                              plotting);
-      }
     }
+    // default test arguments
+    // string tag_arg
+    // string kern_arg = "matern32";  // not currently used. Kernel is hard coded to matern32 + white
+    // string test_func_arg = "all";
+    // int n_runs=25;
+    // int n_iters=250;
+    // int n_init_samples=25;
+    // int x_dim = 1;
+    // double noise_level=0.1;
+    // double exp_bias_ratio=0.25;
+    // int verbosity=1;
+    // bool full_time_test=false;
+    // bool plotting=false;
+
+    // TODO add git commit hash
+    // TODO add date and time
+
+    string log_dir = results_dir + std::filesystem::path::preferred_separator + tag_arg;
+    log_dir += "-func_" + test_func_arg;
+    log_dir += "-dim_" + to_string(x_dim);
+    log_dir += "-kern_" + kern_arg;
+    log_dir += "-runs_" + to_string(n_runs);
+    log_dir += "-iters_" + to_string(n_iters);
+    log_dir += "-init_samp_" + to_string(n_init_samples);
+    log_dir += "-noise_" + to_string(noise_level);
+    log_dir += "-exp_bias_" + to_string(exp_bias_ratio);
+    log_dir += "_" + getDateTime();
+
+    if (PathExists(log_dir)) { throw std::runtime_error("Log directory " + log_dir + " already exists. Aborting test."); }
+    if (std::filesystem::create_directory(log_dir)) { cout << "Made log directory: " << log_dir << endl; }
+    else { throw std::runtime_error("Failed to make log directory. Aborting test."); }
+
+    CML::EventLog log;
+    log.StartFile_Handler(log_dir + std::filesystem::path::preferred_separator + "log.out");
+    log.Log_Handler("Made log file: " + log.get_StartFile() + "\n");
+    // separately log full console output
+    CML::EventLog full_log;
+    if (!debug) {
+      full_log.set_log_console_output(true);
+      full_log.StartFile_Handler(log_dir + std::filesystem::path::preferred_separator + "full_console_log.out");
+    }
+    log.Log_Handler("git reference: " + getGitRefHash() + "\n");
+
+    log.Flush_Handler();
     if (test_func_arg.compare("all") == 0) {
-      // fail += testBayesianSearch(kern_arg, 
+      // fail += testBayesianSearch(log,
+      //                           kern_arg, 
       //                           "sin",
       //                           n_runs,
       //                           n_iters,
@@ -103,7 +146,8 @@ int main(int argc, char* argv[])
       //                           verbosity,
       //                           full_time_test,
       //                           plotting);
-      // fail += testBayesianSearch(kern_arg, 
+      // fail += testBayesianSearch(log,
+      //                           kern_arg, 
       //                           "quadratic",
       //                           n_runs,
       //                           n_iters,
@@ -114,7 +158,8 @@ int main(int argc, char* argv[])
       //                           verbosity,
       //                           full_time_test,
       //                           plotting);
-      // fail += testBayesianSearch(kern_arg, 
+      // fail += testBayesianSearch(log,
+      //                           kern_arg, 
       //                           "quadratic_over_edge",
       //                           n_runs,
       //                           n_iters,
@@ -125,7 +170,8 @@ int main(int argc, char* argv[])
       //                           verbosity,
       //                           full_time_test,
       //                           plotting);
-      // fail += testBayesianSearch(kern_arg, 
+      // fail += testBayesianSearch(log,
+      //                           kern_arg, 
       //                           "PS4_1",
       //                           n_runs,
       //                           n_iters,
@@ -136,7 +182,8 @@ int main(int argc, char* argv[])
       //                           verbosity,
       //                           full_time_test,
       //                           plotting);
-      fail += testBayesianSearch(kern_arg, 
+      fail += testBayesianSearch(log,
+                                kern_arg, 
                                 "PS4_2",
                                 n_runs,
                                 n_iters,
@@ -147,7 +194,8 @@ int main(int argc, char* argv[])
                                 verbosity,
                                 full_time_test,
                                 plotting);
-      fail += testBayesianSearch(kern_arg, 
+      fail += testBayesianSearch(log,
+                                kern_arg, 
                                 "PS4_3",
                                 n_runs,
                                 n_iters,
@@ -158,7 +206,8 @@ int main(int argc, char* argv[])
                                 verbosity,
                                 full_time_test,
                                 plotting);
-      fail += testBayesianSearch(kern_arg, 
+      fail += testBayesianSearch(log,
+                                kern_arg, 
                                 "PS4_4",
                                 n_runs,
                                 n_iters,
@@ -169,7 +218,8 @@ int main(int argc, char* argv[])
                                 verbosity,
                                 full_time_test,
                                 plotting);
-      fail += testBayesianSearch(kern_arg,
+      fail += testBayesianSearch(log,
+                                kern_arg,
                                 "schwefel",
                                 n_runs,
                                 n_iters,
@@ -180,7 +230,8 @@ int main(int argc, char* argv[])
                                 verbosity,
                                 full_time_test,
                                 plotting);
-      fail += testBayesianSearch(kern_arg,
+      fail += testBayesianSearch(log,
+                                kern_arg,
                                 "schwefel",
                                 n_runs,
                                 n_iters,
@@ -191,7 +242,8 @@ int main(int argc, char* argv[])
                                 verbosity,
                                 full_time_test,
                                 plotting);
-      fail += testBayesianSearch(kern_arg,
+      fail += testBayesianSearch(log,
+                                kern_arg,
                                 "schwefel",
                                 n_runs,
                                 n_iters,
@@ -202,7 +254,8 @@ int main(int argc, char* argv[])
                                 verbosity,
                                 full_time_test,
                                 plotting);
-      fail += testBayesianSearch(kern_arg,
+      fail += testBayesianSearch(log,
+                                kern_arg,
                                 "schwefel",
                                 n_runs,
                                 n_iters,
@@ -213,7 +266,8 @@ int main(int argc, char* argv[])
                                 verbosity,
                                 full_time_test,
                                 plotting);
-      fail += testBayesianSearch(kern_arg,
+      fail += testBayesianSearch(log,
+                                kern_arg,
                                 "hartmann4d",
                                 n_runs,
                                 n_iters,
@@ -225,8 +279,23 @@ int main(int argc, char* argv[])
                                 full_time_test,
                                 plotting);
     }
+    else {
+      fail += testBayesianSearch(log,
+                      kern_arg, 
+                      test_func_arg,
+                      n_runs,
+                      n_iters,
+                      n_init_samples,
+                      x_dim,
+                      noise_level,
+                      exp_bias_ratio,
+                      verbosity,
+                      full_time_test,
+                      plotting);
+    }
 
-    cout << "Number of failures: " << fail << "." << endl;
+    log.Log_Handler("Number of failures: " + to_string(fail) + ".");
+    log.CloseFile_Handler();
     command.exitNormal();
   }
   catch(ndlexceptions::Error& err) 
@@ -245,7 +314,8 @@ int main(int argc, char* argv[])
 
 }
 
-int testBayesianSearch(string kernel, 
+int testBayesianSearch(CML::EventLog& log,
+                       string kernel, 
                        string test_func_str,
                        int n_runs,
                        int n_iters,
@@ -259,22 +329,19 @@ int testBayesianSearch(string kernel,
 )
 {
   int fail = 0;
-  // string fileName = "np_files" + ndlstrutil::dirSep() + "testSklearn_gpr_" + kernel + ".npz";
-  // cnpy::npz_t npz_dict = cnpy::npz_load(fileName.c_str());
-  // double* temp = npz_dict["X"].data<double>();
-  // CMatrix X(temp, npz_dict["X"].shape[0], npz_dict["X"].shape[1]);
-
-  // // relative difference tolerance
-  // double tol = 1e-4;
-  // // absolute different tolerance
-  // double abs_tol = 1e-5;
-
-  // CMatrix y(npz_dict["y"].data<double>(), npz_dict["y"].shape[0], npz_dict["y"].shape[1]);
-
-  // TODO test integration of Bayesian search, all functions run
-  // plot results for debugging
-
   int seed = 1234;
+
+  log.Log_Handler("Test function:\t" + test_func_str + "\n");
+  log.Log_Handler("x_dim:\t" + to_string(x_dim) + "\n");
+  log.Log_Handler("Kernel:\t" + kernel + "\n");
+  log.Log_Handler("n_runs:\t" + to_string(n_runs) + "\n");
+  log.Log_Handler("n_iters:\t" + to_string(n_iters) + "\n");
+  log.Log_Handler("n_init_samples:\t" + to_string(n_init_samples) + "\n");
+  log.Log_Handler("Noise level:\t" + to_string(noise_level) + "\n");
+  log.Log_Handler("exp_bias_ratio:\t" + to_string(exp_bias_ratio) + "\n");
+
+  log.Log_Handler("Initial RNG seed:\t" + to_string(seed) + "\n");
+
 
   TestFunction test(test_func_str, seed, noise_level, x_dim, verbosity);
 
@@ -359,8 +426,12 @@ int testBayesianSearch(string kernel,
     // metrics
     CMatrix* x_best = BO.get_best_solution();
     search_rel_errors(run) = test.solution_error(*x_best);
+
     cout << "Relative error for run " << run << ": " << search_rel_errors(run) << endl;
     cout << "Run time (s): " << run_times(run) << endl;
+    // log.Log_Handler("Relative error for run " + to_string(run) + ": " + to_string(search_rel_errors(run)) + "\n");
+    // log.Log_Handler("Run time (s): " + to_string(run_times(run)) + "\n");
+
     if (search_rel_errors(run) < max_pass_error) {
       failures += 1;
     }
@@ -373,12 +444,21 @@ int testBayesianSearch(string kernel,
   }
 
   double pass_prob = ((double)failures)/((double)n_runs);
-  double mean_rel_error_runs = meanCol(search_rel_errors).getVal(0);
-  cout << "Proportion of runs passed for " << test_func_str << " with x_dim " << x_dim << ": " << pass_prob << endl;
-  cout << "Mean relative error for " << n_runs << " runs: " << mean_rel_error_runs << endl;
-  cout << "Average run time (s): " << meanCol(run_times)(0) << endl;
-  cout << "Average max sample update time (s): " << meanCol(sample_times)(sample_times.getCols() - 1) << endl;
-  cout << endl;
+  // performance logging
+  log.Log_Handler("Proportion of runs passed: " + to_string(pass_prob) + "\n");
+  log.Log_Handler("Relative error:\n");
+  log.Log_Handler("Mean +/- STD:\t" + to_string(meanCol(search_rel_errors).getVal(0))
+                  + " +/- " + to_string(stdCol(search_rel_errors).getVal(0)) + "\n");
+  log.Log_Handler("Min:\t\t" + to_string(search_rel_errors.min()) + "\n");
+  log.Log_Handler("Max:\t\t" + to_string(search_rel_errors.max()) + "\n");
+
+  // runtime logging
+  log.Log_Handler("Average run time (s):\t\t" + to_string(meanCol(run_times)(0)) + "\n");
+  log.Log_Handler("Average max sample update time (s):\t" 
+                  + to_string(meanCol(sample_times)(sample_times.getCols() - 1)) + "\n");
+
+  log.Log_Handler("\n");
+  log.Flush_Handler();
 
   if (full_time_test && plotting) { plot_BO_sample_times(sample_times, test_func_str); }
 

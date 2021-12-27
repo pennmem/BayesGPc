@@ -270,8 +270,6 @@ void COptimisable::lbfgs_b_Optimise()
     else if (strncmp(task, "NEW_X", 5) == 0) {
       X.fromArray(Xvals);
       setOptParams(X);
-      // cout << "log params" << endl << X << endl;
-      // cout << "grads" << endl << g << endl;
       iter++;
 
       if (iter >= maxIters) {
@@ -349,8 +347,8 @@ void COptimisable::lbfgs_b_Optimise()
   }
 
   if (max(X) > log(1e10)) {
-    cout << "large log params " << endl << X << endl;
-    cout << "grads " << endl << g << endl;
+    cout << "Warning: large log parameters: " << endl << X << endl;
+    cout << "gradients: " << endl << g << endl;
   }
 
   delete[] Xvals;
@@ -430,12 +428,8 @@ void COptimisable::lbfgsOptimise()
     }
   }
   if (max(X) > log(1e10)) {
-    cout << "log params" << endl << X << endl;
-    cout << "params massive " << endl << X << endl;
-    cout << "grads " << endl << g << endl;
-    cout << "testing" << endl;
-    int asd = 0;
-    asd += 1;
+    cout << "Warning: log parameters massive: " << endl << X << endl;
+    cout << "Gradients: " << endl << g << endl;
   }
 }
 void COptimisable::scgOptimise()

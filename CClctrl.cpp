@@ -210,7 +210,7 @@ void CClctrl::exitNormal()
 void CClctrl::exitError(const string error)
 {
   cerr << error << endl << endl;
-  waitForSpace();
+  // waitForSpace();
   helpInfo();
   exit(1);
 }

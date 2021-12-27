@@ -6,12 +6,19 @@
 #include "cnpy.h"
 #include "sklearn_util.h"
 #include "CNdlInterfaces.h"
+#include "Logger.h"
+#include <algorithm>
 #include <stdexcept>
 #include "CBayesianSearch.h"
 #include <cmath>
 #include <ctime>
 #include <random>
 #include <cassert>
+#include <iostream>
+#include <filesystem>
+#include <ios>
+#include <fstream>
+#include <sys/stat.h>
 #include <matplot/matplot.h>
 using namespace matplot;
 
@@ -22,10 +29,43 @@ using namespace matplot;
 #include <boost/random.hpp>
 
 
+bool PathExists(const std::string &path)
+{
+  struct stat buffer;
+  return (stat(path.c_str(), &buffer) == 0);
+}
+
+std::string getDateTime() {
+  std::time_t t =  std::time(NULL);
+  std::tm tm    = *std::localtime(&t);
+  std::stringstream datetime;
+  datetime << std::put_time(&tm, "%m-%d-%g_%T");
+  return datetime.str();
+}
+
+std::string getGitRefHash() {
+  // open .git/HEAD to get checked out ref path
+  fstream HEAD;
+  HEAD.open( string(".git") + std::filesystem::path::preferred_separator + string("HEAD"), std::ios::in );
+  std::string HEAD_line;
+  std::getline(HEAD, HEAD_line);
+  string ref_path = HEAD_line.substr(HEAD_line.find_first_of(' ') + 1);
+
+  // open current HEAD to get hash
+  fstream ref_file;
+  ref_file.open( string(".git") + std::filesystem::path::preferred_separator + ref_path, std::ios::in );
+  std::string hash;
+  std::getline(ref_file, hash);
+  ref_path.push_back(':');
+  string refHash = ref_path.append(hash);
+  return refHash;
+}
+
 void plot_BO_state(const BayesianSearchModel& BO, const CMatrix& x_plot, const CMatrix& y_plot, 
                    const CMatrix& y_pred, const CMatrix& std_pred, 
                    CMatrix* x_sample, CMatrix* y_sample);
-int testBayesianSearch(string kernel, 
+int testBayesianSearch(CML::EventLog& log,
+                       string kernel, 
                        string test_func_str,
                        int n_runs=25,
                        int n_iters=250,
