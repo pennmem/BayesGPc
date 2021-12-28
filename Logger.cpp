@@ -69,3 +69,35 @@ namespace CML {
     Log.close();
   }
 }
+
+bool PathExists(const std::string &path)
+{
+  struct stat buffer;
+  return (stat(path.c_str(), &buffer) == 0);
+}
+
+std::string getDateTime() {
+  std::time_t t =  std::time(NULL);
+  std::tm tm    = *std::localtime(&t);
+  std::stringstream datetime;
+  datetime << std::put_time(&tm, "%m-%d-%g_%T");
+  return datetime.str();
+}
+
+std::string getGitRefHash() {
+  // open .git/HEAD to get checked out ref path
+  std::fstream HEAD;
+  HEAD.open( std::string(".git") + std::filesystem::path::preferred_separator + std::string("HEAD"), std::ios::in );
+  std::string HEAD_line;
+  std::getline(HEAD, HEAD_line);
+  std::string ref_path = HEAD_line.substr(HEAD_line.find_first_of(' ') + 1);
+
+  // open current HEAD to get hash
+  std::fstream ref_file;
+  ref_file.open( std::string(".git") + std::filesystem::path::preferred_separator + ref_path, std::ios::in );
+  std::string hash;
+  std::getline(ref_file, hash);
+  ref_path.push_back(':');
+  std::string refHash = ref_path.append(hash);
+  return refHash;
+}

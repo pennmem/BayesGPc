@@ -48,6 +48,18 @@ test_optim.o: test_optim.cpp
 Logger.o: Logger.cpp Logger.h
 	$(CC) -c Logger.cpp -o Logger.o $(CCFLAGS)
 
+bayesPlotUtil.o: bayesPlotUtil.cpp bayesPlotUtil.h
+	$(CC) -c bayesPlotUtil.cpp -o bayesPlotUtil.o $(CCFLAGS)
+
+# BayesTestFunction.o: BayesTestFunction.cpp BayesTestFunction.h
+# 	$(CC) -c BayesTestFunction.cpp -o BayesTestFunction.o $(CCFLAGS)
+
+BayesTestFunction.o: BayesTestFunction.cpp BayesTestFunction.h CBayesianSearch.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \
+  CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h ndlfortran_lbfgsb.h \
+  lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
+  CClctrl.h
+	$(CC) -c BayesTestFunction.cpp -o BayesTestFunction.o $(CCFLAGS)
+
 # To compile tests, the MATLAB interface must be enabled (i.e. define _NDLMATLAB)
 tests: testDist testGp testIvm testKern testMatrix testMltools testNdlutil testNoise testTransform  
 
@@ -84,13 +96,13 @@ testKern_sklearn.o: testKern_sklearn.cpp CKern.h ndlassert.h ndlexceptions.h CTr
   CClctrl.h sklearn_util.h
 	$(CC) -c testKern_sklearn.cpp -o testKern_sklearn.o $(CCFLAGS)
 
-testBayesianSearch: testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o ndlassert.o Logger.o
-	$(LD) ${XLINKERFLAGS} -o testBayesianSearch testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o Logger.o $(LDFLAGS)
+testBayesianSearch: testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o ndlassert.o Logger.o bayesPlotUtil.o BayesTestFunction.o
+	$(LD) ${XLINKERFLAGS} -o testBayesianSearch testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o Logger.o bayesPlotUtil.o BayesTestFunction.o $(LDFLAGS)
 
 testBayesianSearch.o: testBayesianSearch.cpp testBayesianSearch.h CBayesianSearch.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \
   CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h ndlfortran_lbfgsb.h \
   lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
-  CClctrl.h sklearn_util.h Logger.h
+  CClctrl.h sklearn_util.h Logger.h bayesPlotUtil.h BayesTestFunction.h
 	$(CC) -c testBayesianSearch.cpp -o testBayesianSearch.o $(CCFLAGS)
 
 testIvm: testIvm.o CIvm.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o

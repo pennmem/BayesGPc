@@ -1,3 +1,6 @@
+#ifndef BAYESIANSEARCH_H
+#define BAYESIANSEARCH_H
+
 #define OPTIM_ENABLE_EIGEN_WRAPPERS
 // #define OPTIM_ENABLE_ARMA_WRAPPERS
 // #define ARMA_DONT_USE_WRAPPER
@@ -81,3 +84,5 @@ double expected_improvement(const CMatrix& x, const CGp& model, double y_b, doub
 // TODO
 // design wrapper around GCp, should really just have sklearn API
 // clean up
+
+#endif

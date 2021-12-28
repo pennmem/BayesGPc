@@ -6,6 +6,8 @@
 #include <ios>
 #include <fstream>
 #include <stdexcept>
+#include <filesystem>
+#include <sys/stat.h>
 
 namespace CML {
   class EventLog {
@@ -31,4 +33,8 @@ namespace CML {
   };
 }
 
-#endif // EVENTLOG_H
+bool PathExists(const std::string &path);
+std::string getDateTime();
+std::string getGitRefHash();
+
+#endif

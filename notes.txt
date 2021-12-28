@@ -1,13 +1,22 @@
 11/23/21
 
-decide on set of initial tests and metrics for tuning algorithm and for achieving an endpoint
 get better notetaking system in place
+    just use more granular Google Docs, go through notes on my todo list, periodically pool ideas from various repositories
+
+finish writing test script
+integrate other kernels
 get tests running on Rhino
-logging (use Elemem logger)
-    make full logger and logger with just test results, 
-    put arguments on top of both and/or , 
-    make separate directory for each test, standard file structure inside
-    put main arguments in directory name, others put in files and in arg config file
+implement reference implementations
+
+get running on Windows
+
+speed up compilation time
+    currently, compilation of testBayesionSearch.o takes ~30 s, linking of testBayesianSearch takes ~20 s
+    if needed, add more granularity to the usage of the header files, try to compile them once in the needed files
+    and nowhere else
+    also look into using .a libraries to reduce compilation redundancy
+
+
 add warm starts
 add intelligent choices of initializations for kernel HP tuning process
 clean up getNextSample(), remove use of "new" if possible (I couldn't tell James why I did this, but I think
@@ -21,6 +30,10 @@ need to deal with degenerate fitting scenarios, either select kernel HP ranges t
 
 get standard run scripts in place for running core experiments with all functions (with appropriate numbers of runs)
     all noise levels of interest, all main hyperparameter settings
+
+decide on set of initial tests and metrics for tuning algorithm and for achieving an endpoint
+    compare against reference implementation (skopt)
+    add two more standard test functions
 
 find another implementation to compare performance against
     also compare against L-BFGS without bounding, which seemed potentially qualitatively different, 

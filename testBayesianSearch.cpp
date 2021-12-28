@@ -89,22 +89,6 @@ int main(int argc, char* argv[])
         command.incrementArgument();
       }
     }
-    // default test arguments
-    // string tag_arg
-    // string kern_arg = "matern32";  // not currently used. Kernel is hard coded to matern32 + white
-    // string test_func_arg = "all";
-    // int n_runs=25;
-    // int n_iters=250;
-    // int n_init_samples=25;
-    // int x_dim = 1;
-    // double noise_level=0.1;
-    // double exp_bias_ratio=0.25;
-    // int verbosity=1;
-    // bool full_time_test=false;
-    // bool plotting=false;
-
-    // TODO add git commit hash
-    // TODO add date and time
 
     string log_dir = results_dir + std::filesystem::path::preferred_separator + tag_arg;
     log_dir += "-func_" + test_func_arg;
