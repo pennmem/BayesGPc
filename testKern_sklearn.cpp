@@ -228,9 +228,9 @@ int testType(const string kernelType)
   {
     throw ndlexceptions::Error("Unrecognised kernel type requested.");
   }
-  kern = getSklearnKernel(&X, npz, kernel_key, param_key, false);
+  kern = getSklearnKernel(X.getCols(), npz, kernel_key, param_key, false);
   // kern2 not used currently
-  // kern2 = getSklearnKernel(&X, npz, kernel_key, param_key, false);
+  // kern2 = getSklearnKernel(X.getCols(), npz, kernel_key, param_key, false);
 
   int fail = testKern(kern, fileName);
   delete kern;

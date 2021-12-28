@@ -1,26 +1,22 @@
-# main test functions across sample noise levels
-nohup ./testBayesianSearch --noise_level 0.1 --exp_bias 0.1 --init_samples 25 > ./results/testAll_initial_lfbgs_bounded_noise01_exp01_init_samps25_fixed_obs_noise_exp_bias.txt 2>&1 &
+# test Bayesian search implementation with main test functions
 
-nohup ./testBayesianSearch --noise_level 0.1 --exp_bias 0.25 --init_samples 25 > ./results/testAll_initial_lfbgs_bounded_noise01_exp025_init_samps25_fixed_obs_noise_exp_bias.txt 2>&1 &
+# $ nohup $(testBayesianSearch.sh) &
 
-nohup ./testBayesianSearch --noise_level 0.1 --exp_bias 0.1 --init_samples 100 > ./results/testAll_initial_lfbgs_bounded_noise01_exp01_init_samps100_fixed_obs_noise_exp_bias.txt 2>&1 &
+kernels=("Matern32" "RBF")
 
-nohup ./testBayesianSearch --noise_level 0.1 --exp_bias 0.25 --init_samples 100 > ./results/testAll_initial_lfbgs_bounded_noise01_exp025_init_samps100_fixed_obs_noise_exp_bias.txt 2>&1 &
-
-
-nohup ./testBayesianSearch --noise_level 0.2 --exp_bias 0.1 --init_samples 25 > ./results/testAll_initial_lfbgs_bounded_noise02_exp01_init_samps25_fixed_obs_noise_exp_bias.txt 2>&1 &
-
-nohup ./testBayesianSearch --noise_level 0.2 --exp_bias 0.25 --init_samples 25 > ./results/testAll_initial_lfbgs_bounded_noise02_exp025_init_samps25_fixed_obs_noise_exp_bias.txt 2>&1 &
-
-nohup ./testBayesianSearch --noise_level 0.2 --exp_bias 0.1 --init_samples 100 > ./results/testAll_initial_lfbgs_bounded_noise02_exp01_init_samps100_fixed_obs_noise_exp_bias.txt 2>&1 &
-
-nohup ./testBayesianSearch --noise_level 0.2 --exp_bias 0.25 --init_samples 100 > ./results/testAll_initial_lfbgs_bounded_noise02_exp025_init_samps100_fixed_obs_noise_exp_bias.txt 2>&1 &
-
-
-nohup ./testBayesianSearch --noise_level 0.3 --exp_bias 0.1 --init_samples 25 > ./results/testAll_initial_lfbgs_bounded_noise03_exp01_init_samps25_fixed_obs_noise_exp_bias.txt 2>&1 &
-
-nohup ./testBayesianSearch --noise_level 0.3 --exp_bias 0.25 --init_samples 25 > ./results/testAll_initial_lfbgs_bounded_noise03_exp025_init_samps25_fixed_obs_noise_exp_bias.txt 2>&1 &
-
-nohup ./testBayesianSearch --noise_level 0.3 --exp_bias 0.1 --init_samples 100 > ./results/testAll_initial_lfbgs_bounded_noise03_exp01_init_samps100_fixed_obs_noise_exp_bias.txt 2>&1 &
-
-nohup ./testBayesianSearch --noise_level 0.3 --exp_bias 0.25 --init_samples 100 > ./results/testAll_initial_lfbgs_bounded_noise03_exp025_init_samps100_fixed_obs_noise_exp_bias.txt 2>&1 &
+noise_levels=(0.0 ) # 0.1 0.3)
+exp_biases=(0.1 ) # 0.25)
+init_samples=(25 ) # 100)
+for k in "${kernels[@]}"
+do
+for n in "${noise_levels[@]}"
+do
+for e in "${exp_biases[@]}"
+do
+for s in "${init_samples[@]}"
+do
+    ./testBayesianSearch --tag run --func sin --noise_level $n --exp_bias $e --init_samples $s --n_runs 2 --kernel $k
+done
+done
+done
+done

@@ -1,14 +1,13 @@
 11/23/21
 
 get better notetaking system in place
-    just use more granular Google Docs, go through notes on my todo list, periodically pool ideas from various repositories
+    use more granular Google Docs, go through notes on my todo list, periodically pool ideas from various repositories
 
-finish writing test script
-integrate other kernels
 get tests running on Rhino
 implement reference implementations
 
 get running on Windows
+may have memory leak?
 
 speed up compilation time
     currently, compilation of testBayesionSearch.o takes ~30 s, linking of testBayesianSearch takes ~20 s

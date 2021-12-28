@@ -8,7 +8,7 @@ CMatrix* readNpzFile(const string fileName, const string variableName)
     return X;
 }
 
-void getSklearnKernels(CCmpndKern *kern, cnpy::npz_t npz_dict, CMatrix *MX, bool structureOnly)
+void getSklearnKernels(CCmpndKern *kern, cnpy::npz_t npz_dict, CMatrix *X, bool structureOnly)
 {
   // create covariance function.
     string key;
@@ -24,24 +24,22 @@ void getSklearnKernels(CCmpndKern *kern, cnpy::npz_t npz_dict, CMatrix *MX, bool
             continue;
         }
 
-        CMatrix *M = 0;
-        M = MX;
         CKern *k;
-        k = getSklearnKernel(M, npz_dict, kernel_key, param_key, structureOnly);
+        k = getSklearnKernel(X->getCols(), npz_dict, kernel_key, param_key, structureOnly);
         kern->addKern(k);
     }
 }
 
-CKern* getSklearnKernel(CMatrix* X, cnpy::npz_t npz_dict, string kernel_key, string param_key, bool structureOnly)
+CKern* getSklearnKernel(unsigned int x_dim, cnpy::npz_t npz_dict, string kernel_key, string param_key, bool structureOnly)
 {
     CKern *kern;
     if(kernel_key.compare("lin") == 0) {
-        kern = new CLinKern(*X);
+        kern = new CLinKern(x_dim);
         if(!structureOnly)
           kern->setParam(*npz_dict[param_key + "__constant_value"].data<double>(), 0);
     }
     else if(kernel_key.compare("RBF") == 0) {
-        kern = new CRbfKern(*X);
+        kern = new CRbfKern(x_dim);
         if(!structureOnly)
         {
             // sklearn encodes length scale rather than inverse width used in CGp
@@ -51,7 +49,7 @@ CKern* getSklearnKernel(CMatrix* X, cnpy::npz_t npz_dict, string kernel_key, str
         }
     }
     else if(kernel_key.compare("RationalQuadratic") == 0) {
-        kern = new CRatQuadKern(*X);
+        kern = new CRatQuadKern(x_dim);
         if(!structureOnly)
         {
             kern->setParam(*npz_dict[param_key + "__alpha"].data<double>(), 0);
@@ -60,7 +58,7 @@ CKern* getSklearnKernel(CMatrix* X, cnpy::npz_t npz_dict, string kernel_key, str
         }
     }
     else if(kernel_key.compare("DotProduct") == 0) {
-        kern = new CPolyKern(*X);
+        kern = new CPolyKern(x_dim);
         if(!structureOnly)
         {
             ((CPolyKern*)kern)->setDegree(*npz_dict[param_key + "__exponent"].data<double>());
@@ -74,12 +72,13 @@ CKern* getSklearnKernel(CMatrix* X, cnpy::npz_t npz_dict, string kernel_key, str
         }
     }
     else if(kernel_key.compare("Matern") == 0) {
+        if (!structureOnly) { throw std::invalid_argument("kernel key 'Matern' must be used with sklearn loading. Use 'Matern32' or 'Matern52' to use without sklearn loading."); }
         double nu = *npz_dict[param_key + "__nu"].data<double>();
         if (nu == 1.5) {
-            kern = new CMatern32Kern(*X);
+            kern = new CMatern32Kern(x_dim);
         }
         else if (nu == 2.5) {
-            kern = new CMatern52Kern(*X);
+            kern = new CMatern52Kern(x_dim);
         }
         else {
             throw std::invalid_argument("Nu value not implemented for Matern kernel: " + std::to_string(nu));
@@ -91,8 +90,24 @@ CKern* getSklearnKernel(CMatrix* X, cnpy::npz_t npz_dict, string kernel_key, str
             kern->setParam(*npz_dict[param_key + "__constant_value"].data<double>(), 1);
         }
     }
+    else if(kernel_key.compare("Matern32") == 0) {
+        kern = new CMatern32Kern(x_dim);
+        if(!structureOnly)
+        {
+            kern->setParam(*npz_dict[param_key + "__length_scale"].data<double>(), 0);
+            kern->setParam(*npz_dict[param_key + "__constant_value"].data<double>(), 1);
+        }
+    }
+    else if(kernel_key.compare("Matern52") == 0) {
+        kern = new CMatern52Kern(x_dim);
+        if(!structureOnly)
+        {
+            kern->setParam(*npz_dict[param_key + "__length_scale"].data<double>(), 0);
+            kern->setParam(*npz_dict[param_key + "__constant_value"].data<double>(), 1);
+        }
+    }
     else if(kernel_key.compare("WhiteKernel") == 0) {
-        kern = new CWhiteKern(*X);
+        kern = new CWhiteKern(x_dim);
         if(!structureOnly)
         {
             kern->setParam(*(npz_dict[param_key + "__noise_level"].data<double>()), 0);

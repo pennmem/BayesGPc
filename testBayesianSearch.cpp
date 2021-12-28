@@ -38,6 +38,7 @@ int main(int argc, char* argv[])
       while (command.isFlags()) {
         string arg = command.getCurrentArgument();
         if (command.isCurrentArg("-tag", "--tag")) {
+          command.incrementArgument();
           tag_arg = command.getCurrentArgument();
         }
         if (command.isCurrentArg("-k", "--kernel")) {
@@ -116,6 +117,7 @@ int main(int argc, char* argv[])
     }
     log.Log_Handler("git reference: " + getGitRefHash() + "\n");
 
+    log.Log_Handler("\n");
     log.Flush_Handler();
     if (test_func_arg.compare("all") == 0) {
       // fail += testBayesianSearch(log,
@@ -326,6 +328,8 @@ int testBayesianSearch(CML::EventLog& log,
 
   log.Log_Handler("Initial RNG seed:\t" + to_string(seed) + "\n");
 
+  log.Log_Handler("\n");
+
 
   TestFunction test(test_func_str, seed, noise_level, x_dim, verbosity);
 
@@ -363,8 +367,10 @@ int testBayesianSearch(CML::EventLog& log,
     cout << "Run " << run << endl;
     seed++;
 
+    cnpy::npz_t npz_dict;
+    CKern* k = getSklearnKernel((unsigned int)x_dim, npz_dict, kernel, std::string(""), true);
     CCmpndKern kern(x_dim);
-    CMatern32Kern* k = new CMatern32Kern(x_dim);
+    // CMatern32Kern* k = new CMatern32Kern(x_dim);
     kern.addKern(k);
     CWhiteKern* whitek = new CWhiteKern(x_dim);
     kern.addKern(whitek);
@@ -425,6 +431,9 @@ int testBayesianSearch(CML::EventLog& log,
       BO.gp->out(y_pred, std_pred, x);
       plot_BO_state(BO, x, y, y_pred, std_pred, x_sample, y_sample);
     }
+
+  delete k;
+  delete whitek;
   }
 
   double pass_prob = ((double)failures)/((double)n_runs);
