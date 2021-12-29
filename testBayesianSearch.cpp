@@ -19,7 +19,9 @@ int main(int argc, char* argv[])
   {
     // default test arguments
     string tag_arg        = "test";
-    string kern_arg       = "matern32";  // not currently used. Kernel is hard coded to matern32 + white
+    // white kernel currently added to user-specified kernel to obtain full kernel
+    // Current options: Matern32, Matern52, RBF, RationalQuadratic, DotProduct, lin (linear kernel)
+    string kern_arg       = "Matern32";
     string test_func_arg  = "all";
     int n_runs            = 25;
     int n_iters           = 250;
@@ -440,8 +442,9 @@ int testBayesianSearch(CML::EventLog& log,
   // performance logging
   log.Log_Handler("Proportion of runs passed: " + to_string(pass_prob) + "\n");
   log.Log_Handler("Relative error:\n");
-  log.Log_Handler("Mean +/- STD:\t" + to_string(meanCol(search_rel_errors).getVal(0))
-                  + " +/- " + to_string(stdCol(search_rel_errors).getVal(0)) + "\n");
+  double rel_error_std = stdCol(search_rel_errors).getVal(0);
+  log.Log_Handler("Mean +/- STD (SEM):\t" + to_string(meanCol(search_rel_errors).getVal(0))
+                  + " +/- " + to_string(rel_error_std) + " (" + to_string(rel_error_std/sqrt((double)n_runs)) + ")\n");
   log.Log_Handler("Min:\t\t" + to_string(search_rel_errors.min()) + "\n");
   log.Log_Handler("Max:\t\t" + to_string(search_rel_errors.max()) + "\n");
 

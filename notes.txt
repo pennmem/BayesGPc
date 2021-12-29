@@ -1,13 +1,15 @@
-11/23/21
-
-get better notetaking system in place
-    use more granular Google Docs, go through notes on my todo list, periodically pool ideas from various repositories
+12/28/21
 
 get tests running on Rhino
+    ask Daniel Utin for ray-tracing function, skopt settings
+    add two more standard test functions
+    look into standard optimization tuning methods, see previously found papers
 implement reference implementations
+tune/debug algorithm
 
 get running on Windows
 may have memory leak?
+integrate into Elemem
 
 speed up compilation time
     currently, compilation of testBayesionSearch.o takes ~30 s, linking of testBayesianSearch takes ~20 s
@@ -55,7 +57,6 @@ find another implementation to compare performance against
 confirm whether "new sample" should be "new sample" or actually "next sample" 
 
 
-finish testing/debugging
 get VS Code Git integration in place
 Windows build, check in with Ryan about Windows 10 compatibility
 clean up deletion and recreation of models upon sampling new points
@@ -69,8 +70,6 @@ Latin hypercube sampling, orthogonal sampling
     small initial set of random samples (like 3 samples) or else with some small random sampling perturbation
     then sampling would be biased toward regions with low sample density, producing uniform samples with less
     clustering of samples
-
-update slides for meeting with Dan
 
 got L-BFGS-B in place, testing
 random testBayesianSearch processes running in background, don't seem like additional processes?
@@ -136,6 +135,7 @@ eigen (matrix algebra library; dependency of optim)
     change line 107 in optim/include/misc/optim_options.hpp to
         #include <[your eigen header library location here, should start with eigen[version number here] in e.g. /usr/local/include]/Eigen/Dense>
     use header-only library, might consider finding way of using BLAS/OpenBLAS
+        ideally would figure out way to install library from headers to reduce compile time
     without intefering with access of BLAS/LAPACK by CGp by pre-compiling for additional performance boost
 
 optim
