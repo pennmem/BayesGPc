@@ -14,11 +14,11 @@ int main(int argc, char* argv[])
   CClgptest command(argc, argv);
   int fail = 0;
   CML::EventLog log;
-  string results_dir = "results";
   try
   {
     // default test arguments
     string tag_arg        = "test";
+    string results_dir = "results";
     // white kernel currently added to user-specified kernel to obtain full kernel
     // Current options: Matern32, Matern52, RBF, RationalQuadratic, DotProduct, lin (linear kernel)
     string kern_arg       = "Matern32";
@@ -42,6 +42,10 @@ int main(int argc, char* argv[])
         if (command.isCurrentArg("-tag", "--tag")) {
           command.incrementArgument();
           tag_arg = command.getCurrentArgument();
+        }
+        if (command.isCurrentArg("-l", "--logdir")) {
+          command.incrementArgument();
+          results_dir = command.getCurrentArgument();
         }
         if (command.isCurrentArg("-k", "--kernel")) {
           command.incrementArgument();
