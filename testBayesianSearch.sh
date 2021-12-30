@@ -22,7 +22,7 @@ if test -d "${LOGDIR}"; then
     echo "Experiment tag '${TAG}' already used. Exiting."
     exit 1
 else 
-    echo ${LOGDIR}
+    echo "Log directory: ${LOGDIR}"
 fi
 
 mkdir $LOGDIR
@@ -51,4 +51,6 @@ done
 done
 done
 
-source parallel_exec.sh ./testBayesianSearch $ARGS_FILE $LOGDIR testBayesianSearch
+curdir=$(pwd)
+echo "pwd: ${curdir}"
+source parallel_exec.sh ${curdir}/testBayesianSearch $ARGS_FILE $LOGDIR testBayesianSearch
