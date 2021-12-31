@@ -43,7 +43,7 @@ for e in "${exp_biases[@]}"
 do
 for s in "${init_samples[@]}"
 do
-    args="--tag ${TAG} --func sin --noise_level ${n} --exp_bias ${e} --init_samples ${s} --n_runs 25 --kernel ${k}"
+    args="--tag ${TAG} --func all --noise_level ${n} --exp_bias ${e} --init_samples ${s} --n_runs 25 --kernel ${k}"
     # nohup ./testBayesianSearch $args &
     echo $args >> $ARGS_FILE
 done
