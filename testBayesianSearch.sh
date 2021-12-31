@@ -31,8 +31,8 @@ touch ARGS_FILE
 
 # arguments
 kernels=("Matern32" "RBF")
-noise_levels=(0.0 ) # 0.1 0.3)
-exp_biases=(0.1 ) # 0.25)
+noise_levels=(0.0 0.1 0.3)
+exp_biases=(0.1 0.25 0.4)
 init_samples=(25 100)
 
 for k in "${kernels[@]}"

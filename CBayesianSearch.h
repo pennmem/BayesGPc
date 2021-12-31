@@ -11,6 +11,7 @@
 #include "CMatrix.h"
 #include "CNoise.h"
 #include <cmath>
+#include <cassert>
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/variate_generator.hpp>

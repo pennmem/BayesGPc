@@ -236,6 +236,7 @@ int testBayesianSearch(CML::EventLog& log,
                        bool plotting
 )
 {
+  assert(n_init_samples < n_iters);
   int fail = 0;
   int seed = 1234;
 

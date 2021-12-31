@@ -11,6 +11,8 @@ get running on Windows
 may have memory leak?
 integrate into Elemem
 
+fix seg fault when init_samples > n_iters (or when n_iters is small?)
+
 speed up compilation time
     currently, compilation of testBayesionSearch.o takes ~30 s, linking of testBayesianSearch takes ~20 s
     if needed, add more granularity to the usage of the header files, try to compile them once in the needed files
