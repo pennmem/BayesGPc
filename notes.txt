@@ -146,6 +146,10 @@ optim
         (obvious bug fix, pull request not made yet)
     ./configure --head-only-version
 
+nlohmann/json
+    cd DEPENDENCY_DIR
+    git clone git@github.com:nlohmann/json.git
+
 
 11/11/21
 

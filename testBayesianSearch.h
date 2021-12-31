@@ -20,9 +20,10 @@
 #include <ctime>
 #include <random>
 #include <cassert>
-
+#include "version.h"
 
 int testBayesianSearch(CML::EventLog& log,
+                       json& json_log,
                        string kernel, 
                        string test_func_str,
                        int n_runs=25,

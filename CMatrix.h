@@ -1331,8 +1331,10 @@ CMatrix varCol(const CMatrix&);
 CMatrix stdCol(const CMatrix&);
 //  Log determinant of a positive definite matrix where U is the Cholesky decomposition of the matrix.
 double logDet(const CMatrix& U);
-  
-    
+
+std::vector<std::vector<double>> to_vector(const CMatrix& x);
+CMatrix from_vector(const std::vector<std::vector<double>>& vec);
+
 // inline void swap(CMatrix& x, CMatrix& y);
 
 CMatrix linspace(double x0, double x1, int n);

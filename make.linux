@@ -37,6 +37,9 @@ MATPLOTLINKFLAG =-L$(DEP_DIR)/matplotplusplus/build/source/matplot/ -lmatplot $(
 
 BOOSTLIB_INCLUDE =-I/usr/local/include/boost_1_77_0
 
+# nlohmann/json
+JSON_INCLUDE_DIRS =-I$(DEP_DIR)/json/single_include
+
 # Uncomment these lines to set up the MATLAB interface.
 #MATLABLIBS = -lmat -lmx
 #MATLABBASE=/usr/local/pkg/matlab/
@@ -50,6 +53,6 @@ INCLUDE = $(MATLABINCLUDE)
 LD=g++
 LDFLAGS = ${LAPACKLIBS} ${F2CLIB} -lc ${MATPLOTLINKFLAG} ${NPYLINKFLAG} -lquadmath -static
 CC=g++
-CCFLAGS = -std=c++17 -ggdb -DDBG -fPIC -I$(INCLUDE) -D$(PLAT) $(MATLABFLAG) $(OPTIMFLAG) $(BOOSTLIB_INCLUDE) ${MATPLOT_INCLUDE_DIRS}
+CCFLAGS = -std=c++17 -ggdb -DDBG -fPIC -I$(INCLUDE) -D$(PLAT) $(MATLABFLAG) $(OPTIMFLAG) $(BOOSTLIB_INCLUDE) ${MATPLOT_INCLUDE_DIRS} $(JSON_INCLUDE_DIRS)
 FC=gfortran
 FCFLAGS = -funroll-all-loops -O3 -fPIC

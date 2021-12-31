@@ -8,6 +8,9 @@
 #include <stdexcept>
 #include <filesystem>
 #include <sys/stat.h>
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 namespace CML {
   class EventLog {
@@ -21,6 +24,8 @@ namespace CML {
       void Log_Handler(const std::string& event);
       void Flush_Handler();
       void CloseFile_Handler();
+
+      json j;
 
     protected:
       bool log_console_output = false;

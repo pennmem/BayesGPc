@@ -102,7 +102,7 @@ testBayesianSearch: testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfo
 testBayesianSearch.o: testBayesianSearch.cpp testBayesianSearch.h CBayesianSearch.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \
   CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h ndlfortran_lbfgsb.h \
   lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
-  CClctrl.h sklearn_util.h Logger.h bayesPlotUtil.h BayesTestFunction.h
+  CClctrl.h sklearn_util.h Logger.h bayesPlotUtil.h BayesTestFunction.h version.h
 	$(CC) -c testBayesianSearch.cpp -o testBayesianSearch.o $(CCFLAGS)
 
 testIvm: testIvm.o CIvm.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o
@@ -227,6 +227,15 @@ ndlfortran_linpack.o: ndlfortran_linpack.f
 # ndlfortran_linpack.f ndlfortran_timer.f
 ndlfortran_lbfgsb.o: ndlfortran_lbfgsb.f
 	$(FC) -c ndlfortran_lbfgsb.f -o ndlfortran_lbfgsb.o $(FCFLAGS)
+
+# version info
+GIT_BRANCH=$(shell git symbolic-ref HEAD)
+GIT_COMMIT=$(shell git describe --always --dirty)
+GIT_URL=$(shell git config --get remote.origin.url)
+version.h: .git/index
+	echo "#define GIT_BRANCH \"$(GIT_BRANCH)\"" > $@
+	echo "#define GIT_COMMIT \"$(GIT_COMMIT)\"" >> $@
+	echo "#define GIT_URL \"$(GIT_URL)\"" >> $@
 
 # compile these fortran files after make clean since they aren't compiling with 
 # other make commands as expected, might be that including a header file [header.h]

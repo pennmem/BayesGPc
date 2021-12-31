@@ -1235,6 +1235,27 @@ void CMatrix::toUnheadedStream(ostream& out) const
     out << endl;
   }
 }
+
+std::vector<std::vector<double>> to_vector(const CMatrix& x) {
+  std::vector<std::vector<double>> vec;
+  for (int i = 0; i < x.getRows(); i++) {
+    vec.push_back(std::vector<double>());
+    for (int j = 0; j < x.getCols(); j++) {
+      vec[i].push_back(x.getVal(i, j));
+    }
+  }
+  return vec;
+}
+CMatrix from_vector(const std::vector<std::vector<double>>& vec) {
+  CMatrix x(vec.size(), vec[0].size());
+  for (int i = 0; i < x.getRows(); i++) {
+    for (int j = 0; j < x.getCols(); j++) {
+      x(i, j) = vec[i][j];
+    }
+  }
+  return x;
+}
+
 #ifdef _NDLMATLAB
 mxArray* CMatrix::toMxArray() const 
 {

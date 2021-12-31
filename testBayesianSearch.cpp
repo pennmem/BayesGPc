@@ -121,158 +121,68 @@ int main(int argc, char* argv[])
       full_log.set_log_console_output(true);
       full_log.StartFile_Handler(log_dir + std::filesystem::path::preferred_separator + "full_console_log.out");
     }
-    log.Log_Handler("git reference: " + getGitRefHash() + "\n");
+    log.Log_Handler(string("git branch:\t") + string(GIT_BRANCH) + string("\n"));
+    log.Log_Handler(string("git commit:\t") + string(GIT_COMMIT) + string("\n"));
+    log.Log_Handler(string("git URL:\t") + string(GIT_URL) + string("\n"));
 
     log.Log_Handler("\n");
     log.Flush_Handler();
+
+    // include json logging for parsing
+    // keep old .txt logging method for now...
+    json config;
+    config["func"] = test_func_arg;
+    config["dim"] = to_string(x_dim);
+    config["kern"] = kern_arg;
+    config["runs"] = to_string(n_runs);
+    config["iters"] = to_string(n_iters);
+    config["init_samp"] = to_string(n_init_samples);
+    config["noise"] = to_string(noise_level);
+    config["exp_bias"] = to_string(exp_bias_ratio);
+    config["datetime"] = getDateTime();
+    config["GIT_BRANCH"] = string(GIT_BRANCH);
+    config["GIT_COMMIT"] = string(GIT_COMMIT);
+    config["GIT_URL"] = string(GIT_URL);
+    ofstream config_file(log_dir + std::filesystem::path::preferred_separator + "config.json");
+    config_file << config.dump(4);
+    config_file.flush();
+
+    json json_log;
+
     if (test_func_arg.compare("all") == 0) {
-      // fail += testBayesianSearch(log,
-      //                           kern_arg, 
-      //                           "sin",
-      //                           n_runs,
-      //                           n_iters,
-      //                           n_init_samples,
-      //                           x_dim,
-      //                           noise_level,
-      //                           exp_bias_ratio,
-      //                           verbosity,
-      //                           full_time_test,
-      //                           plotting);
-      // fail += testBayesianSearch(log,
-      //                           kern_arg, 
-      //                           "quadratic",
-      //                           n_runs,
-      //                           n_iters,
-      //                           n_init_samples,
-      //                           x_dim,
-      //                           noise_level,
-      //                           exp_bias_ratio,
-      //                           verbosity,
-      //                           full_time_test,
-      //                           plotting);
-      // fail += testBayesianSearch(log,
-      //                           kern_arg, 
-      //                           "quadratic_over_edge",
-      //                           n_runs,
-      //                           n_iters,
-      //                           n_init_samples,
-      //                           x_dim,
-      //                           noise_level,
-      //                           exp_bias_ratio,
-      //                           verbosity,
-      //                           full_time_test,
-      //                           plotting);
-      // fail += testBayesianSearch(log,
-      //                           kern_arg, 
-      //                           "PS4_1",
-      //                           n_runs,
-      //                           n_iters,
-      //                           n_init_samples,
-      //                           x_dim,
-      //                           noise_level,
-      //                           exp_bias_ratio,
-      //                           verbosity,
-      //                           full_time_test,
-      //                           plotting);
-      fail += testBayesianSearch(log,
-                                kern_arg, 
-                                "PS4_2",
-                                n_runs,
-                                n_iters,
-                                n_init_samples,
-                                x_dim,
-                                noise_level,
-                                exp_bias_ratio,
-                                verbosity,
-                                full_time_test,
-                                plotting);
-      fail += testBayesianSearch(log,
-                                kern_arg, 
-                                "PS4_3",
-                                n_runs,
-                                n_iters,
-                                n_init_samples,
-                                x_dim,
-                                noise_level,
-                                exp_bias_ratio,
-                                verbosity,
-                                full_time_test,
-                                plotting);
-      fail += testBayesianSearch(log,
-                                kern_arg, 
-                                "PS4_4",
-                                n_runs,
-                                n_iters,
-                                n_init_samples,
-                                x_dim,
-                                noise_level,
-                                exp_bias_ratio,
-                                verbosity,
-                                full_time_test,
-                                plotting);
-      fail += testBayesianSearch(log,
-                                kern_arg,
-                                "schwefel",
-                                n_runs,
-                                n_iters,
-                                n_init_samples,
-                                1,
-                                noise_level,
-                                exp_bias_ratio,
-                                verbosity,
-                                full_time_test,
-                                plotting);
-      fail += testBayesianSearch(log,
-                                kern_arg,
-                                "schwefel",
-                                n_runs,
-                                n_iters,
-                                n_init_samples,
-                                2,
-                                noise_level,
-                                exp_bias_ratio,
-                                verbosity,
-                                full_time_test,
-                                plotting);
-      fail += testBayesianSearch(log,
-                                kern_arg,
-                                "schwefel",
-                                n_runs,
-                                n_iters,
-                                n_init_samples,
-                                3,
-                                noise_level,
-                                exp_bias_ratio,
-                                verbosity,
-                                full_time_test,
-                                plotting);
-      fail += testBayesianSearch(log,
-                                kern_arg,
-                                "schwefel",
-                                n_runs,
-                                n_iters,
-                                n_init_samples,
-                                4,
-                                noise_level,
-                                exp_bias_ratio,
-                                verbosity,
-                                full_time_test,
-                                plotting);
-      fail += testBayesianSearch(log,
-                                kern_arg,
-                                "hartmann4d",
-                                n_runs,
-                                n_iters,
-                                n_init_samples,
-                                x_dim,
-                                noise_level,
-                                exp_bias_ratio,
-                                verbosity,
-                                full_time_test,
-                                plotting);
+      vector<std::pair<std::string, int>> funcs{
+                          //  {"sin", 1},
+                          //  {"quadratic", 1},
+                          //  {"quadratic_over_edge", 1},
+                          //  {"PS4_1", 1},
+                          //  {"PS4_2", 1},
+                          //  {"PS4_3", 1},
+                          //  {"PS4_4", 1},
+                           {"schwefel", 1},
+                           {"schwefel", 2},
+                           {"schwefel", 3},
+                           {"schwefel", 4},
+                           {"hartmann", 4}
+                          };
+      for (auto p : funcs) {
+        fail += testBayesianSearch(log,
+                        json_log,
+                        kern_arg, 
+                        p.first,
+                        n_runs,
+                        n_iters,
+                        n_init_samples,
+                        p.second,
+                        noise_level,
+                        exp_bias_ratio,
+                        verbosity,
+                        full_time_test,
+                        plotting);
+      }
     }
     else {
       fail += testBayesianSearch(log,
+                      json_log,
                       kern_arg, 
                       test_func_arg,
                       n_runs,
@@ -288,6 +198,11 @@ int main(int argc, char* argv[])
 
     log.Log_Handler("Number of failures: " + to_string(fail) + ".");
     log.CloseFile_Handler();
+
+    ofstream json_out(log_dir + std::filesystem::path::preferred_separator + "log.json");
+    json_out << json_log.dump(4);
+    json_out.flush();
+
     command.exitNormal();
   }
   catch(ndlexceptions::Error& err) 
@@ -307,6 +222,7 @@ int main(int argc, char* argv[])
 }
 
 int testBayesianSearch(CML::EventLog& log,
+                       json& json_log,
                        string kernel, 
                        string test_func_str,
                        int n_runs,
@@ -371,6 +287,7 @@ int testBayesianSearch(CML::EventLog& log,
 
   for (int run = 0; run < n_runs; run++) {
     cout << "Run " << run << endl;
+    string func_run = test_func_str + ":run" + to_string(run);
     seed++;
 
     cnpy::npz_t npz_dict;
@@ -432,6 +349,9 @@ int testBayesianSearch(CML::EventLog& log,
       failures += 1;
     }
 
+    json_log[func_run]["x"] = to_vector(*(BO.x_samples));
+    json_log[func_run]["y"] = to_vector(*(BO.y_samples));
+    
     // plotting
     if (plotting && x_dim == 1 && !full_time_test) {
       BO.gp->out(y_pred, std_pred, x);
@@ -442,20 +362,37 @@ int testBayesianSearch(CML::EventLog& log,
   delete whitek;
   }
 
-  double pass_prob = ((double)failures)/((double)n_runs);
   // performance logging
+  double pass_prob = ((double)failures)/((double)n_runs);
   log.Log_Handler("Proportion of runs passed: " + to_string(pass_prob) + "\n");
+  json_log[test_func_str]["pass proportion"] = to_string(pass_prob);
   log.Log_Handler("Relative error:\n");
+  double rel_error_mean = meanCol(search_rel_errors).getVal(0);
   double rel_error_std = stdCol(search_rel_errors).getVal(0);
-  log.Log_Handler("Mean +/- STD (SEM):\t" + to_string(meanCol(search_rel_errors).getVal(0))
-                  + " +/- " + to_string(rel_error_std) + " (" + to_string(rel_error_std/sqrt((double)n_runs)) + ")\n");
-  log.Log_Handler("Min:\t\t" + to_string(search_rel_errors.min()) + "\n");
-  log.Log_Handler("Max:\t\t" + to_string(search_rel_errors.max()) + "\n");
+  double rel_error_sem = rel_error_std/sqrt((double)n_runs);
+  log.Log_Handler("Mean +/- STD (SEM):\t" + to_string(rel_error_mean)
+                  + " +/- " + to_string(rel_error_std) + " (" + to_string(rel_error_sem) + ")\n");
+  json_log[test_func_str]["relative error:mean"] = to_string(rel_error_mean);
+  json_log[test_func_str]["relative error:std"] = to_string(rel_error_std);
+  json_log[test_func_str]["relative error:sem"] = to_string(rel_error_sem);
+
+  double rel_error_min = search_rel_errors.min();
+  log.Log_Handler("Min:\t\t" + to_string(rel_error_min) + "\n");
+  json_log[test_func_str]["relative error:min"] = to_string(rel_error_min);
+
+  double rel_error_max = search_rel_errors.max();
+  log.Log_Handler("Max:\t\t" + to_string(rel_error_max) + "\n");
+  json_log[test_func_str]["relative error:max"] = to_string(rel_error_max);
 
   // runtime logging
-  log.Log_Handler("Average run time (s):\t\t" + to_string(meanCol(run_times)(0)) + "\n");
+  double ave_run_time = meanCol(run_times)(0);
+  log.Log_Handler("Average run time (s):\t\t" + to_string(ave_run_time) + "\n");
+  json_log[test_func_str]["mean run time"] = to_string(ave_run_time);
   log.Log_Handler("Average max sample update time (s):\t" 
                   + to_string(meanCol(sample_times)(sample_times.getCols() - 1)) + "\n");
+  json_log[test_func_str]["mean max sample update time"] = to_string(ave_run_time);
+  json_log[test_func_str]["sample times"] = to_vector(sample_times);
+  json_log[test_func_str]["run times"] = to_vector(run_times);
 
   log.Log_Handler("\n");
   log.Flush_Handler();
@@ -465,6 +402,5 @@ int testBayesianSearch(CML::EventLog& log,
   if (pass_prob < min_pass_prob) {
     fail += 1;
   }
-
   return fail;
 }

@@ -39,7 +39,7 @@ namespace CML {
         throw std::runtime_error("Logger file stream not open.");
     }
   }
-  
+
   void EventLog::set_log_console_output(bool val) {
     log_console_output = val;
   }
@@ -84,20 +84,21 @@ std::string getDateTime() {
   return datetime.str();
 }
 
-std::string getGitRefHash() {
-  // open .git/HEAD to get checked out ref path
-  std::fstream HEAD;
-  HEAD.open( std::string(".git") + std::filesystem::path::preferred_separator + std::string("HEAD"), std::ios::in );
-  std::string HEAD_line;
-  std::getline(HEAD, HEAD_line);
-  std::string ref_path = HEAD_line.substr(HEAD_line.find_first_of(' ') + 1);
+// // assumes the current working directory is the repo directory
+// std::string getGitRefHash() {
+//   // open .git/HEAD to get checked out ref path
+//   std::fstream HEAD;
+//   HEAD.open( std::string(".git") + std::filesystem::path::preferred_separator + std::string("HEAD"), std::ios::in );
+//   std::string HEAD_line;
+//   std::getline(HEAD, HEAD_line);
+//   std::string ref_path = HEAD_line.substr(HEAD_line.find_first_of(' ') + 1);
 
-  // open current HEAD to get hash
-  std::fstream ref_file;
-  ref_file.open( std::string(".git") + std::filesystem::path::preferred_separator + ref_path, std::ios::in );
-  std::string hash;
-  std::getline(ref_file, hash);
-  ref_path.push_back(':');
-  std::string refHash = ref_path.append(hash);
-  return refHash;
-}
+//   // open current HEAD to get hash
+//   std::fstream ref_file;
+//   ref_file.open( std::string(".git") + std::filesystem::path::preferred_separator + ref_path, std::ios::in );
+//   std::string hash;
+//   std::getline(ref_file, hash);
+//   ref_path.push_back(':');
+//   std::string refHash = ref_path.append(hash);
+//   return refHash;
+// }
