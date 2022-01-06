@@ -172,7 +172,6 @@ int main(int argc, char* argv[])
                            {"sum_squares", 1},
                            {"sum_squares", 2},
                            {"sum_squares", 4},
-                           {"rosenbrock", 1},
                            {"rosenbrock", 2},
                            {"rosenbrock", 4},
                           };
