@@ -132,13 +132,13 @@ int main(int argc, char* argv[])
     // keep old .txt logging method for now...
     json config;
     config["func"] = test_func_arg;
-    config["dim"] = to_string(x_dim);
+    config["dim"] = x_dim;
     config["kern"] = kern_arg;
-    config["runs"] = to_string(n_runs);
-    config["iters"] = to_string(n_iters);
-    config["init_samp"] = to_string(n_init_samples);
-    config["noise"] = to_string(noise_level);
-    config["exp_bias"] = to_string(exp_bias_ratio);
+    config["runs"] = n_runs;
+    config["iters"] = n_iters;
+    config["init_samp"] = n_init_samples;
+    config["noise"] = noise_level;
+    config["exp_bias"] = exp_bias_ratio;
     config["datetime"] = getDateTime();
     config["GIT_BRANCH"] = string(GIT_BRANCH);
     config["GIT_COMMIT"] = string(GIT_COMMIT);
@@ -160,9 +160,21 @@ int main(int argc, char* argv[])
                           //  {"PS4_4", 1},
                            {"schwefel", 1},
                            {"schwefel", 2},
-                           {"schwefel", 3},
                            {"schwefel", 4},
-                           {"hartmann", 4}
+                           {"hartmann4d", 4},
+                           {"ackley", 1},
+                           {"ackley", 2},
+                           {"ackley", 4},
+                           {"rastrigin", 1},
+                           {"rastrigin", 2},
+                           {"rastrigin", 4},
+                           {"eggholder", 2},
+                           {"sum_squares", 1},
+                           {"sum_squares", 2},
+                           {"sum_squares", 4},
+                           {"rosenbrock", 1},
+                           {"rosenbrock", 2},
+                           {"rosenbrock", 4},
                           };
       for (auto p : funcs) {
         fail += testBayesianSearch(log,
@@ -257,14 +269,36 @@ int testBayesianSearch(CML::EventLog& log,
   TestFunction test(test_func_str, seed, noise_level, x_dim, verbosity);
 
   int n_plot = 400;
-  if (test.x_dim == 1 && test.x_interval(1) - test.x_interval(0) > 100.0) {
+  if (test.x_dim == 1 && test.x_interval(1) - test.x_interval(0) > 400.0) {
     n_plot = (int)(test.x_interval(1) - test.x_interval(0));
   }
+  if (test.x_dim == 2) {
+    n_plot = 75;
+  }
+  CMatrix x;
+  CMatrix y;
+  if (x_dim <= 2) {
+    double x_interval_len = test.x_interval(0, 1) - test.x_interval(0, 0);
+    if (x_dim == 1) {
+      x = linspace(test.x_interval(0, 0) - 0.0 * x_interval_len, 
+                   test.x_interval(0, 1) + 0.0 * x_interval_len, n_plot);
+    }
+    else {
+      x = mesh1d(linspace(test.x_interval(0, 0), test.x_interval(0, 1), n_plot),
+                 linspace(test.x_interval(1, 0), test.x_interval(1, 1), n_plot));
+      // using function name "mesh" instead of "mesh1d" doesn't find function symbol??? 
+      // get compiler error with unknown symbol, but name change gives successful compilation?
+    }
+    y = test.func(x, false);
+  }
+
+  CMatrix y_pred(x.getRows(), 1);
+  CMatrix std_pred(x.getRows(), 1);
 
   // for getting estimates of unknown function optima
-  test.verbosity = 1;
-  test.get_func_optimum(true);
-  test.get_func_optimum(false);
+  // test.verbosity = 1;
+  // test.get_func_optimum(true, true);
+  // test.get_func_optimum(false, true);
   test.verbosity = verbosity;
 
   // normalize exploration bias by output range of test function
@@ -286,114 +320,116 @@ int testBayesianSearch(CML::EventLog& log,
   CMatrix sample_times(n_runs, n_iters);
   CMatrix run_times(n_runs, 1);
 
+  // runs with exceptions
+  vector<int> except_runs;
+
   for (int run = 0; run < n_runs; run++) {
     cout << "Run " << run << endl;
     string func_run = test_func_str + ":run" + to_string(run);
     seed++;
+    try {
+      cnpy::npz_t npz_dict;
+      CKern* k = getSklearnKernel((unsigned int)x_dim, npz_dict, kernel, std::string(""), true);
+      CCmpndKern kern(x_dim);
+      // CMatern32Kern* k = new CMatern32Kern(x_dim);
+      kern.addKern(k);
+      CWhiteKern* whitek = new CWhiteKern(x_dim);
+      kern.addKern(whitek);
+      // getSklearnKernels(&kern, npz_dict, &X, true);
 
-    cnpy::npz_t npz_dict;
-    CKern* k = getSklearnKernel((unsigned int)x_dim, npz_dict, kernel, std::string(""), true);
-    CCmpndKern kern(x_dim);
-    // CMatern32Kern* k = new CMatern32Kern(x_dim);
-    kern.addKern(k);
-    CWhiteKern* whitek = new CWhiteKern(x_dim);
-    kern.addKern(whitek);
-    // getSklearnKernels(&kern, npz_dict, &X, true);
+      BayesianSearchModel BO(kern, &test.x_interval, obsNoise * obsNoise, exp_bias, n_init_samples, seed, verbosity);
 
-    BayesianSearchModel BO(kern, &test.x_interval, obsNoise * obsNoise, exp_bias, n_init_samples, seed, verbosity);
+      clock_t start = clock();
+      clock_t sample_update_start;
+      for (int i = 0; i<n_iters; i++) {
+        sample_update_start = clock();
+        CMatrix* x_sample = BO.get_next_sample();
+        CMatrix* y_sample = new CMatrix(test.func(*x_sample));
+        BO.add_sample(*x_sample, *y_sample);
+        sample_times(run, i) = (double)(clock() - sample_update_start)/CLOCKS_PER_SEC;
 
-    CMatrix x;
-    CMatrix y;
-    if (x_dim == 1) {
-      double x_interval_len = test.x_interval(0, 1) - test.x_interval(0, 0);
-      x = linspace(test.x_interval(0, 0) - 0.0 * x_interval_len, 
-                   test.x_interval(0, 1) + 0.0 * x_interval_len, n_plot);
-      y = test.func(x, false);
-    }
-    CMatrix y_pred(n_plot, 1);
-    CMatrix std_pred(n_plot, 1);
-
-    clock_t start = clock();
-    clock_t sample_update_start;
-    for (int i = 0; i<n_iters; i++) {
-      sample_update_start = clock();
-      CMatrix* x_sample = BO.get_next_sample();
-      CMatrix* y_sample = new CMatrix(test.func(*x_sample));
-      BO.add_sample(*x_sample, *y_sample);
-      sample_times(run, i) = (double)(clock() - sample_update_start)/CLOCKS_PER_SEC;
-
-      if (plotting && (verbosity >= 2) && (i > n_init_samples)) {
-        BO.get_next_sample();
-        if (x_dim == 1) {
+        if (plotting && (verbosity >= 2) && x_dim <= 2 && (i > n_init_samples)) {
+          BO.get_next_sample();
           BO.gp->out(y_pred, std_pred, x);
           plot_BO_state(BO, x, y, y_pred, std_pred, x_sample, y_sample);
         }
       }
+      run_times(run) = (double)(clock() - start)/CLOCKS_PER_SEC;
+
+      // FIXME needed for now with janky way I'm deleting CGp gp and CNoise attributes to allow for updating with new 
+      // samples
+      CMatrix* x_sample = BO.get_next_sample();
+      CMatrix* y_sample = new CMatrix(test.func(*x_sample));
+
+      // metrics
+      CMatrix* x_best = BO.get_best_solution();
+      search_rel_errors(run) = test.solution_error(*x_best);
+
+      cout << "Relative error for run " << run << ": " << search_rel_errors(run) << endl;
+      cout << "Run time (s): " << run_times(run) << endl;
+      // log.Log_Handler("Relative error for run " + to_string(run) + ": " + to_string(search_rel_errors(run)) + "\n");
+      // log.Log_Handler("Run time (s): " + to_string(run_times(run)) + "\n");
+
+      if (search_rel_errors(run) < max_pass_error) {
+        failures += 1;
+      }
+
+      json_log[func_run]["x"] = to_vector(*(BO.x_samples));
+      json_log[func_run]["y"] = to_vector(*(BO.y_samples));
+      
+      // plotting
+      if (plotting && x_dim <= 2 && !full_time_test) {
+        BO.gp->out(y_pred, std_pred, x);
+        plot_BO_state(BO, x, y, y_pred, std_pred, x_sample, y_sample);
+      }
+
+      delete k;
+      delete whitek;
     }
-    run_times(run) = (double)(clock() - start)/CLOCKS_PER_SEC;
-
-    // FIXME needed for now with janky way I'm deleting CGp gp and CNoise attributes to allow for updating with new 
-    // samples
-    CMatrix* x_sample = BO.get_next_sample();
-    CMatrix* y_sample = new CMatrix(test.func(*x_sample));
-
-    // metrics
-    CMatrix* x_best = BO.get_best_solution();
-    search_rel_errors(run) = test.solution_error(*x_best);
-
-    cout << "Relative error for run " << run << ": " << search_rel_errors(run) << endl;
-    cout << "Run time (s): " << run_times(run) << endl;
-    // log.Log_Handler("Relative error for run " + to_string(run) + ": " + to_string(search_rel_errors(run)) + "\n");
-    // log.Log_Handler("Run time (s): " + to_string(run_times(run)) + "\n");
-
-    if (search_rel_errors(run) < max_pass_error) {
-      failures += 1;
+    catch(...) { // catch errors for logging/debugging and continue tests
+      log.Log_Handler(string("Error in run ") + to_string(run) + string(". Check log."));
+      except_runs.push_back(run);
+      run_times(run) = nan("");
+      search_rel_errors(run) = nan("");
     }
-
-    json_log[func_run]["x"] = to_vector(*(BO.x_samples));
-    json_log[func_run]["y"] = to_vector(*(BO.y_samples));
-    
-    // plotting
-    if (plotting && x_dim == 1 && !full_time_test) {
-      BO.gp->out(y_pred, std_pred, x);
-      plot_BO_state(BO, x, y, y_pred, std_pred, x_sample, y_sample);
-    }
-
-  delete k;
-  delete whitek;
   }
 
   // performance logging
   double pass_prob = ((double)failures)/((double)n_runs);
   log.Log_Handler("Proportion of runs passed: " + to_string(pass_prob) + "\n");
-  json_log[test_func_str]["pass proportion"] = to_string(pass_prob);
+  json_log[test_func_str]["pass proportion"] = pass_prob;
   log.Log_Handler("Relative error:\n");
   double rel_error_mean = meanCol(search_rel_errors).getVal(0);
   double rel_error_std = stdCol(search_rel_errors).getVal(0);
   double rel_error_sem = rel_error_std/sqrt((double)n_runs);
   log.Log_Handler("Mean +/- STD (SEM):\t" + to_string(rel_error_mean)
                   + " +/- " + to_string(rel_error_std) + " (" + to_string(rel_error_sem) + ")\n");
-  json_log[test_func_str]["relative error:mean"] = to_string(rel_error_mean);
-  json_log[test_func_str]["relative error:std"] = to_string(rel_error_std);
-  json_log[test_func_str]["relative error:sem"] = to_string(rel_error_sem);
+  json_log[test_func_str]["relative error:mean"] = rel_error_mean;
+  json_log[test_func_str]["relative error:std"] = rel_error_std;
+  json_log[test_func_str]["relative error:sem"] = rel_error_sem;
 
   double rel_error_min = search_rel_errors.min();
   log.Log_Handler("Min:\t\t" + to_string(rel_error_min) + "\n");
-  json_log[test_func_str]["relative error:min"] = to_string(rel_error_min);
+  json_log[test_func_str]["relative error:min"] = rel_error_min;
 
   double rel_error_max = search_rel_errors.max();
   log.Log_Handler("Max:\t\t" + to_string(rel_error_max) + "\n");
-  json_log[test_func_str]["relative error:max"] = to_string(rel_error_max);
+  json_log[test_func_str]["relative error:max"] = rel_error_max;
 
   // runtime logging
   double ave_run_time = meanCol(run_times)(0);
   log.Log_Handler("Average run time (s):\t\t" + to_string(ave_run_time) + "\n");
-  json_log[test_func_str]["mean run time"] = to_string(ave_run_time);
+  json_log[test_func_str]["mean run time"] = ave_run_time;
   log.Log_Handler("Average max sample update time (s):\t" 
                   + to_string(meanCol(sample_times)(sample_times.getCols() - 1)) + "\n");
-  json_log[test_func_str]["mean max sample update time"] = to_string(ave_run_time);
+  json_log[test_func_str]["mean max sample update time"] = ave_run_time;
   json_log[test_func_str]["sample times"] = to_vector(sample_times);
   json_log[test_func_str]["run times"] = to_vector(run_times);
+
+  if (except_runs.size() > 0) { 
+    log.Log_Handler("Runs with exceptions occurred. See log.json for specific run numbers in item 'exception runs'.\n");
+  }
+  json_log[test_func_str]["exception runs"] = except_runs;
 
   log.Log_Handler("\n");
   log.Flush_Handler();

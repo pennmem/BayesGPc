@@ -1,7 +1,6 @@
 #include "CBayesianSearch.h"
 
 
-// TODO move out to separate header
 double expected_improvement(const CMatrix& x, const CGp& model, double y_b, double exp_bias) {
     double EI;
 

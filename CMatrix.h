@@ -1338,5 +1338,6 @@ CMatrix from_vector(const std::vector<std::vector<double>>& vec);
 // inline void swap(CMatrix& x, CMatrix& y);
 
 CMatrix linspace(double x0, double x1, int n);
+CMatrix mesh1d(const CMatrix& x, const CMatrix& y);
 
 #endif

@@ -1,17 +1,41 @@
 12/28/21
 
-get tests running on Rhino
-    ask Daniel Utin for ray-tracing function, skopt settings
-    add two more standard test functions
-    look into standard optimization tuning methods, see previously found papers
+tests:
+    Ray-tracing function - Daniel Utin can send me the C++ code, they used swig to interface with Python
+look into discrete RVs
+look into standard optimization tuning methods, see previously found papers
+    may want to compare performance directly with Picheny et al.
+
+try setting min length scale to 0.05 * domain
+    Picheny et al. did this, said it was common practice
+test whether global optimization of acquisition function is finding true optimum by comparing with more intensive tuning process
+add non-isotropic length scales - most of the test functions are either isotropic or smooth
+    or at the very least, rescale domain
+for selecting the next sample, consider treating observation noise as a separate component of variance from the uncertainty
+    in the GP estimate of the mean, should increase exploration and reduce oversampling the current best point
+    Sklearn implemented the observation noise as a constant and separate component of the variance, e.g., as constant white kernel
+    other references (https://www.cs.cornell.edu/courses/cs4780/2018fa/lectures/lecturenote15.html) did the same
+    however GPML, Ch. 2 pg. 16 does not include the observation noise in the estimates of the conditional predictive covariance
+    same with Picheny, V., Wagner, T., & Ginsbourger, D. (2012). A benchmark of kriging-based infill criteria for noisy optimization.
+    seems like this is a modeling decision, no concensus
+    TODO add measure of sample point entropy, should really just be able to measure if a run has locked on to a particular value
+
 implement reference implementations
+do stats in Python
+    add sample entropy metric
+        a little involved, see Paninski 2003
+    add option to compute mean improvement in estimate per sample and std? probably too high variance/multi-modal depending on local minima/degeneracy in GP HP tuning
+
 tune/debug algorithm
+integrate into Elemem - talk with James and Ryan
+get running on Windows - talk with Ryan
 
-get running on Windows
-may have memory leak?
-integrate into Elemem
-
-fix seg fault when init_samples > n_iters (or when n_iters is small?)
+Misc.
+    may have memory leak?
+    replace all inputs to testBayesianSearch with config json instance
+    make test function members private
+    add plot saving for runs (can always reimplement in Python)
+    fix seg fault when init_samples > n_iters (or when n_iters is small?)
 
 speed up compilation time
     currently, compilation of testBayesionSearch.o takes ~30 s, linking of testBayesianSearch takes ~20 s

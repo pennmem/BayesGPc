@@ -4,9 +4,11 @@
 #include "CBayesianSearch.h"
 #include <matplot/matplot.h>
 #include "CMatrix.h"
+#include <thread>
 using namespace matplot;
 
-void plot_BO_state(const BayesianSearchModel& BO, const CMatrix& x_plot, const CMatrix& y_plot, 
+void plot_BO_state(const BayesianSearchModel& BO, 
+                   const CMatrix& x_plot, const CMatrix& y_plot,
                    const CMatrix& y_pred, const CMatrix& std_pred, 
                    CMatrix* x_sample, CMatrix* y_sample);
 

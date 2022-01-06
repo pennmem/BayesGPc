@@ -1118,6 +1118,23 @@ CMatrix linspace(double x0, double x1, int n) {
   return v;
 }
 
+// matplotlib mesh with flattened column dimensions (CMatrix types only support 2D matrices)
+// e.g. outputs X with shape (x.getRows()*y.getRows, 2). 
+// Reshaping column 0 into shape (x.getRows(), y.getRows()) gives matrix with values of x constant 
+// along corresponding rows. Similarly reshaping column 1 gives matrix with values of y constant
+// along corresponding columns
+CMatrix mesh1d(const CMatrix& x, const CMatrix& y) {
+  assert(x.getCols() == 1 && y.getCols() == 1);
+  CMatrix X(x.getRows() * y.getRows(), 2);
+  for (int i = 0; i < x.getRows(); i++) {
+    for (int j = 0; j < y.getRows(); j++) {
+      X(i * x.getRows() + j, 0) = x.getVal(i, 0);
+      X(i * x.getRows() + j, 1) = y.getVal(j, 0);
+    }
+  }
+  return X;
+}
+
 
 void CMatrix::readParamsFromStream(istream& in) 
 {
