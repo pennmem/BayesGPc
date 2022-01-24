@@ -1,5 +1,9 @@
 12/28/21
 
+Python reference implementation:
+    json parsing script, compute basic metrics\
+    tune Python kernel
+
 tests:
     Ray-tracing function - Daniel Utin can send me the C++ code, they used swig to interface with Python
 look into discrete RVs
@@ -32,6 +36,8 @@ get running on Windows - talk with Ryan
 
 Misc.
     may have memory leak?
+    2D plotting segfaulting unexpectedly... seems potentially related to 
+    larger samples
     replace all inputs to testBayesianSearch with config json instance
     make test function members private
     add plot saving for runs (can always reimplement in Python)

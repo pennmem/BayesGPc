@@ -141,7 +141,6 @@ if __name__ == "__main__":
     kern += gaussian_process.kernels.Matern(nu=3/2) * gaussian_process.kernels.ConstantKernel()
     gp = gaussian_process.GaussianProcessRegressor(kern, normalize_y=True, alpha=noise_std)
 
-
     exploration_bias = 0.1 * (range_interval[1] - range_interval[0])
     EI_exploration = partial(ExpectedImprovement, exploration_bias=exploration_bias)
 

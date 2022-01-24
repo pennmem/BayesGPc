@@ -119,8 +119,7 @@ void TestFunction::_init() {
     }
     y_interval(1) = 0;
   }
-  // standard multi-modal optimization test function.
-  // Used by Grace Dessert in her BO tests at Nia.
+  // multi-modal optimization test function
   else if (name.compare("hartmann4d") == 0) {
     if (x_dim != 4) {
       cout << "Warning: 'hartmann4d' test function requires x_dim=4. Overriding user given value." << endl;
@@ -130,8 +129,10 @@ void TestFunction::_init() {
       x_interval(i, 0) = 0.0;
       x_interval(i, 1) = 1.0;
     }
-    y_interval(1) = 1.31105;
-    y_interval(0) = -3.51367;
+    // Min found for function hartmann4d: (x_best, y_best): ([1, 1, 6.71703e-13, 1, ], -1.30954)
+    // Max found for function hartmann4d: (x_best, y_best): ([0.187395, 0.194152, 0.557918, 0.26478, ], 3.13449)
+    y_interval(1) = 3.13449;
+    y_interval(0) = -1.31105;
   }
   // many local minima in larger shallow bowl
   else if (name.compare("rastrigin") == 0) {

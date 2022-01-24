@@ -34,6 +34,7 @@ int testBayesianSearch(CML::EventLog& log,
                        double exp_bias_ratio=0.1,
                        int verbosity=0,
                        bool full_time_test=false,
-                       bool plotting=false);
+                       bool plotting=false,
+                       int seed=1234);
 
 #endif

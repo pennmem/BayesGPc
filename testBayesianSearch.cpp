@@ -29,6 +29,7 @@ int main(int argc, char* argv[])
     int x_dim             = 1;
     double noise_level    = 0.1;
     double exp_bias_ratio = 0.25;
+    int seed              = 1234;
     int verbosity         = 1;
     bool full_time_test   = false;
     bool plotting         = false;
@@ -63,7 +64,7 @@ int main(int argc, char* argv[])
           command.incrementArgument();
           n_iters = std::stoi(command.getCurrentArgument());
         }
-        if (command.isCurrentArg("-s", "--init_samples")) {
+        if (command.isCurrentArg("-s", "--n_init_samples")) {
           command.incrementArgument();
           n_init_samples = std::stoi(command.getCurrentArgument());
         }
@@ -82,6 +83,10 @@ int main(int argc, char* argv[])
         // whether to plot timing results (and to not plot BO state) if plotting is on
         if (command.isCurrentArg("-t", "--timed")) {
           full_time_test = true;
+        }
+        if (command.isCurrentArg("-seed", "--seed")) {
+          command.incrementArgument();
+          seed = std::stoi(command.getCurrentArgument());
         }
         if (command.isCurrentArg("-v", "--verbosity")) {
           command.incrementArgument();
@@ -131,13 +136,19 @@ int main(int argc, char* argv[])
     // include json logging for parsing
     // keep old .txt logging method for now...
     json config;
+    config["system"] = string("CBayesianSearch");
+    config["logdir"] = log_dir;
+    config["verbosity"] = verbosity;
+    config["plot"] = plotting;
+    config["seed"] = seed;
+
     config["func"] = test_func_arg;
     config["dim"] = x_dim;
     config["kern"] = kern_arg;
-    config["runs"] = n_runs;
-    config["iters"] = n_iters;
-    config["init_samp"] = n_init_samples;
-    config["noise"] = noise_level;
+    config["n_runs"] = n_runs;
+    config["n_iters"] = n_iters;
+    config["n_init_samp"] = n_init_samples;
+    config["noise_level"] = noise_level;
     config["exp_bias"] = exp_bias_ratio;
     config["datetime"] = getDateTime();
     config["GIT_BRANCH"] = string(GIT_BRANCH);
@@ -188,7 +199,8 @@ int main(int argc, char* argv[])
                         exp_bias_ratio,
                         verbosity,
                         full_time_test,
-                        plotting);
+                        plotting,
+                        seed);
       }
     }
     else {
@@ -204,7 +216,8 @@ int main(int argc, char* argv[])
                       exp_bias_ratio,
                       verbosity,
                       full_time_test,
-                      plotting);
+                      plotting,
+                      seed);
     }
 
     log.Log_Handler("Number of failures: " + to_string(fail) + ".");
@@ -244,12 +257,12 @@ int testBayesianSearch(CML::EventLog& log,
                        double exp_bias_ratio,
                        int verbosity,
                        bool full_time_test,
-                       bool plotting
+                       bool plotting,
+                       int seed
 )
 {
   assert(n_init_samples < n_iters);
   int fail = 0;
-  int seed = 1234;
 
   log.Log_Handler("Test function:\t" + test_func_str + "\n");
   log.Log_Handler("x_dim:\t" + to_string(x_dim) + "\n");
@@ -264,6 +277,7 @@ int testBayesianSearch(CML::EventLog& log,
 
   log.Log_Handler("\n");
 
+  string fd = test_func_str + ":d" + to_string(x_dim);
 
   TestFunction test(test_func_str, seed, noise_level, x_dim, verbosity);
 
@@ -296,8 +310,8 @@ int testBayesianSearch(CML::EventLog& log,
 
   // for getting estimates of unknown function optima
   // test.verbosity = 1;
-  // test.get_func_optimum(true, true);
-  // test.get_func_optimum(false, true);
+  // test.get_func_optimum(true);
+  // test.get_func_optimum(false);
   test.verbosity = verbosity;
 
   // normalize exploration bias by output range of test function
@@ -321,10 +335,11 @@ int testBayesianSearch(CML::EventLog& log,
 
   // runs with exceptions
   vector<int> except_runs;
+  vector<vector<vector<double>>> x_samples_runs;
+  vector<vector<vector<double>>> y_samples_runs;
 
   for (int run = 0; run < n_runs; run++) {
     cout << "Run " << run << endl;
-    string func_run = test_func_str + ":run" + to_string(run);
     seed++;
     try {
       cnpy::npz_t npz_dict;
@@ -373,8 +388,8 @@ int testBayesianSearch(CML::EventLog& log,
         failures += 1;
       }
 
-      json_log[func_run]["x"] = to_vector(*(BO.x_samples));
-      json_log[func_run]["y"] = to_vector(*(BO.y_samples));
+      x_samples_runs.push_back(to_vector(*(BO.x_samples)));
+      y_samples_runs.push_back(to_vector(*(BO.y_samples)));
       
       // plotting
       if (plotting && x_dim <= 2 && !full_time_test) {
@@ -394,41 +409,37 @@ int testBayesianSearch(CML::EventLog& log,
   }
 
   // performance logging
+  json_log[fd]["x_samples"] = x_samples_runs;
+  json_log[fd]["y_samples"] = y_samples_runs;
+  json_log[fd]["relative errors"] = to_vector(search_rel_errors);
+
   double pass_prob = ((double)failures)/((double)n_runs);
   log.Log_Handler("Proportion of runs passed: " + to_string(pass_prob) + "\n");
-  json_log[test_func_str]["pass proportion"] = pass_prob;
   log.Log_Handler("Relative error:\n");
   double rel_error_mean = meanCol(search_rel_errors).getVal(0);
   double rel_error_std = stdCol(search_rel_errors).getVal(0);
   double rel_error_sem = rel_error_std/sqrt((double)n_runs);
   log.Log_Handler("Mean +/- STD (SEM):\t" + to_string(rel_error_mean)
                   + " +/- " + to_string(rel_error_std) + " (" + to_string(rel_error_sem) + ")\n");
-  json_log[test_func_str]["relative error:mean"] = rel_error_mean;
-  json_log[test_func_str]["relative error:std"] = rel_error_std;
-  json_log[test_func_str]["relative error:sem"] = rel_error_sem;
 
   double rel_error_min = search_rel_errors.min();
   log.Log_Handler("Min:\t\t" + to_string(rel_error_min) + "\n");
-  json_log[test_func_str]["relative error:min"] = rel_error_min;
 
   double rel_error_max = search_rel_errors.max();
   log.Log_Handler("Max:\t\t" + to_string(rel_error_max) + "\n");
-  json_log[test_func_str]["relative error:max"] = rel_error_max;
 
   // runtime logging
   double ave_run_time = meanCol(run_times)(0);
   log.Log_Handler("Average run time (s):\t\t" + to_string(ave_run_time) + "\n");
-  json_log[test_func_str]["mean run time"] = ave_run_time;
   log.Log_Handler("Average max sample update time (s):\t" 
                   + to_string(meanCol(sample_times)(sample_times.getCols() - 1)) + "\n");
-  json_log[test_func_str]["mean max sample update time"] = ave_run_time;
-  json_log[test_func_str]["sample times"] = to_vector(sample_times);
-  json_log[test_func_str]["run times"] = to_vector(run_times);
+  json_log[fd]["sample times"] = to_vector(sample_times);
+  json_log[fd]["run times"] = to_vector(run_times);
 
   if (except_runs.size() > 0) { 
     log.Log_Handler("Runs with exceptions occurred. See log.json for specific run numbers in item 'exception runs'.\n");
   }
-  json_log[test_func_str]["exception runs"] = except_runs;
+  json_log[fd]["exception runs"] = except_runs;
 
   log.Log_Handler("\n");
   log.Flush_Handler();

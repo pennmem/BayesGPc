@@ -16,8 +16,16 @@ LIBDEXT = .so
 DEP_DIR =/mnt/c/Users/dasha/Documents/research/stim_cml/source/dependencies
 
 # Python-numpy interface
+NPY_INCLUDE =-I${DEP_DIR}/cnpy
 NPYLIBS = -lcnpy -lz
 NPYLINKFLAG =${NPYLIBS}
+
+#make is using miniconda gcc, don't think it was doing that before, 
+#using weird command line options with miniconda-g++ with make build commands
+#seems like some command line argument changed when I used setup.py, 
+#no longer able to compile files since cnpy.h isn't being found, arguments
+#from make.linux no longer being used. 
+#no makefile options for CMltools.o in original GPc repo
 
 # optim library
 OPTIMDIR =./../dependencies/optim/header_only_version
@@ -53,6 +61,6 @@ INCLUDE = $(MATLABINCLUDE)
 LD=g++
 LDFLAGS = ${LAPACKLIBS} ${F2CLIB} -lc ${MATPLOTLINKFLAG} ${NPYLINKFLAG} -lquadmath -static
 CC=g++
-CCFLAGS = -std=c++17 -ggdb -DDBG -fPIC -I$(INCLUDE) -D$(PLAT) $(MATLABFLAG) $(OPTIMFLAG) $(BOOSTLIB_INCLUDE) ${MATPLOT_INCLUDE_DIRS} $(JSON_INCLUDE_DIRS)
+CCFLAGS = -std=c++17 -ggdb -DDBG -fPIC -I$(INCLUDE) -D$(PLAT) $(MATLABFLAG) $(OPTIMFLAG) $(BOOSTLIB_INCLUDE) ${MATPLOT_INCLUDE_DIRS} $(JSON_INCLUDE_DIRS) $(NPY_INCLUDE)
 FC=gfortran
 FCFLAGS = -funroll-all-loops -O3 -fPIC

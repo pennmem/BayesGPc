@@ -75,9 +75,6 @@ testGp: testGp.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CT
 testGp.o: testGp.cpp CGp.h CKern.h CMatrix.h CClctrl.h
 	$(CC) -c testGp.cpp -o testGp.o $(CCFLAGS)
 
-#gp: gp.o CClctrl.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o ndlassert.o
-#	$(LD) ${XLINKERFLAGS} -o gp gp.o CGp.o CClctrl.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o ndlassert.o $(LDFLAGS)
-
 testGp_sklearn: testGp_sklearn.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o
 	$(LD) ${XLINKERFLAGS} -o testGp_sklearn  testGp_sklearn.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o $(LDFLAGS)
 
@@ -197,6 +194,21 @@ CIvm.o: CIvm.cpp CIvm.h CMltools.h ndlassert.h ndlexceptions.h \
   ndlfortran.h lapack.h CKern.h CTransform.h CDataModel.h CDist.h \
   CNoise.h
 	$(CC) -c CIvm.cpp -o CIvm.o $(CCFLAGS)
+
+# apparently there was never a make rule for CMltools.o in the original GPc
+# it was being correctly generated automatically on WSL2 Ubuntu 20.04 until
+# some internal setting changed. Then it alone of all the object files
+# was being compiled with a conda version of GCC and failing
+CMltools.o: CMltools.cpp CMltools.h ndlassert.h ndlexceptions.h \
+  ndlstrutil.h COptimisable.h CMatrix.h CNdlInterfaces.h ndlutil.h \
+  ndlfortran.h lapack.h CKern.h CTransform.h CDataModel.h CDist.h \
+  CNoise.h
+	$(CC) -c CMltools.cpp -o CMltools.o $(CCFLAGS)
+
+sklearn_util.o: sklearn_util.cpp sklearn_util.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \
+  CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h lapack.h \
+  CDataModel.h CDist.h
+	$(CC) -c sklearn_util.cpp -o sklearn_util.o $(CCFLAGS)
 
 CBayesianSearch.o: CBayesianSearch.cpp CBayesianSearch.h CGp.cpp CGp.h \
   CMltools.h ndlassert.h ndlexceptions.h \
