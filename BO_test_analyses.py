@@ -2,6 +2,8 @@ import json
 import os
 import numpy as  np
 
+import seaborn as sns
+
 test_dirs = ["debug_results/test-func_rastrigin-dim_1-kern_Matern32-runs_2-iters_51-init_samp_50-noise_0.100000-exp_bias_0.250000_01-23-22_23:45:53",
              "debug_results/skopt-func_rastrigin-dim_1-kern_Matern32-runs_1-iters_51-init_samp_50-exp_bias_0.0_01-23-22_23:49:46"]
 
@@ -15,7 +17,10 @@ for d in test_dirs:
     
 for i, r in enumerate(results):
     print(configs[i]["system"])
-    
+
+sns.boxplot(x="Relative Error",
+            y="Model and test function",
+            )
 
 import pdb; pdb.set_trace()
 
