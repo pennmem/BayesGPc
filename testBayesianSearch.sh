@@ -1,12 +1,18 @@
 #!/bin/bash
 
 # test Bayesian search implementation with main test functions
-# $ nohup $(testBayesianSearch.sh) &
+# $ nohup $(testBayesianSearch.sh) [TAG] [IMPL] &
+# TAG: tag for test run, IMPL: implementation to test.
 
-if [[ "$#" -lt 2 ]]; then
+if [[ "$#" -lt 1 ]]; then
     TAG="test"
+    IMPL="CBay"
+else if [[ "$#" -lt 2 ]]; then
+    TAG=$1
+    IMPL="CBay"
 else
     TAG=$1
+    IMPL=$2
 fi
 
 # shift 1
@@ -17,10 +23,15 @@ fi
 #     SMOKESCREEN=0
 # fi
 
-LOGDIR=$(pwd)/results/${TAG}
+if [ $IMPL != "CBay" -a $IMPL != "skopt" ]; then
+    echo "Implementation '${IMPL}' not implemented. Only 'CBay' and 'skopt' currently supported. Exiting."
+    return 1
+fi
+
+LOGDIR=$(pwd)/results/${TAG}_${IMPL}
 if test -d "${LOGDIR}"; then
     echo "Experiment tag '${TAG}' already used. Exiting."
-    exit 1
+    return 1
 else 
     echo "Log directory: ${LOGDIR}"
 fi
@@ -49,6 +60,10 @@ for s in "${init_samples[@]}"
 do
     args="--tag ${TAG} --func all --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs 2 --kern ${k} --n_iters 150"
     # nohup ./testBayesianSearch $args &
+    if [ $IMPL != "CBay" ]; then
+        args="--impl ${IMPL} ${args}"
+    fi
+
     echo $args >> $ARGS_FILE
 done
 done
@@ -57,5 +72,8 @@ done
 
 curdir=$(pwd)
 echo "pwd: ${curdir}"
-#source parallel_exec.sh ${curdir}/testBayesianSearch $ARGS_FILE $LOGDIR testBayesianSearch
-source parallel_exec.sh ${curdir}/ReferenceBayesianSearch.py $ARGS_FILE $LOGDIR testBayesianSearch_py
+if [ $IMPL == "CBay" ]; then
+    source parallel_exec.sh ${curdir}/testBayesianSearch $ARGS_FILE $LOGDIR testBayesianSearch
+else
+    source parallel_exec.sh ${curdir}/ReferenceBayesianSearch.py $ARGS_FILE $LOGDIR testBayesianSearch_py
+fi

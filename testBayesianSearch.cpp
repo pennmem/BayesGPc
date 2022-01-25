@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
     // include json logging for parsing
     // keep old .txt logging method for now...
     json config;
-    config["system"] = string("CBayesianSearch");
+    config["impl"] = string("CBay");
     config["logdir"] = log_dir;
     config["verbosity"] = verbosity;
     config["plot"] = plotting;

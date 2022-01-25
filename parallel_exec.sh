@@ -1,6 +1,6 @@
 if [[ "$#" -lt 2 ]]; then
     echo "USAGE: parallel.sh [executable] [arguments_file] [logdir (optional)] [cluster job name (optional)]"
-    exit 1
+    return 1
 fi
 
 EXEC=$1
