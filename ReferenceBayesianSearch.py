@@ -1,3 +1,5 @@
+#!/home1/rdehaan/.conda/envs/eeg/bin/python
+
 import subprocess
 import json
 from tabnanny import verbose
@@ -471,6 +473,7 @@ def test_BO(func_name, x_dim, args, full_metrics):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--tag", type=str, default="skopt")
+    parser.add_argument("--impl", type=str, default="skopt")
     parser.add_argument("--logdir", type=str, default="results")
     parser.add_argument("--verbosity", type=int, default=1)
     parser.add_argument("--full_errors", action="store_true")
@@ -493,10 +496,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.tag != "skopt":
+    if args.impl != "skopt":
         raise NotImplementedError
 
-    args.system = "python"
     args.GIT_BRANCH = GIT_BRANCH
     args.GIT_COMMIT = GIT_COMMIT
     args.GIT_URL = GIT_URL
@@ -507,6 +509,7 @@ if __name__ == "__main__":
     args.datetime = getDateTime()
 
     logdir = os.path.join(args.logdir, args.tag + \
+                            f"-impl_{args.impl}" + \
                             f"-func_{args.func}" + \
                             f"-dim_{args.x_dim}" + \
                             f"-kern_{args.kern}" + \

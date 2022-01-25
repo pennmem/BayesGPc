@@ -10,7 +10,7 @@ if [ $TRAIL == ".py" ]; then
 else
     PYEXEC=0
 fi
-
+echo ${PYEXEC}
 
 ARGS_FILE="$2"
 NUM_JOBS=`wc -l < "$ARGS_FILE"`
@@ -43,8 +43,8 @@ while IFS=" " ; read -r arr
     do
         sleep 5
         echo "$arr"
-        if [[PYEXEC -eq 0]]; then
-            qsub -b y -N $JOB_NAME -q "RAM.q" -l h_vmem=90G,s_vmem=90G -e "${LOGDIR}/err.CBayesian.${arr// /_}" -o "${LOGDIR}/out.${arr// /_}" $EXEC ${arr} --logdir $LOGDIR
+        if [[ $PYEXEC -eq 0 ]]; then
+            qsub -b y -N $JOB_NAME -q "RAM.q" -l h_vmem=90G,s_vmem=90G -e "${LOGDIR}/err.${arr// /_}" -o "${LOGDIR}/out.${arr// /_}" $EXEC ${arr} --logdir $LOGDIR
         else
             qsub -N $JOB_NAME -q "RAM.q" -l h_vmem=90G,s_vmem=90G -e "${LOGDIR}/err.${arr// /_}" -o "${LOGDIR}/out.${arr// /_}" $EXEC ${arr} --logdir $LOGDIR
         fi
