@@ -7,7 +7,7 @@
 if [[ "$#" -lt 1 ]]; then
     TAG="test"
     IMPL="CBay"
-else if [[ "$#" -lt 2 ]]; then
+elif [[ "$#" -lt 2 ]]; then
     TAG=$1
     IMPL="CBay"
 else
