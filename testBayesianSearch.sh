@@ -15,7 +15,7 @@ else
     IMPL=$2
 fi
 
-# shift 1
+# shift 2
 
 # if [[ "$#" -lt 1 ]]; then
 #     SMOKESCREEN=1
@@ -43,12 +43,12 @@ touch ARGS_FILE
 # arguments
 kernels=("Matern32")
 # kernels=("Matern32" "RBF")
-noise_levels=(0.0)
-# 0.1 0.3)
-exp_biases=(0.1)
-# 0.25 0.4)
-init_samples=(25)
-# 100)
+# noise_levels=(0.0)
+noise_levels=(0.0 0.1 0.3)
+# exp_biases=(0.1)
+exp_biases=(0.1 0.25 0.5)
+# init_samples=(25)
+init_samples=(25 100)
 
 for k in "${kernels[@]}"
 do
@@ -58,12 +58,10 @@ for e in "${exp_biases[@]}"
 do
 for s in "${init_samples[@]}"
 do
-    args="--tag ${TAG} --func all --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs 2 --kern ${k} --n_iters 150"
-    # nohup ./testBayesianSearch $args &
+    args="--tag ${TAG} --func all --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs 25 --kern ${k} --n_iters 250"
     if [ $IMPL != "CBay" ]; then
         args="--impl ${IMPL} ${args}"
     fi
-
     echo $args >> $ARGS_FILE
 done
 done
