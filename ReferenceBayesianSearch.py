@@ -570,6 +570,7 @@ if __name__ == "__main__":
                             f"-runs_{args.n_runs}" + \
                             f"-iters_{args.n_iters}" + \
                             f"-init_samp_{args.n_init_samples}" + \
+                            f"-noise_{args.noise_level}" + \
                             f"-exp_bias_{args.exp_bias}" + \
                             "_" + getDateTime())
     os.makedirs(logdir)
