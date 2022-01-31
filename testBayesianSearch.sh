@@ -41,30 +41,37 @@ ARGS_FILE=$LOGDIR/args.txt
 touch ARGS_FILE
 
 # arguments
-kernels=("Matern32")
-# kernels=("Matern32" "RBF")
+# kernels=("Matern32")
+kernels=("Matern32" "Matern52" "RBF" "RationalQuadratic")
 # noise_levels=(0.0)
-noise_levels=(0.0 0.1 0.3)
+noise_levels=(0.0 0.1 0.2 0.3)
 # exp_biases=(0.1)
 exp_biases=(0.1 0.25 0.5)
 # init_samples=(25)
-init_samples=(25 100)
+init_samples=(25 100)  # 100 in Nia implementation
 
-for k in "${kernels[@]}"
-do
 for n in "${noise_levels[@]}"
-do
-for e in "${exp_biases[@]}"
 do
 for s in "${init_samples[@]}"
 do
-    args="--tag ${TAG} --func all --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs 25 --kern ${k} --n_iters 250"
-    if [ $IMPL != "CBay" ]; then
+    if [ $IMPL == "nia" ]; then
+        args="--tag ${TAG} --func all --noise_level ${n} --n_init_samples ${s} --n_runs 25"
         args="--impl ${IMPL} ${args}"
+        echo $args >> $ARGS_FILE
+        continue
     fi
-    echo $args >> $ARGS_FILE
-done
-done
+
+    for k in "${kernels[@]}"
+    do
+    for e in "${exp_biases[@]}"
+    do
+        args="--tag ${TAG} --func all --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs 25 --kernel ${k} --n_iters 250"
+        if [ $IMPL == "skopt" ]; then
+            args="--impl ${IMPL} ${args}"
+        fi
+        echo $args >> $ARGS_FILE
+    done
+    done
 done
 done
 

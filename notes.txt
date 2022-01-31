@@ -1,7 +1,64 @@
-12/28/21
+1/28/22
+
+-PS4 used 5 restarts in the GP tuning process, try this
+    setting initial length scales to values other than the lower
+    bound resulted in frequently tuning to upper bound for high 
+    noise with skopt implementation. Strangely, though CBayes
+    is using same optimizer and the HP bounds used are huge,
+    this doesn't seem to be an issue with CBayes? 
+    
+    No, CBayes is frequently converging to small length scales on
+    schwefel, 
+    need to add named hp setting and hp bounds to all kernels
+
+    Generally, all hp initializations are set to 1 in CBayes as well
+    issues mostly resolved in skopt implementation with init 
+    length scale of 1, optimization mostly just stuck on 
+    lower bound then, probably trying to converge to zero 
+    length scale/Matern variance but can't... 
+    not really optimizing well, just working because schwefel has
+    intrinsic length scale of ~0.1
+    probably doesn't matter for smoother functions like what we expect
+    for amplitude... this still works? 
+    tunes Rosenbrock fine, kinda easy if goal isn't global optimum
+    high noise conditions are hard...
+    
+-get Python tests started
+    test across a few major kernels, both qualitatively and quantitatively
+    just set hp ranges in reasonable range, then leave fixed
+    try a few different values for the white noise parameters
+    record hp values
+-integrate into Elemem
+    Elemem CPS task design and testing
+    CMake dependencies
+-update CBayesianSearch
+    add named hp setters/bounds
+    exclude white noise from predictive variance
+    add random restarts to HP tuning?
+    start these tests as well
+    fix 2D plotting seg faults
+
+-add robust exception handling
+    HP restarts
+-implement and test selection of different discrete locations
+-add Latin hypercube sampling
+-consider adding additional randomization to prevent selection of same
+    points repetitively, can raise exp bias, need to carefully tune
+-add other improvements to algorithm, see below, in particular warm starts
+    and random selections if HP optimization taking too long with restarts
+-check what PS4 did for discrete parameter space
+    didn't seem to do anything special, may have been rounding to the nearest uA
+    1 uA was the smallest increment they rounded to in the Python code, dug into the cpp
+    implementation and didn't see anything else before the OdinLib DLL was called
+    found bug with GP SEM computation for the location comparisons
+
+-choose educational video
+-choose lockout period
+-separately log GP selected value and GP HPs at each iteration along
+    with BlackRock-rounded stim parameters
+
 
 Python reference implementation:
-    json parsing script, compute basic metrics\
     tune Python kernel
 
 tests:
@@ -35,12 +92,11 @@ integrate into Elemem - talk with James and Ryan
 get running on Windows - talk with Ryan
 
 Misc.
-    may have memory leak?
+    may have memory leak with current method of reinstantiating GPc model in BayesianSearchModel after adding each sample?
     2D plotting segfaulting unexpectedly... seems potentially related to 
     larger samples
     replace all inputs to testBayesianSearch with config json instance
     make test function members private
-    add plot saving for runs (can always reimplement in Python)
     fix seg fault when init_samples > n_iters (or when n_iters is small?)
 
 speed up compilation time
@@ -50,23 +106,60 @@ speed up compilation time
     also look into using .a libraries to reduce compilation redundancy
 
 
+notes from playing around with skopt on schwefel and rastrigin:
+    restarts could be quite helpful for multimodal functions
+    model often fixates on a single optima
+        however, more exploration can be driven with far higher exp biases (1.0-5.0)
+    results and final kernels hyperparameters from run to run are highly variable
+        GP fits feel unstable. high noise conditions are challenging...
+    qualitative behaviors:
+        best fit converging on pure noise, often results in argmin nowhere near an
+        optima, GP estimates optima in clearly suboptimal places, values that are not
+        even local optima, often just outside and hanging over into local optima
+    seems like searching with predictive mean variance rather than sample variance
+    could help encourage more
+    exploration with greater difference between explored and unexplored regions,
+    will make large difference in exp bias values between skopt/CBayes implementations
+    even successful runs that converge on a decent local optima often don't find
+    the bottom of that optima, likely means more exploration bias needed
+        
+
 add warm starts
 add intelligent choices of initializations for kernel HP tuning process
+consider removing white noise variance for estimating predictive variance of the mean?
+    GPML did not add noise variance to predictive variance, 
+    but white kernel, which represents the noise level (and is learnable), 
+    does just this. Current observation noise is only added to observation kernel covar,
+    but white kernel noise is still present in predictive kernel, givng a result
+    that is unprincipled (only part of the estimated observation noise is included)
+    Better approach would be to place min noise level on white kernel,
+    thereby replacing the current function of the observation noise as a min noise level,
+    then I should remove the white kernel noise from the predictive variance to obtain
+    an estimate of the variance of the predictive mean. 
+    Would this variance (with the white kernel removed) be estimating the predictive
+    variance in the mean? That is what we want use to compare models, not the predictive
+    variance of individual samples at a location
+    
+    If the mean at a point is known, then the variance of a sample at that point will 
+    be the observation noise by definition. If the mean is unknown, then the predictive 
+    sample variance will be the observation noise plus the predictive mean estimation noise?
+    The observation noise is assumed to be additive and independent of the mean. 
+    Therefore, it may be subtracted from the total variance to obtain the mean estimation 
+    variance since there are no other sources of variance beyond the uncertainty in 
+    estimating the mean and the observation noise (we assume the covariance is fixed by
+    construction and is independent of the sample values themselves but could have
+    its uncertainty modeled as well?)
+any needed adjustments for sampling at only highly discrete points?
+
 clean up getNextSample(), remove use of "new" if possible (I couldn't tell James why I did this, but I think
     I remember something in CGp failing when I tried that more direct approach)
 implement one-sample update function, test runtime
+try adding option for restarting search, then combining all samples over various restarts for decorrelated searches (also faster runtimes)
 
 need to deal with degenerate fitting scenarios, either select kernel HP ranges that won't result in trivial values
     (maybe a bad idea?), take best estimate (one with highest "reasonable" max) over final five sample updates, or
     perturb the samples with noise to try to shake out of degenerate local optima
     seems like algorithm either grabs onto an optimum early and converges to a non-trivial HP set or else just finds a degenerate HP set and randomly samples everywhere
-
-get standard run scripts in place for running core experiments with all functions (with appropriate numbers of runs)
-    all noise levels of interest, all main hyperparameter settings
-
-decide on set of initial tests and metrics for tuning algorithm and for achieving an endpoint
-    compare against reference implementation (skopt)
-    add two more standard test functions
 
 find another implementation to compare performance against
     also compare against L-BFGS without bounding, which seemed potentially qualitatively different, 
@@ -78,16 +171,9 @@ find another implementation to compare performance against
     
     tune the kernel hyperparameters with a standard script
 
-    get two more standard optimization benchmark functions
-
-    check what sciopt implementation is doing, might be suboptimal
-
     add uniform random sampling search process on top of GP for comparison
     get standard implementation of Bayesian search
     try differential evolution and other global optimization algorithms that handle noisy observations
-
-confirm whether "new sample" should be "new sample" or actually "next sample" 
-
 
 get VS Code Git integration in place
 Windows build, check in with Ryan about Windows 10 compatibility
@@ -184,10 +270,6 @@ nlohmann/json
 
 
 11/11/21
-
-TODO
-  // TODO test acquisition functions in separate file
-  // TODO separate out acquisition functions with templates, virtual function implementation
   exception handling. if GP or global optimizations fail, need to just sample uniform sample with 
   logged error message
     matrix non positive definite error obtained after (10) initial samples collected
@@ -246,7 +328,6 @@ TODO
         can also try fixing a minimum value for the main kernel variances
         check whether test functions are non-isometric, i.e., whether the intrinsic length scale varies directionally
         check where exactly CNoise values came into play
-        get 2D plotting in place
         try standardizing schwefel x domain? hartmann4d is standardized, also hangs
         
         handle every GPc ndl/optim error dependent on matrices being e.g. PD, nicely behaved, everything that can go wrong stochastically, 
@@ -254,7 +335,6 @@ TODO
         catch every other error with a random sample
 
         
-        DONE increase computational resources devoted to global search for higher dimensional functions
         DONE confirm sklearn comparison tests are still similarly passing and that I didn't break something
             kernel tests passing
             GPR tests passing to same degree they were before as far as I can remember (some failures, but still optimizing, seems more like some kind of disalignment of values)
@@ -265,55 +345,8 @@ TODO
         breakpoints
             seeding appears to produce reproducibility as of 11/26/21
   
-  // TODO test optimization of acquisition function
-
-
-unit tests, performance tests, runtime tests
-    performance functions
-        mixture of N gaussians test with random multidimensional mean 
-            locations so long as means are decently distributed
-        simple linear functions
-        DONE negative QUADRATIC with peak at edge
-            tests whether DE has bias against testing edges with log-transforms
-            GP/acquisition function seems to find/latch onto edge very quickly
-                might be due to high SNR, but ultimately, we don't want to cling to edges
-                might want to add noise to sampled values to prevent resampling edges
-                std estimate doesn't seem to shrink much from additional samples, likely because of high noise
-                could try lower noise levels as well
-            some sporadic fits are completely off from sampled points
-                strangely, the likelihood was not shot
-                FIXED bias may not have been learned properly
-        DONE negative quadratic with peak before edge
-            tests case in which delta increases monotonically with amplitude
-        functions with varying length scales
-        DONE function dependent on ||x||, e.g., sin(||x||), to test for feature independent effects
-            most of these kernels are stationary, so these effects should be captured
-        schwefel test function
-            has both of the previous properties
-            x_dim 1: passing at noise level of 0.1
-            x_dim 2: failing everything, finding exact same local minimum over and over, matern32 variance collapsing to zero
-            x_dim 3: not completely failing, but not optimal either
-            x_dim 4: failing, along with hartmann4d
-            all initial samples for test functions with even number of dimensions are along edges of input space
-            
-            FIXED model currently failing to find correct lengthscales and biases
-                length scale seem fixed to upper bound of 1
-                lengthscale is not arbitrarily fixed to upper bound of 1. with function 'sin', 
-                length scale grows above 1
-        PS4_2 (multi-modal PS4 test)
-            DE failing to find global optimum, tests are artificially passing
-
-
 find solid unit testing framework, look into what Elemem
 is using
-add observation noise to predictions
-    try reducing observation noise, better to only allow
-    model to fit to data? don't want higher noise than
-    needed
-
-need to correct gradients in CGp for noise, failing CGp grad tests only with observation noise and matern32 kernel, 
-passing them without observation noise
-try multiple L-BFGS optimization runs, other solvers
 
 implement discrete location selection
 
@@ -389,15 +422,6 @@ multidimensional:
         to directly use a GP with discrete RVs in combination with continuous RVs)
 
 
-Testing
-push
-Start with unit tests rather than qualitative testing, unless I have specific hypotheses in mind to improve fits
-Add search performance tests
-Add timing tests
-    ask James and Ryan about computational resources available at sites
-smart pointers
-
-
 11/8/21
 
 BO is mostly working on 1D test function of sin(x) with Matern32 kernel based on qualitative plotting tests
@@ -412,7 +436,7 @@ overall exploration is more "reluctant", much higher exploration biases being us
 CGp GP fit is much rougher than fit with sklearn using same kernel
 
 Seems like the predicted variance might be flatter than sklearn?
-sklearn appears to be only adding observation noise to sample variances, whereas CGp is adding noise all 
+sklearn appears to be only adding observation noise to sample variances, whereas CGp is adding noise to all 
 elements of covariance
 CGp was not adding observation noise to diagonal elements
 

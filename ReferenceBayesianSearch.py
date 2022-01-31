@@ -23,6 +23,7 @@ from skopt.plots import plot_convergence
 from skopt import acquisition
 
 from sklearn import gaussian_process
+from sklearn.gaussian_process import kernels
 
 from PyBenchFCN import Factory
 
@@ -327,32 +328,81 @@ def test_BO(func_name, x_dim, args, full_metrics):
         #     space.Real(-100, 100, transform='normalize'),  # Light's X coordinate
         #     space.Real(-100, 100, transform='normalize'),  # Light's Y coordinate
         #     space.Real(-100, 100, transform='normalize')]  # Light's Z coordinate
-        # search_space = [space.Real(x_bounds[d][0], x_bounds[d][1], transform='normalize') for d in range(x_dim)]  # Light's Z coordinate
-        search_space = [space.Real(x_bounds[d][0], x_bounds[d][1], transform='identity') for d in range(x_dim)]
-        transformed_x_bounds = [s.transformed_bounds for s in search_space]
 
-        kern = gaussian_process.kernels.WhiteKernel(noise_level=1.0,
-                                                    noise_level_bounds=(1e-6, 1000))
-        mean_domain_length = np.diff(fcn.x_interval, axis=1).mean()
-        kern += gaussian_process.kernels.Matern(nu=3/2, 
-                                                length_scale=1.0,
-                                                length_scale_bounds=(0.05*mean_domain_length, 
-                                                                     2.0*mean_domain_length))\
-                * gaussian_process.kernels.ConstantKernel(constant_value=1.0,
-                                                          constant_value_bounds=(0.5, 2.0))
-        # observation noise not currently being internally scaled with standard deviation of samples... (standard sklearn implementation)
-        gp = gaussian_process.GaussianProcessRegressor(kern, normalize_y=True, alpha=(0.5*fcn.noise_level) ** 2)
+        if args.impl == "nia":  # default 
+            search_space = [space.Real(x_bounds[d][0], x_bounds[d][1], transform='normalize') for d in range(x_dim)]
+            transformed_x_bounds = [s.transformed_bounds for s in search_space]
+            opt = Optimizer(search_space, 
+                            "GP", 
+                            acq_func="EI", 
+                            acq_optimizer="sampling",
+                            n_initial_points=args.n_init_samples,  #100, in original implementation 
+                            random_state=args.seed, 
+                            initial_point_generator='random')
+            # default skopt implementation seems to set additive white kernel to zero during fitting, not sure exactly what they're doing.
+            # white kernel noise levels in model kernel equal to zero after fitting process, 
+            # seems like skopt implementation is handling noise level separately
+            # fits are often quite bad on schwefel with length scales in different directions being converged to opposite extremes
+            # also much slower than using GPR with skopt.Optimizer directly
+        else:  # standard interpolation kernels plus white kernel
+            # CBayesianSearch is currently using unscaled domain
+            search_space = [space.Real(x_bounds[d][0], x_bounds[d][1], transform='identity') for d in range(x_dim)]
+            transformed_x_bounds = [s.transformed_bounds for s in search_space]
 
-        exp_bias = args.exp_bias * fcn.range
+            # TODO make generalized kernel factory function
+            kern = kernels.WhiteKernel(noise_level=1.0,
+                                       noise_level_bounds=(1e-6, 1000))
+            mean_domain_length = np.diff(fcn.x_interval, axis=1).mean()
 
-        opt = Optimizer(search_space, 
-                        gp, 
-                        acq_func="EI", 
-                        acq_optimizer="sampling", 
-                        n_initial_points=args.n_init_samples, 
-                        random_state=args.seed + run, 
-                        initial_point_generator='random',
-                        acq_func_kwargs={"xi": exp_bias})
+            length_scale_lower = 0.1
+            length_scale_upper = 2.0
+            diff = length_scale_upper - length_scale_lower
+            interp_val = 0.25
+            init_length_scale = (length_scale_lower + interp_val * diff) * mean_domain_length
+            length_scale_bounds = (0.1*mean_domain_length, 2.0*mean_domain_length)
+            var_kern = kernels.ConstantKernel(constant_value=1.0, constant_value_bounds=(0.25, 4.0))
+            if args.kernel == "Matern32":
+                kern += kernels.Matern(nu=3/2, 
+                                    length_scale=init_length_scale,
+                                    length_scale_bounds=length_scale_bounds) * var_kern
+            elif args.kernel == "Matern52":
+                kern += kernels.Matern(nu=5/2, 
+                                    length_scale=init_length_scale,
+                                    length_scale_bounds=length_scale_bounds) * var_kern
+            elif args.kernel == "RBF":
+                kern += kernels.RBF(length_scale=init_length_scale,
+                                    length_scale_bounds=length_scale_bounds) * var_kern
+            elif args.kernel == "RationalQuadratic":
+                kern += kernels.RationalQuadratic(length_scale=init_length_scale,
+                                                alpha=1.0, 
+                                                length_scale_bounds=length_scale_bounds,
+                                                alpha_bounds=(1e-1, 1e1)) * var_kern
+            elif args.kernel == "DotProduct":
+                kern += kernels.DotProduct(sigma_0=1.0, 
+                                        sigma_0_bounds=(1e-05, 100000)) * var_kern
+            elif args.kernel == "lin":
+                raise NotImplementedError
+                # kern += kernels.L(nu=3/2, 
+                #                        length_scale=init_length_scale,
+                #                        length_scale_bounds=length_scale_bounds) * var_kern
+            else: raise NotImplementedError
+
+            # observation noise not currently being internally scaled with standard deviation of samples... (standard sklearn implementation)
+            gp = gaussian_process.GaussianProcessRegressor(kern,
+                                                        normalize_y=True,
+                                                        alpha=(0.5*fcn.noise_level) ** 2,
+                                                        n_restarts_optimizer=0)
+
+            exp_bias = args.exp_bias * fcn.range
+
+            opt = Optimizer(search_space, 
+                            gp, 
+                            acq_func="EI", 
+                            acq_optimizer="sampling", 
+                            n_initial_points=args.n_init_samples, 
+                            random_state=args.seed + run, 
+                            initial_point_generator='random',
+                            acq_func_kwargs={"xi": exp_bias})
 
         for iter in range(args.n_iters):
             t = time.time()
@@ -398,32 +448,34 @@ def test_BO(func_name, x_dim, args, full_metrics):
                     x1s = np.linspace(fcn.x_interval[0, 0], fcn.x_interval[0, 1], n_points)
                     x2s = np.linspace(fcn.x_interval[1, 0], fcn.x_interval[1, 1], n_points)
                     x1, x2 = np.meshgrid(x1s, x2s)
+
                     X = np.concatenate([x1.reshape(-1, 1), 
                                         x2.reshape(-1, 1)], 
                                         axis=1)
                     f_true = fcn.f(X, add_noise=False).reshape(x1.shape)
                     # f_min = np.min(f_true)
                     # f_max = np.max(f_true)
+                    X_transformed = np.concatenate([s.transform(X[:, i]).reshape(-1, 1) for i, s in enumerate(search_space)], axis=1)
+
+                    acq = acquisition._gaussian_acquisition(X_transformed, opt.models[-1],
+                            y_opt=np.min(opt.yi),
+                            acq_func=opt.acq_func,
+                            acq_func_kwargs=opt.acq_func_kwargs).reshape(x1.shape)
+
+                    cs = plt.contourf(x1, x2, acq, levels=levels)
+                    plt.colorbar(cs)
+                    plt.scatter(np.array(opt.Xi)[:, 0],
+                                np.array(opt.Xi)[:, 1], s=1, marker='.', c="k")
+                    plt.title(f"Acquisition function")
+
+                    plt.figure()
                     ax = plt.axes(projection='3d')
                     ax.plot_surface(x1, x2, f_true, cmap='viridis', edgecolor='none')
                     ax.set_title(f"True function: {args.func}")
-                    plt.figure()
-                    cs = plt.contourf(x1, x2, f_true, levels=levels)
-                    plt.colorbar(cs)
-                    plt.scatter(np.array(opt.Xi)[:, 0], 
-                                np.array(opt.Xi)[:, 1], s=1, marker='.', c="k")
-                    plt.title(f"True function: {args.func}")
 
-                    X_transformed = np.concatenate([s.transform(X[:, i]).reshape(-1, 1) for i, s in enumerate(search_space)], axis=1)
                     mu, std = opt.models[-1].predict(X_transformed, return_std=True)
                     mu = mu.reshape(x1.shape)
                     std = std.reshape(x1.shape)
-                    plt.figure()
-                    cs = plt.contourf(x1, x2, mu, levels=levels)
-                    plt.colorbar(cs)
-                    plt.scatter(np.array(opt.Xi)[:, 0], 
-                                np.array(opt.Xi)[:, 1], s=1, marker='.', c="k")
-                    plt.title(f"GP mean")
 
                     plt.figure()
                     cs = plt.contourf(x1, x2, std, levels=levels)
@@ -432,17 +484,19 @@ def test_BO(func_name, x_dim, args, full_metrics):
                                 np.array(opt.Xi)[:, 1], s=1, marker='.', c="k")
                     plt.title(f"GP std")
 
-                    acq = acquisition._gaussian_acquisition(X_transformed, opt.models[-1],
-                            y_opt=np.min(opt.yi),
-                            acq_func=opt.acq_func,
-                            acq_func_kwargs=opt.acq_func_kwargs).reshape(x1.shape)
+                    plt.figure()
+                    cs = plt.contourf(x1, x2, mu, levels=levels)
+                    plt.colorbar(cs)
+                    plt.scatter(np.array(opt.Xi)[:, 0], 
+                                np.array(opt.Xi)[:, 1], s=1, marker='.', c="k")
+                    plt.title(f"GP mean")
 
                     plt.figure()
-                    cs = plt.contourf(x1, x2, acq, levels=levels)
+                    cs = plt.contourf(x1, x2, f_true, levels=levels)
                     plt.colorbar(cs)
-                    plt.scatter(np.array(opt.Xi)[:, 0],
+                    plt.scatter(np.array(opt.Xi)[:, 0], 
                                 np.array(opt.Xi)[:, 1], s=1, marker='.', c="k")
-                    plt.title(f"Acquisition function")
+                    plt.title(f"True function: {args.func}")
                 else:
                     raise ValueError
                 print(opt.models[-1].kernel_)
@@ -486,7 +540,7 @@ if __name__ == "__main__":
     parser.add_argument("--x_dim", type=int, default=1)
 
     # model hyperparameters
-    parser.add_argument("--kern", type=str, default="Matern32")
+    parser.add_argument("--kernel", type=str, default="Matern32")
     parser.add_argument("--n_runs", type=int, default=1)
     parser.add_argument("--n_iters", type=int, default=250)
     parser.add_argument("--n_init_samples", type=int, default=50)
@@ -496,7 +550,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.impl != "skopt":
+    if args.impl not in ["skopt", "nia"]:
         raise NotImplementedError
 
     args.GIT_BRANCH = GIT_BRANCH
@@ -512,7 +566,7 @@ if __name__ == "__main__":
                             f"-impl_{args.impl}" + \
                             f"-func_{args.func}" + \
                             f"-dim_{args.x_dim}" + \
-                            f"-kern_{args.kern}" + \
+                            f"-kern_{args.kernel}" + \
                             f"-runs_{args.n_runs}" + \
                             f"-iters_{args.n_iters}" + \
                             f"-init_samp_{args.n_init_samples}" + \
@@ -541,21 +595,21 @@ if __name__ == "__main__":
                 #  ("PS4_3", 1),
                 #  ("PS4_4", 1),
                 ("schwefel", 1),
-                 ("schwefel", 2),
-                 ("schwefel", 4),
+                ("schwefel", 2),
+                ("schwefel", 4),
                 ("hartmann4d", 4),
                 ("ackley", 1),
-                 ("ackley", 2),
-                 ("ackley", 4),
+                ("ackley", 2),
+                ("ackley", 4),
                 ("rastrigin", 1),
-                 ("rastrigin", 2),
-                 ("rastrigin", 4),
+                ("rastrigin", 2),
+                ("rastrigin", 4),
                 ("eggholder", 2),
                 ("sum_squares", 1),
-                 ("sum_squares", 2),
-                 ("sum_squares", 4),
+                ("sum_squares", 2),
+                ("sum_squares", 4),
                 ("rosenbrock", 2),
-                 ("rosenbrock", 4),
+                ("rosenbrock", 4),
         ]
     else:
         funcs = [(args.func, args.x_dim)]

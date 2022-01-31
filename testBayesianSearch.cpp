@@ -137,6 +137,7 @@ int main(int argc, char* argv[])
     // keep old .txt logging method for now...
     json config;
     config["impl"] = string("CBay");
+    config["tag"] = tag_arg;
     config["logdir"] = log_dir;
     config["verbosity"] = verbosity;
     config["plot"] = plotting;

@@ -621,7 +621,7 @@ void CGp::_posteriorVar(CMatrix& varSigma, CMatrix& kX, const CMatrix& Xin) cons
       vsVal += 1.0/getBetaVal();
       for(unsigned int j=0; j<getOutputDim(); j++)
       {
-	varSigma.setVal(vsVal, i, j);
+	      varSigma.setVal(vsVal, i, j);
       }
     }
   }
