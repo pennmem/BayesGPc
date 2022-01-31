@@ -342,7 +342,9 @@ def test_BO(func_name, x_dim, args, full_metrics):
             # default skopt implementation seems to set additive white kernel to zero during fitting, not sure exactly what they're doing.
             # white kernel noise levels in model kernel equal to zero after fitting process, 
             # seems like skopt implementation is handling noise level separately
-            # fits are often quite bad on schwefel with length scales in different directions being converged to opposite extremes
+            # fits are often quite bad on schwefel with length 
+            # scales in different directions being converged to opposite extremes
+            # seems maybe more consistent overall? need to directly test, store kernel parameters...
             # also much slower than using GPR with skopt.Optimizer directly
         else:  # standard interpolation kernels plus white kernel
             # CBayesianSearch is currently using unscaled domain
