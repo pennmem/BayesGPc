@@ -23,6 +23,7 @@
 
 class BayesianSearchModel {
     public:
+        BayesianSearchModel() {}
         BayesianSearchModel(CCmpndKern& kernel, CMatrix* param_bounds, double observation_noise, double exp_bias, int init_samples, int rng_seed, int verbose) {
             kern = kernel.clone();
             // TODO check bounds dimensions
@@ -40,6 +41,8 @@ class BayesianSearchModel {
             x_samples = new CMatrix(1, x_dim);
             y_samples = new CMatrix(1, 1);
         }
+        BayesianSearchModel(const BayesianSearchModel&) = delete;
+        BayesianSearchModel& operator=(const BayesianSearchModel&) = delete;
 
         ~BayesianSearchModel() {
             delete x_samples;

@@ -1,3 +1,26 @@
+2/8/22
+Elemem integration
+
+config:
+    DONE get classifier weights file
+
+test experiment
+
+DONE logging
+DONE update CPS config updating to FR5-style
+
+update BO or ExperCPS to handle multiple parallel searches
+    add wrapper to BO?
+    any need to do this within cpp? could just compute with separate Python script...
+
+add discretized grid search functionality for selecting next point
+
+add enumerations for stim parameters
+
+LATER:
+interface:
+    add min/max check boxes for amplitude
+
 1/28/22
 
 -PS4 used 5 restarts in the GP tuning process, try this

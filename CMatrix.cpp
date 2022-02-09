@@ -113,7 +113,7 @@ int CMatrix::sysv(const CMatrix& A, const char* uplo, int lwork)
   DIMENSIONMATCH(nrows==A.nrows);
   if(lwork < 0)
     lwork = 3*nrows;
-  int info;
+  int info = 0;
   std::vector<int> ipivv(nrows);
   int *ipiv = &ipivv[0];
   CMatrix work(1, lwork);
