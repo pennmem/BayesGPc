@@ -1,22 +1,30 @@
 #include "CMatrix.h"
 #include "CBayesianSearch.h"
+#include <boost/math/distributions/fisher_f.hpp>
+#include <boost/math/distributions/students_t.hpp>
 
 struct ComparisonStruct {
-    CMatrix x,
+    int idx_best,
     vector<CMatrix> xs,
     vector<double> mus,
-    double anova_pval,
-    vector<double> sham_pvals
-    int model_idx,
+    vector<double> sems,
+    vector<double> ns,  // effective sample sizes
+    double pval,
 };
+
+struct TestStruct {
+    double stat,
+    double pval
+}
 
 class CSearchComparison {
     CSearchComparison() {}
 
-    CSearchComparison(int n_models, vector<CCmpndKern> kernels, vector<CMatrix> param_bounds, 
+    CSearchComparison(int n_models, double alpha, vector<CCmpndKern> kernels, vector<CMatrix> param_bounds, 
             vector<double> observation_noises, vector<double> exp_biases, vector<int> init_samples, 
             vector<int> rng_seeds, int verbose) {
         num_models = n_models;
+        pthreshold = alpha;
         kerns = kernels;
         bounds = param_bounds;
         obsNoises = observation_noises; 
@@ -37,6 +45,7 @@ class CSearchComparison {
     ComparisonStruct get_best_solution();
 
     unsigned int num_models;
+    double pthreshold;
     vector<BayesianSearchModel> models;
     vector<CCmpndKern> kerns;
     vector<CMatrix> param_bounds;

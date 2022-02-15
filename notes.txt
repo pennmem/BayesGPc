@@ -218,7 +218,8 @@ random testBayesianSearch processes running in background, don't seem like addit
 
 Installation notes:
 
-Mac build requires Xcode version 12.05 (newer versions broke the build)
+Mac build requires Xcode version 12.05 (12.0.5?) (newer versions broke the build)
+clang version 12.0.5
 
 look into version packaging for reproducibility
 
