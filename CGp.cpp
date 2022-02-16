@@ -484,6 +484,23 @@ void CGp::out(CMatrix& yPred, CMatrix& probPred, const CMatrix& Xin) const
   posteriorMeanVar(muTest, varSigmaTest, Xin);
   pnoise->out(yPred, probPred, muTest, varSigmaTest);
 }
+void CGp::out_sem(CMatrix& yPred, CMatrix& probPred, const CMatrix& Xin) const
+{
+  out(yPred, probPred, Xin);
+  probPred -= sqrt(obsNoiseVar + pkern->getWhite() * (scale.getVal(0) * scale.getVal(0)));
+  for(unsigned int i=0; i<probPred.getRows(); i++)
+  {
+    double vsVal = probPred(i);
+    if (vsVal < 0) {
+      cout << "Negative predictive SEM: " << vsVal << endl;
+      if (vsVal < -1e-6)  // allow some room for numerical stability
+        CHECKZEROORPOSITIVE(vsVal >= -1e-6);
+      else {
+        probPred(i) = 0;
+      }
+    }
+  }
+}
 double CGp::outGradParams(CMatrix& g, const CMatrix &Xin, unsigned int pointNo, unsigned int outputNo) const
 {
   throw ndlexceptions::NotImplementedError("outGradParams not yet implemented for CGp.");

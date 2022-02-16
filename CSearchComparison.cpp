@@ -18,16 +18,16 @@ ComparisonStruct CSearchComparison::get_best_solution() {
     CMatrix std_pred(1, 1);
     for (int i = 0; i < num_models; i++) {
         // get best predictions
-        xs.push(models[i].get_best_solution());
-        models[i].gp->out_sem(y_pred, sem_pred, xs[i]);
-        mus.push(y_pred.getVal(0));
-        sems.push(sem_pred.getVal(0));
+        xs.push_back(models[i]->get_best_solution());
+        models[i]->gp->out_sem(y_pred, sem_pred, *(xs[i]));
+        mus.push_back(y_pred.getVal(0));
+        sems.push_back(sem_pred.getVal(0));
 
         if (mus[i] > best_val) { idx_best = i; }
         
         // estimate effective GP sample sizes
-        models[i].gp->out(y_pred, std_pred, xs[i]);
-        eff_ns.push(std::pow(std_pred.getVal(0) / sems[i], 2));
+        models[i]->gp->out(y_pred, std_pred, *(xs[i]));
+        eff_ns.push_back(std::pow(std_pred.getVal(0) / sems[i], 2));
     }
 
     TestStruct test = anova_welch(mus, sems, eff_ns);
@@ -47,15 +47,15 @@ ComparisonStruct CSearchComparison::get_best_solution() {
 
 
 // compare distribution of samples to predicted distribution from GP using Welch's t-test
-vector<double> CSearchComparison::compare_GP_to_sample(const ComparisonStruct& res, const vector<double>& dist_results) {
+TestStruct CSearchComparison::compare_GP_to_sample(const ComparisonStruct& res, const vector<double>& dist_results) {
     double mu2 = 0;
     double sem2 = -1;
     double n2 = dist_results.size();
-    for (int i = 0; i < n2; i++;) { mu2 += dist_results[i]; }
+    for (int i = 0; i < n2; i++) { mu2 += dist_results[i]; }
     mu2 /= n2;
-    for (int i = 0; i < n2; i++;) { sem2 += std:pow(dist_results[i] - mu2, 2); }
+    for (int i = 0; i < n2; i++) { sem2 += std::pow(dist_results[i] - mu2, 2); }
     sem2 /= n2 - 1;  // variance estimate
-    sem2 = std:sqrt(sem2/n2);
+    sem2 = std::sqrt(sem2/n2);
     TestStruct ttest_res = ttest_welch(res.mus[res.idx_best], mu2, 
                                        res.sems[res.idx_best], sem2, 
                                        res.ns[res.idx_best], n2);
@@ -63,8 +63,8 @@ vector<double> CSearchComparison::compare_GP_to_sample(const ComparisonStruct& r
 }
 
 
-TestStruct anova_welch(vector<double> mus,  
-                       vector<double> sems, 
+TestStruct anova_welch(vector<double> mus,
+                       vector<double> sems,
                        vector<double> ns) {
     TestStruct res;
     int n_groups = mus.size();
@@ -74,10 +74,10 @@ TestStruct anova_welch(vector<double> mus,
 
     for (int i = 0; i < n_groups; i++) {
         // reciprocated square-SEM
-        ws.push(std::pow(1/sems[i], 2));
+        ws.push_back(std::pow(1/sems[i], 2));
         w_sum += ws[i];
         mu_total += ws[i] * mus[i];
-    }    
+    }
     mu_total /= w_sum;
 
     double MSTR = 0;
@@ -96,15 +96,16 @@ TestStruct anova_welch(vector<double> mus,
         // are somewhat unstable and highly dependent on initialization. I need to run tests of the
         // parameter stability and talk with Mike.
         // better estimates of degrees of freedom available, see https://hastie.su.domains/Papers/cantoni_biometrika.pdf
-        assert(eff_n > 1);
+        assert(ns[i] > 1);
         lambda += std::pow(1.0 - ws[i]/w_sum, 2)/(ns[i] - 1);
     }
-    lambda *= 3.0 / (std::pow(n_groups, 2) - 1);
+    lambda *= 3.0 / (n_groups * n_groups - 1);
 
     res.stat = MSTR/(1 + 2 * lambda * (n_groups - 2)/3);
-    boost::math::fisher_f::fisher_f Fdist(n_groups - 1, 1/lambda);
+    boost::math::fisher_f Fdist(n_groups - 1, 1/lambda);
     
     res.pval = cdf(complement(Fdist, res.stat));
+    return res;
 }
 
 
@@ -114,15 +115,16 @@ TestStruct ttest_welch(double mu1, double mu2,
                        double n1, double n2) {
     TestStruct res;
 
-    sem1_2 = std::pow(sem1, 2);
-    sem2_2 = std::pow(sem2, 2);
+    double sem1_2 = sem1 * sem1;
+    double sem2_2 = sem2 * sem2;
 
     // t-stat
     res.stat = (mu1 - mu2)/std::sqrt(sem1_2 + sem2_2);
     
     double dof = std::pow(sem1_2 + sem2_2, 2) / (std::pow(sem1_2, 2)/(n1 - 1) + std::pow(sem2_2, 2)/(n2 - 1));
-    boost::math::students_t::students_t dist(dof);
+    boost::math::students_t dist(dof);
     res.pval = cdf(complement(dist, res.stat));
 
     return res;
 }
+

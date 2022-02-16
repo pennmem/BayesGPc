@@ -1084,6 +1084,30 @@ CMatrix stdCol(const CMatrix& A)
     v.setVal(sqrt(v.getVal(i)), i);
   return v;
 }
+CMatrix varCol(const CMatrix& A, const double dof)
+{
+  CMatrix M = meanCol(A);
+  assert(dof>=0);
+  DIMENSIONMATCH((double)A.getRows()>dof);
+  double numRowsInv = 1.0/(double)(A.getRows() - dof);
+  double temp;
+  for(unsigned int j=0; j<A.getCols(); j++) {
+    double val = 0;
+    for (unsigned int i=0; i<A.getRows(); i++) {
+      temp = A.getVal(i, j) - M.getVal(0, j);
+      val += temp*temp;
+    }
+    M.setVal(val*numRowsInv, 0, j);
+  }
+  return M;
+}
+CMatrix stdCol(const CMatrix& A, const double dof)
+{
+  CMatrix v = varCol(A, dof);
+  for(unsigned int i=0; i<A.getCols(); i++)
+    v.setVal(sqrt(v.getVal(i)), i);
+  return v;
+}
 CMatrix zeros(const int rows, const int cols) {
   CMatrix z(rows, cols);
   z.zeros();

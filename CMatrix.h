@@ -1328,7 +1328,10 @@ CMatrix stdRow(const CMatrix&);
 CMatrix sumCol(const CMatrix&);
 CMatrix meanCol(const CMatrix&);
 CMatrix varCol(const CMatrix&);
+// corrected for different degrees of freedom
+CMatrix varCol(const CMatrix&, const double dof);
 CMatrix stdCol(const CMatrix&);
+CMatrix stdCol(const CMatrix&, const double dof);
 //  Log determinant of a positive definite matrix where U is the Cholesky decomposition of the matrix.
 double logDet(const CMatrix& U);
 

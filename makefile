@@ -93,6 +93,15 @@ testKern_sklearn.o: testKern_sklearn.cpp CKern.h ndlassert.h ndlexceptions.h CTr
   CClctrl.h sklearn_util.h
 	$(CC) -c testKern_sklearn.cpp -o testKern_sklearn.o $(CCFLAGS)
 
+testCSearchComparison.o: testCSearchComparison.cpp CSearchComparison.h CBayesianSearch.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \
+  CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h ndlfortran_lbfgsb.h \
+  lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
+  CClctrl.h sklearn_util.h
+	$(CC) -c testCSearchComparison.cpp -o testCSearchComparison.o $(CCFLAGS)
+
+testCSearchComparison: testCSearchComparison.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o ndlassert.o
+	$(LD) ${XLINKERFLAGS} -o testCSearchComparison testCSearchComparison.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o $(LDFLAGS)
+
 testBayesianSearch: testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o ndlassert.o Logger.o bayesPlotUtil.o BayesTestFunction.o
 	$(LD) ${XLINKERFLAGS} -o testBayesianSearch testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o Logger.o bayesPlotUtil.o BayesTestFunction.o $(LDFLAGS)
 
@@ -216,6 +225,12 @@ CBayesianSearch.o: CBayesianSearch.cpp CBayesianSearch.h CGp.cpp CGp.h \
   ndlfortran.h lapack.h CKern.h CTransform.h CDataModel.h CDist.h \
   CNoise.h
 	$(CC) -c CBayesianSearch.cpp -o CBayesianSearch.o $(CCFLAGS) ${BOOSTLIB}
+
+CSearchComparison.o: CSearchComparison.cpp CSearchComparison.h CBayesianSearch.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \
+  CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h ndlfortran_lbfgsb.h \
+  lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
+  CClctrl.h sklearn_util.h
+	$(CC) -c CSearchComparison.cpp -o CSearchComparison.o $(CCFLAGS)
 
 ndlutil.o: ndlutil.cpp ndlutil.h ndlassert.h ndlexceptions.h ndlfortran.h
 	$(CC) -c ndlutil.cpp -o ndlutil.o $(CCFLAGS)

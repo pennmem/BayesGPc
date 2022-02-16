@@ -416,6 +416,4 @@ int testKern(CKern* kern, CKern* kern2, const string fileName)
 
   return fail;
 
-
 }
-

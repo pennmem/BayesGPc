@@ -46,6 +46,7 @@ public:
   // For MapModel interface.
   void out(CMatrix& yPred, const CMatrix& inData) const;
   void out(CMatrix& yPred, CMatrix& probPred, const CMatrix& inData) const;
+  void out_sem(CMatrix& yPred, CMatrix& probPred, const CMatrix& Xin) const;
   double outGradParams(CMatrix& g, const CMatrix& Xin, unsigned int pointNo, unsigned int outputNo) const;
   double outGradX(CMatrix& g, const CMatrix& Xin, unsigned int pointNo, unsigned int outputNo) const;
 
