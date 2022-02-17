@@ -6,6 +6,7 @@ using namespace std;
 
 int testType(const string kernelType);
 int testKern(CKern* kern, const string fileName);
+int testKernNaming();
 
 int main()
 {
@@ -42,6 +43,7 @@ int main()
    
     // fail += testType("cmpnd");
     // // fail += testType("tensor");
+    fail += testKernNaming();
     cout << "Number of failures: " << fail << "." << endl;
   }
   catch(ndlexceptions::FileFormatError err)
@@ -247,13 +249,10 @@ int testKern(CKern* kern, const string fileName)
 
   // double* temp = npz["params"].data<double>();
   // CMatrix params(temp, npz["params"].shape[0], npz["params"].shape[1]);
-  // params.readMatlabFile(fileName, "params");
 
   // temp = npz["X"].data<double>();
   CMatrix X(npz["X"].data<double>(), npz["X"].shape[0], npz["X"].shape[1]);
-  // X.readMatlabFile(fileName, "X");
   CMatrix X2(npz["X2"].data<double>(), npz["X2"].shape[0], npz["X2"].shape[1]);
-  // X2.readMatlabFile(fileName, "X2");
   // kern->setTransParams(params);
   // test GCp model and model loaded directly from reference implementation match
   // kern2->readMatlabFile(fileName, "kern2");
@@ -447,3 +446,97 @@ int testKern(CKern* kern, const string fileName)
   cout << endl;
   return fail;
 }
+
+// test recursive naming structure for kernels
+int testKernNaming() {
+  int fail = 0;
+
+  // basic kernel
+  string var_name = "variance";
+  string ls_name = "lengthScale";
+
+  CMatern32Kern matern32;
+  matern32.setParamByName(var_name, 1.0);
+  matern32.setParamByName(ls_name, 2.0);
+
+  assert(matern32.getParamByName(var_name) == 1.0);
+  assert(matern32.getParamByName(ls_name) == 2.0);
+
+  CMatrix ls_bounds(1, 2);
+  ls_bounds(0,0) = 0.1;
+  ls_bounds(0,1) = 0.5;
+  CMatrix var_bounds(1, 2);
+  var_bounds(0,0) = 0.3;
+  var_bounds(0,1) = 0.7;
+  matern32.setBoundsByName(var_name, var_bounds);
+  matern32.setBoundsByName(ls_name, ls_bounds);
+
+  assert(var_bounds.equals(matern32.getBoundsByName(var_name)));
+  assert(ls_bounds.equals(matern32.getBoundsByName(ls_name)));
+
+  // kernel with one layer of nesting
+  var_name = string("matern32_0:variance");
+  ls_name = string("matern32_0:lengthScale");
+  string white_name = "white_1:variance";
+  CWhiteKern white;
+
+  CCmpndKern cmpd_kern;
+  cmpd_kern.addKern(&matern32);
+  cmpd_kern.addKern(&white);
+  cmpd_kern.setParamByName(var_name, 3.0);
+  cmpd_kern.setParamByName(ls_name, 4.0);
+  cmpd_kern.setParamByName(white_name, 5.0);
+
+  assert(cmpd_kern.getParamByName(var_name) == 3.0);
+  assert(cmpd_kern.getParamByName(ls_name) == 4.0);
+  assert(cmpd_kern.getParamByName(white_name) == 5.0);
+
+  ls_bounds(0,0) = 1.1;
+  ls_bounds(0,1) = 1.5;
+  var_bounds(0,0) = 1.3;
+  var_bounds(0,1) = 1.7;
+  CMatrix white_bounds(1, 2);
+  white_bounds(0, 0) = 1.2;
+  white_bounds(0, 1) = 1.8;
+
+  cmpd_kern.setBoundsByName(var_name, var_bounds);
+  cmpd_kern.setBoundsByName(ls_name, ls_bounds);
+  cmpd_kern.setBoundsByName(white_name, white_bounds);
+
+  assert(var_bounds.equals(cmpd_kern.getBoundsByName(var_name)));
+  assert(ls_bounds.equals(cmpd_kern.getBoundsByName(ls_name)));
+  assert(white_bounds.equals(cmpd_kern.getBoundsByName(white_name)));
+
+  // kernel with two layers of nesting
+  CCmpndKern cmpd2;
+  cmpd2.addKern(&cmpd_kern);
+  var_name = string("cmpnd_0:matern32_0:variance");
+  ls_name = string("cmpnd_0:matern32_0:lengthScale");
+  white_name = string("cmpnd_0:white_1:variance");
+
+  cmpd2.setParamByName(var_name, 6.0);
+  cmpd2.setParamByName(ls_name, 7.0);
+  cmpd2.setParamByName(white_name, 8.0);
+
+  assert(cmpd2.getParamByName(var_name) == 6.0);
+  assert(cmpd2.getParamByName(ls_name) == 7.0);
+  assert(cmpd2.getParamByName(white_name) == 8.0);
+
+  ls_bounds(0,0) = 2.1;
+  ls_bounds(0,1) = 2.5;
+  var_bounds(0,0) = 2.3;
+  var_bounds(0,1) = 2.7;
+  white_bounds(0, 0) = 2.2;
+  white_bounds(0, 1) = 2.8;
+
+  cmpd2.setBoundsByName(var_name, var_bounds);
+  cmpd2.setBoundsByName(ls_name, ls_bounds);
+  cmpd2.setBoundsByName(white_name, white_bounds);
+
+  assert(var_bounds.equals(cmpd2.getBoundsByName(var_name)));
+  assert(ls_bounds.equals(cmpd2.getBoundsByName(ls_name)));
+  assert(white_bounds.equals(cmpd2.getBoundsByName(white_name)));
+
+  return fail;
+}
+

@@ -637,6 +637,7 @@ void CWhiteKern::_init()
   setParamName("variance", 0);
   addTransform(CTransform::defaultPositive(), 0);
   setStationary(true);
+  setDefaultBounds();
 }
 void CWhiteKern::setInitParam()
 {
@@ -801,6 +802,7 @@ void CWhitefixedKern::_init()
   setType("whitefixed");
   setName("fixed white noise");
   setStationary(true);
+  setDefaultBounds();
 }
 void CWhitefixedKern::setInitParam()
 {
@@ -923,6 +925,7 @@ void CBiasKern::_init()
   setParamName("variance", 0);
   addTransform(CTransform::defaultPositive(), 0);
   setStationary(true);
+  setDefaultBounds();
 }
 
 void CBiasKern::setInitParam()
@@ -1064,6 +1067,7 @@ void CRbfKern::_init()
   setParamName("variance", 1);
   addTransform(CTransform::defaultPositive(), 1);
   setStationary(true);
+  setDefaultBounds();
 }
 void CRbfKern::setInitParam()
 {
@@ -1298,6 +1302,7 @@ void CExpKern::_init()
   setParamName("variance", 1);
   addTransform(CTransform::defaultPositive(), 1);
   setStationary(true);
+  setDefaultBounds();
 }
 void CExpKern::setInitParam()
 {
@@ -1496,6 +1501,7 @@ void CRatQuadKern::_init()
   setParamName("variance", 2);
   addTransform(CTransform::defaultPositive(), 2);
   setStationary(true);
+  setDefaultBounds();
 }
 void CRatQuadKern::setInitParam()
 {
@@ -1743,6 +1749,7 @@ void CMatern32Kern::_init()
   addTransform(CTransform::defaultPositive(), 0);
   setParamName("variance", 1);
   addTransform(CTransform::defaultPositive(), 1);
+  setDefaultBounds();
   setStationary(true);
 }
 void CMatern32Kern::setInitParam()
@@ -1991,6 +1998,7 @@ void CMatern52Kern::_init()
   setParamName("variance", 1);
   addTransform(CTransform::defaultPositive(), 1);
   setStationary(true);
+  setDefaultBounds();
 }
 void CMatern52Kern::setInitParam()
 {
@@ -2253,6 +2261,7 @@ void CLinKern::_init()
   setParamName("variance", 0);
   addTransform(CTransform::defaultPositive(), 0);
   setStationary(false);
+  setDefaultBounds();
 }
 void CLinKern::setInitParam()
 {
@@ -2425,6 +2434,7 @@ void CMlpKern::_init()
   setParamName("variance", 2);
   addTransform(CTransform::defaultPositive(), 2);
   setStationary(false);
+  setDefaultBounds();
 }
 void CMlpKern::setInitParam()
 {
@@ -2719,6 +2729,7 @@ void CPolyKern::_init()
   setParamName("variance", 2);
   addTransform(CTransform::defaultPositive(), 2);
   setStationary(false);
+  setDefaultBounds();
 }
 void CPolyKern::setInitParam()
 {
@@ -2955,6 +2966,7 @@ void CLinardKern::_init()
   setParamName("variance", 0);
   addTransform(CTransform::defaultPositive(), 0);
   setStationary(false);
+  setDefaultBounds();
 }
 void CLinardKern::setInitParam()
 { 
@@ -3195,6 +3207,7 @@ void CRbfardKern::_init()
   setParamName("variance", 1);
   addTransform(CTransform::defaultPositive(), 1);
   setStationary(true);
+  setDefaultBounds();
 }
 void CRbfardKern::setInitParam()
 {
@@ -3459,7 +3472,7 @@ void CMlpardKern::_init()
   setParamName("variance", 2);
   addTransform(CTransform::defaultPositive(), 2);
   setStationary(false);
-
+  setDefaultBounds();
 }
 void CMlpardKern::setInitParam()
 {
@@ -3896,6 +3909,7 @@ void CPolyardKern::_init()
   setParamName("variance", 2);
   addTransform(CTransform::defaultPositive(), 2);
   setStationary(false);
+  setDefaultBounds();
 }
 void CPolyardKern::setInitParam()
 {

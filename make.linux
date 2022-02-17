@@ -13,6 +13,8 @@ LIBDCOMMAND = gcc -shared -o
 LIBSEXT = .a
 LIBDEXT = .so
 
+OPT_LEVEL=3
+
 DEP_DIR =/mnt/c/Users/dasha/Documents/research/stim_cml/source/dependencies
 
 # Python-numpy interface
@@ -29,10 +31,10 @@ NPYLINKFLAG =${NPYLIBS}
 
 # optim library
 OPTIMDIR =./../dependencies/optim/header_only_version
-OPTIMFLAG =-O3 -march=native -ffp-contract=fast -I${OPTIMDIR}
+OPTIMFLAG =-O${OPT_LEVEL} -march=native -ffp-contract=fast -I${OPTIMDIR}
 # for armadillo backend in place of eigen. Not currently being used.
 # ARMADILLODIR =/usr/local/include/armadillo
-# OPTIMFLAG =-O3 -march=native -ffp-contract=fast -I${ARMADILLODIR} -I${OPTIMDIR}
+# OPTIMFLAG =-O${OPT_LEVEL} -march=native -ffp-contract=fast -I${ARMADILLODIR} -I${OPTIMDIR}
 # OPTIMLINKFLAG = -loptim
 
 # matplot
@@ -63,4 +65,4 @@ LDFLAGS = ${LAPACKLIBS} ${F2CLIB} -lc ${MATPLOTLINKFLAG} ${NPYLINKFLAG} -lquadma
 CC=g++
 CCFLAGS = -std=c++17 -ggdb -DDBG -fPIC -I$(INCLUDE) -D$(PLAT) $(MATLABFLAG) $(OPTIMFLAG) $(BOOSTLIB_INCLUDE) ${MATPLOT_INCLUDE_DIRS} $(JSON_INCLUDE_DIRS) $(NPY_INCLUDE)
 FC=gfortran
-FCFLAGS = -funroll-all-loops -O3 -fPIC
+FCFLAGS = -funroll-all-loops -O${OPT_LEVEL} -fPIC

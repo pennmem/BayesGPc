@@ -64,9 +64,30 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
     for(unsigned int i=0; i<indices.size(); i++)
       d.setVal(diagComputeElement(X, indices[i]), i);
   }
- 
+  // get the index of a parameter
+  virtual unsigned int getParamIndex(string name) const
+  {
+    string n;
+    for (unsigned int i = 0; i < nParams; i++)
+    {
+      string n = getParamName(i);
+      if (n.compare(name) == 0) {
+        return i;
+      }
+    }
+    throw ndlexceptions::Error(string("Unknown parameter name.") + name);
+  }
   // Set the parameters of the kernel.
   virtual void setParam(double, unsigned int)=0;
+  // Get a particular parameter.
+  virtual double getParam(unsigned int) const=0;
+  virtual void setParamByName(const string name, double val) {
+    setParam(val, getParamIndex(name));
+  };
+  virtual double getParamByName(const string name) const
+  {
+    return getParam(getParamIndex(name));
+  }
   // Get gradients of the kernel with respect to input values.
   //   g[i].val(k,j) = d kern(X_row_i,X2_row_k)/ d x_component_j
   virtual void getGradX(vector<CMatrix*>& gX, const CMatrix& X, const CMatrix& X2, bool addG=false) const
@@ -234,8 +255,6 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
     cerr << "You cannot add a kernel to this kernel." << endl;
     return 0;
   }
-  // Get a particular parameter.
-  virtual double getParam(unsigned int) const=0;
   // Test if kernel leads to stationary functions.
   bool isStationary() const
   {
@@ -256,8 +275,9 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
   // Place the parameters in a vector.
   void getParams(CMatrix& paramVec) const
     {
-      for(unsigned int i=0; i<nParams; i++)
-	paramVec.setVal(getParam(i), i);
+      for(unsigned int i=0; i<nParams; i++) {
+      	paramVec.setVal(getParam(i), i);
+      }
     }
   // Return a string representing the kernel type.
   inline string getType() const
@@ -318,51 +338,61 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
     BOUNDCHECK(index<paramNames.size());
     return paramNames[index];
   }
-  // set kernel parameter optimization bounds of particular parameter by name
-  virtual void setBoundsByName(const string name, const CMatrix b) const
+  // get kernel parameter optimization bounds of particular parameter by name
+  virtual CMatrix getBoundsByName(const string name) const
   {
-    DIMENSIONMATCH(b.getRows()==1);
-    DIMENSIONMATCH(b.getCols()==2);
+    string n;
     for (int paramNo = 0; paramNo < nParams; paramNo++)
     {
-      n = components[i]->getParamName(paramNo);
+      n = getParamName(paramNo);
       if (n.compare(name) == 0) {
-        bounds(paramNo, 0) = b(0, 0);
-        bounds(paramNo, 1) = b(0, 1);
-        return;
+        CMatrix b(1, 2);
+        b(0, 0) = bounds.getVal(paramNo, 0);
+        b(0, 1) = bounds.getVal(paramNo, 1);
+        return b;
       }
-    }      
+    }
+    cout << "Unknown parameter name: " << name << endl;
+    throw ndlexceptions::Error(("Unknown parameter name.") + name);
   }
   // set kernel parameter optimization bounds of particular parameter by name
-  virtual void setBoundsByName(const string name, const CMatrix b) const
+  virtual void setBoundsByName(const string name, const CMatrix b)
   {
     DIMENSIONMATCH(b.getRows()==1);
     DIMENSIONMATCH(b.getCols()==2);
-    // for simplicity, just search linearly until kernel name is found
-    unsigned int start = 0;
-    unsigned int end = 0;
     string n;
-    for(size_t i=0; i<components.size(); i++)
+    for (int paramNo = 0; paramNo < nParams; paramNo++)
     {
-      end = start+components[i]->getNumParams()-1;
-      for (int paramNo = 0; paramNo < components[i]->nParams; paramNo++)
-      {
-        n = components[i]->getParamName(paramNo);
-        if (n.compare(name) == 0) {
-          components[i]->setBoundsByName(b, paramNo);
-          return;
-        }
-      }      
-      start = end + 1;
+      n = getParamName(paramNo);
+      if (n.compare(name) == 0) {
+        bounds.setMatrix(paramNo, 0, b);
+        return;
+      }
     }
+    cout << "Unknown parameter name: " << name << endl;
+    throw ndlexceptions::Error(string("Unknown parameter name.") + name);
   }
   // set kernel parameter optimization bounds
-  virtual void setBounds(CMatrix b) const
+  virtual void setBounds(const CMatrix b)
   {
     DIMENSIONMATCH(b.getRows()==nParams);
     DIMENSIONMATCH(b.getCols()==2);
     bounds = b;
   }
+  virtual CMatrix getBounds() const
+  {
+    CMatrix b(bounds);
+    return b;
+  }
+  virtual void setDefaultBounds() {
+    CMatrix b(nParams, 2);
+    for (int i = 0; i < nParams; i++) {
+      b(i, 0) = 1e-6;
+      b(i, 1) = 1e6;
+    }
+    setBounds(b);
+  }
+
   // Write out the kernel parameters to a stream.
   virtual void writeParamsToStream(ostream& out) const;
   // Read in the kernel parameters from a stream.
@@ -431,12 +461,14 @@ class CComponentKern : public CKern
   CComponentKern(const CMatrix& X) : CKern(X) {}
   CComponentKern(const CComponentKern& kern) : CKern(kern) {
     
-  }  //, components(kern.components) {} // not sure why components was being copied in initializer list... leads to double destruction
+  }  // components(kern.components) {} // not sure why components was being copied in initializer list... leads to double destruction
   virtual unsigned int addKern(const CKern* kern)
   {
     components.push_back(kern->clone());
     unsigned int oldNParams = nParams;
     nParams+=kern->getNumParams();
+    if (bounds.getCols()==1) { bounds = kern->getBounds(); } // handle case where bounds is unallocated since empty CMatrices are not implemented
+    else { bounds.appendRows(kern->getBounds()); }
     for(size_t i=0; i<kern->getNumTransforms(); i++)
       addTransform(kern->getTransform(i), kern->getTransformIndex(i)+oldNParams);      
     setStationary(isStationary() && kern->isStationary());
@@ -473,6 +505,72 @@ class CComponentKern : public CKern
     }
     return -1;
   }
+  // set kernel parameter optimization bounds of particular parameter by name
+  virtual void setBoundsByName(const string full_name, const CMatrix b)
+  {
+    DIMENSIONMATCH(b.getRows()==1);
+    DIMENSIONMATCH(b.getCols()==2);
+    // parse parameter name
+    int loc;
+    loc = full_name.find_first_of(":");
+    if (loc == full_name.npos) { throw ndlexceptions::Error("No kernel name delimiter ':' found in <name>. Try e.g. 'CRBFKern_0:inverseWidth'."); }
+    string kern_name = full_name.substr(0, loc);
+    string param_name = full_name.substr(loc + 1);
+    loc = kern_name.find_first_of("_");
+    if (loc == kern_name.npos) { throw ndlexceptions::Error("No kernel index delimiter '_' found in <name>. Try e.g. 'CRBFKern_0:inverseWidth'."); }
+    int kern_idx = stoi(full_name.substr(loc + 1));
+    kern_name = full_name.substr(0, loc);
+    
+    assert(kern_name.compare(components[kern_idx]->getType()) == 0);
+    string n;
+
+    for (int paramNo = 0; paramNo < components[kern_idx]->getNumParams(); paramNo++)
+    {
+      n = components[kern_idx]->getParamName(paramNo);
+      if (n.compare(param_name) == 0) 
+      {
+        components[kern_idx]->setBoundsByName(param_name, b);
+        bounds.setMatrix(paramNo, 0, b);
+        return;
+      }
+    }      
+    cout << "setBoundsByName: Parameter name " << full_name << " not found." << endl;
+    throw ndlexceptions::Error("setBoundsByName: Parameter name not found. "
+                               "Kernel names must be prepended to parameter names with "
+                               "an index and a colon delimiter, e.g., 'rbf_0:inverseWidth' or "
+                               "'cmpnd_0:rbf_0:inverseWidth'");
+  }
+  virtual CMatrix getBoundsByName(const string full_name) const
+  {
+    // parse parameter name
+    int loc;
+    loc = full_name.find_first_of(":");
+    if (loc == full_name.npos) { throw ndlexceptions::Error("No kernel name delimiter ':' found in <name>. Try e.g. 'CRBFKern_0:inverseWidth'."); }
+    string kern_name = full_name.substr(0, loc);
+    string param_name = full_name.substr(loc + 1);
+    loc = kern_name.find_first_of("_");
+    if (loc == kern_name.npos) { throw ndlexceptions::Error("No kernel index delimiter '_' found in <name>. Try e.g. 'CRBFKern_0:inverseWidth'."); }
+    int kern_idx = stoi(full_name.substr(loc + 1));
+    kern_name = full_name.substr(0, loc);
+    
+    assert(kern_idx < components.size());
+    assert(kern_name.compare(components[kern_idx]->getType()) == 0);
+    string n;
+
+    for (int paramNo = 0; paramNo < components[kern_idx]->getNumParams(); paramNo++)
+    {
+      n = components[kern_idx]->getParamName(paramNo);
+      if (n.compare(param_name) == 0) 
+      {
+        return components[kern_idx]->getBoundsByName(param_name);
+      }
+    }      
+    cout << "setBoundsByName: Parameter name " << full_name << " not found." << endl;
+    throw ndlexceptions::Error("setBoundsByName: Parameter name not found. "
+                               "Kernel names must be prepended to parameter names with "
+                               "an index and a colon delimiter, e.g., 'rbf_0:inverseWidth' or "
+                               "'cmpnd_0:rbf_0:inverseWidth'");
+  }
   virtual string getParamName(unsigned int paramNo) const
   {
     unsigned int start = 0;
@@ -481,7 +579,10 @@ class CComponentKern : public CKern
     {
       end = start+components[i]->getNumParams()-1;
       if(paramNo <= end)
-	      return components[i]->getType() + components[i]->getParamName(paramNo-start);
+      {
+	      string n = components[i]->getType() + string("_") + to_string(i) + string(":") + components[i]->getParamName(paramNo-start);
+        return n;
+      }
       start = end + 1;
     }
     return "";
@@ -571,7 +672,7 @@ private:
   void _init();
 };
 
-// Tensor Kernel --- This kernel combines other multiplicitavely together.
+// Tensor Kernel --- This kernel combines kernels multiplicatively together.
 class CTensorKern: public CComponentKern {
  public:
   CTensorKern();

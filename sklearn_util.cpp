@@ -16,7 +16,7 @@ void getSklearnKernels(CCmpndKern *kern, cnpy::npz_t npz_dict, CMatrix *X, bool 
     string param_key;
     for(auto it=npz_dict.begin(); it!=npz_dict.end(); it++) {
         key = it->first;
-        if(key.find_first_of("&") != key.npos) {
+        if (key.find_first_of("&") != key.npos) {
             kernel_key = key.substr(key.find_first_of("&")+1);
             param_key = key.substr(0, key.find_first_of("&"));
         }
