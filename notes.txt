@@ -1,25 +1,41 @@
+2/16/22
+
+make minimal CBayesianSearch updates to test
+    DONE out_sem
+    standard way to control search space bounds
+    start tests
+    make minimal analyses of results
+debug CBayesianSearch optimization errors (non-PSD)
+    clean up CBayesianSearch with better updating of samples
+Elemem on Windows
+Elemem integration
+find video
+submit my Elemem code for review
+
+
 2/8/22
+
 Elemem integration
 
 config:
-    DONE get classifier weights file
 
 test experiment
-
-DONE logging
-DONE update CPS config updating to FR5-style
 
 update BO or ExperCPS to handle multiple parallel searches
     add wrapper to BO?
     any need to do this within cpp? could just compute with separate Python script...
 
 add discretized grid search functionality for selecting next point
+    add search space constraints similar to skopt
 
 add enumerations for stim parameters
+add some form of mapping to parameters for various kernels? Could just directly set
+kernel hp bounds?
 
 LATER:
 interface:
     add min/max check boxes for amplitude
+        currently just assuming max ampitude is approved amplitude, min is 0
 
 1/28/22
 

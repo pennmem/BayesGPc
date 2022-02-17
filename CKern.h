@@ -52,7 +52,9 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
     DIMENSIONMATCH(X.rowsMatch(d));
     DIMENSIONMATCH(d.getCols()==1);
     for(unsigned int i=0; i<X.getRows(); i++)
+    {
       d.setVal(diagComputeElement(X, i), i);
+    }
   }
   // Compute the diagonal at particular indices.
   virtual void diagCompute(CMatrix& d, const CMatrix& X, const vector<unsigned int> indices) const
@@ -100,9 +102,9 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
     {
       for(unsigned int j=0; j<indices2.size(); j++)
       {
-	BOUNDCHECK(indices1[i]<X1.getRows());
-	BOUNDCHECK(indices2[j]<X2.getRows());
-	K.setVal(computeElement(X1, indices1[i], X2, indices2[j]), i, j);
+        BOUNDCHECK(indices1[i]<X1.getRows());
+        BOUNDCHECK(indices2[j]<X2.getRows());
+        K.setVal(computeElement(X1, indices1[i], X2, indices2[j]), i, j);
       }
     }
   }
@@ -115,11 +117,11 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
     {
       for(unsigned int j=0; j<i; j++)
       {
-	BOUNDCHECK(indices[i]<X.getRows());
-	BOUNDCHECK(indices[j]<X.getRows());
-	k = computeElement(X, indices[i], X, indices[j]);
-	K.setVal(k, i, j);
-	K.setVal(k, j, i);
+        BOUNDCHECK(indices[i]<X.getRows());
+        BOUNDCHECK(indices[j]<X.getRows());
+        k = computeElement(X, indices[i], X, indices[j]);
+        K.setVal(k, i, j);
+        K.setVal(k, j, i);
       }
       K.setVal(diagComputeElement(X, indices[i]), i, i);
     }
@@ -134,9 +136,9 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
     {
       for(unsigned int j=0; j<i; j++)
       {
-	k = computeElement(X, i, X, j);
-	K.setVal(k, i, j);
-	K.setVal(k, j, i);
+        k = computeElement(X, i, X, j);
+        K.setVal(k, i, j);
+        K.setVal(k, j, i);
       }
       K.setVal(diagComputeElement(X, i), i, i);
     }	      
@@ -151,7 +153,7 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
     {
       for(unsigned int j=0; j<K.getCols(); j++)
       {
-	K.setVal(computeElement(X, i, X2, j), i, j);
+	      K.setVal(computeElement(X, i, X2, j), i, j);
       }
     }	      
   }
@@ -247,7 +249,9 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
   void setParams(const CMatrix& paramVec)
     {
       for(unsigned int i=0; i<nParams; i++)
-	setParam(paramVec.getVal(i), i);
+      {
+      	setParam(paramVec.getVal(i), i);
+      }
     }
   // Place the parameters in a vector.
   void getParams(CMatrix& paramVec) const
@@ -297,23 +301,68 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
   }
   // Assign a name to the kernel parameters.
   void setParamName(const string name, unsigned int index)
+  {
+    BOUNDCHECK(index<nParams);
+    if(paramNames.size() == index)
+      paramNames.push_back(name);
+    else 
     {
-      BOUNDCHECK(index<nParams);
-      if(paramNames.size() == index)
-	paramNames.push_back(name);
-      else 
-	{
-	  if(paramNames.size()<index)
-	    paramNames.resize(index+1, "no name");
-	  paramNames[index] = name;
-	}
+      if(paramNames.size()<index)
+        paramNames.resize(index+1, "no name");
+      paramNames[index] = name;
     }
+  }
   // Get the name of a kernel parameter.
   virtual string getParamName(unsigned int index) const
+  {
+    BOUNDCHECK(index<paramNames.size());
+    return paramNames[index];
+  }
+  // set kernel parameter optimization bounds of particular parameter by name
+  virtual void setBoundsByName(const string name, const CMatrix b) const
+  {
+    DIMENSIONMATCH(b.getRows()==1);
+    DIMENSIONMATCH(b.getCols()==2);
+    for (int paramNo = 0; paramNo < nParams; paramNo++)
     {
-      BOUNDCHECK(index<paramNames.size());
-      return paramNames[index];
+      n = components[i]->getParamName(paramNo);
+      if (n.compare(name) == 0) {
+        bounds(paramNo, 0) = b(0, 0);
+        bounds(paramNo, 1) = b(0, 1);
+        return;
+      }
+    }      
+  }
+  // set kernel parameter optimization bounds of particular parameter by name
+  virtual void setBoundsByName(const string name, const CMatrix b) const
+  {
+    DIMENSIONMATCH(b.getRows()==1);
+    DIMENSIONMATCH(b.getCols()==2);
+    // for simplicity, just search linearly until kernel name is found
+    unsigned int start = 0;
+    unsigned int end = 0;
+    string n;
+    for(size_t i=0; i<components.size(); i++)
+    {
+      end = start+components[i]->getNumParams()-1;
+      for (int paramNo = 0; paramNo < components[i]->nParams; paramNo++)
+      {
+        n = components[i]->getParamName(paramNo);
+        if (n.compare(name) == 0) {
+          components[i]->setBoundsByName(b, paramNo);
+          return;
+        }
+      }      
+      start = end + 1;
     }
+  }
+  // set kernel parameter optimization bounds
+  virtual void setBounds(CMatrix b) const
+  {
+    DIMENSIONMATCH(b.getRows()==nParams);
+    DIMENSIONMATCH(b.getCols()==2);
+    bounds = b;
+  }
   // Write out the kernel parameters to a stream.
   virtual void writeParamsToStream(ostream& out) const;
   // Read in the kernel parameters from a stream.
@@ -348,6 +397,8 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
   string kernName;
   string type;
   vector<string> paramNames;
+  // parameter bounds
+  CMatrix bounds;
  private:
   bool updateXused;
   unsigned int inputDim;
@@ -400,8 +451,8 @@ class CComponentKern : public CKern
       end = start+components[i]->getNumParams()-1;
       if(paramNo <= end)
       {
-	components[i]->setParam(val, paramNo-start);
-	return;
+        components[i]->setParam(val, paramNo-start);
+        return;
       }      
       start = end + 1;
     }
@@ -415,7 +466,9 @@ class CComponentKern : public CKern
     {
       end = start+components[i]->getNumParams()-1;
       if(paramNo <= end)
-	return components[i]->getParam(paramNo-start);
+      {
+      	return components[i]->getParam(paramNo-start);
+      }
       start = end + 1;
     }
     return -1;
@@ -428,7 +481,7 @@ class CComponentKern : public CKern
     {
       end = start+components[i]->getNumParams()-1;
       if(paramNo <= end)
-	return components[i]->getType() + components[i]->getParamName(paramNo-start);
+	      return components[i]->getType() + components[i]->getParamName(paramNo-start);
       start = end + 1;
     }
     return "";
