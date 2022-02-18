@@ -93,18 +93,10 @@ CMatrix* BayesianSearchModel::get_next_sample() {
         gp->setVerbosity(verbosity);
         int default_optimiser = CGp::LBFGS_B;
         gp->setDefaultOptimiser(default_optimiser);  //options: LBFGS_B, BFGS, SCG, CG, GD
-        CMatrix hp_bounds(kern->getNumParams(), 2);
 
-        // kernel hyperparameter bounds are in log-space
-        // TODO integrate bounds with kernels
-        // TODO convert bounds to linear space
-        // use transforms...
-        for (int i = 0; i < kern->getNumParams(); i++) {
-            hp_bounds(i, 0) = -10;
-            hp_bounds(i, 1) = 10;
+        if (default_optimiser == CGp::LBFGS_B) {
+            gp->setBoundsByName();
         }
-
-        if (default_optimiser == CGp::LBFGS_B) gp->setBounds(hp_bounds);
         gp->setObjectiveTol(1e-6);
         gp->setParamTol(1e-6);
         gp->setOutputBiasLearnt(outputBiasScaleLearnt);

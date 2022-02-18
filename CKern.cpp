@@ -12,6 +12,21 @@ ostream& CKern::display(ostream& os) const
   return os;
 }
 
+json CKern::display_structure() const
+{
+  json j;
+  string n;
+  double* temp;
+  for(unsigned int i=0; i<nParams; i++)
+  {
+    n = getParamName(i);
+    CMatrix b(getBoundsByName(n));
+    j[n]["bounds"] = vector<double>(b.getVals(), b.getVals() + 2);
+  }
+
+  return j;
+}
+
 void CKern::writeParamsToStream(ostream& out) const
 {
   writeToStream(out, "baseType", getBaseType());

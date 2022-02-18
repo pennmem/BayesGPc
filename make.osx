@@ -4,6 +4,11 @@
 #
 SHELL = /bin/sh
 
+# for debugging
+OPT_LEVEL=1
+# for release
+#OPT_LEVEL=3
+
 PLAT = _LINUX
 LAPACKLIBS = -llapack -lblas
 F2CLIB = -lgfortran
@@ -23,8 +28,8 @@ NPYLINKFLAG =${NPYLIBS}
 OPTIMDIR =/Users/rdehaan/projects/dependencies/optim/header_only_version
 # OPTIMDIR =/usr/local/include/optim
 # ARMADILLODIR =/usr/local/include/armadillo
-OPTIMFLAG =-O3 -march=native -ffp-contract=fast -I${OPTIMDIR}
-# OPTIMFLAG =-O3 -march=native -ffp-contract=fast -I${ARMADILLODIR} -I${OPTIMDIR}
+OPTIMFLAG =-O${OPT_LEVEL} -march=native -ffp-contract=fast -I${OPTIMDIR}
+# OPTIMFLAG =-O${OPT_LEVEL} -march=native -ffp-contract=fast -I${ARMADILLODIR} -I${OPTIMDIR}
 # OPTIMLINKFLAG = -loptim  # not linking currently since linking would involve with current setup, linking to blas/lapack a second time, causing linker errors
 
 # matplotlibcpp library
@@ -56,6 +61,6 @@ LDFLAGS = ${LAPACKLIBS} ${F2CLIB} -lc ${NPYLINKFLAG} ${MATPLOTLINKFLAG}
 CC=g++
 CCFLAGS = -std=c++17 -ggdb -DDBG -fPIC -I$(INCLUDE) -D$(PLAT) $(MATLABFLAG) $(OPTIMFLAG) $(JSON_INCLUDE_DIRS) -mmacosx-version-min=11.0
 #CCFLAGS = -std=c++17 -ggdb -DDBG -fPIC -I$(INCLUDE) -D$(PLAT) $(MATLABFLAG) $(OPTIMFLAG) -I${MATPLOT_INCLUDE_DIRS}
-#CCFLAGS = -O3 -fPIC -I$(INCLUDE) -D$(PLAT) $(MATLABFLAG)
+#CCFLAGS = -O${OPT_LEVEL} -fPIC -I$(INCLUDE) -D$(PLAT) $(MATLABFLAG)
 FC=gfortran-7
-FCFLAGS = -funroll-all-loops -O3 -fPIC
+FCFLAGS = -funroll-all-loops -O${OPT_LEVEL} -fPIC

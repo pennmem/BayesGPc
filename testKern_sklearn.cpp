@@ -3,6 +3,7 @@
 #include "sklearn_util.h"
 
 using namespace std;
+using namespace nlohmann;
 
 int testType(const string kernelType);
 int testKern(CKern* kern, const string fileName);
@@ -16,11 +17,11 @@ int main()
     // fail += testType("white");
     // // fail += testType("bias");
 
-    fail += testType("matern32");
-    fail += testType("matern52");
+    // fail += testType("matern32");
+    // fail += testType("matern52");
 
-    fail += testType("rbf");
-    fail += testType("ratquad");
+    // fail += testType("rbf");
+    // fail += testType("ratquad");
     // fail += testType("poly");  // TODO not currently matching sklearn
 
     // // fail += testType("lin");
@@ -536,6 +537,15 @@ int testKernNaming() {
   assert(var_bounds.equals(cmpd2.getBoundsByName(var_name)));
   assert(ls_bounds.equals(cmpd2.getBoundsByName(ls_name)));
   assert(white_bounds.equals(cmpd2.getBoundsByName(white_name)));
+
+  // test display of kernel structure
+  json sol = cmpd2.display_structure();
+  
+  json ref;
+  ref[var_name]["bounds"] = vector<double>(var_bounds.getVals(), var_bounds.getVals() + 2);
+  ref[ls_name]["bounds"] = vector<double>(ls_bounds.getVals(), ls_bounds.getVals() + 2);;
+  ref[white_name]["bounds"] = vector<double>(white_bounds.getVals(), white_bounds.getVals() + 2);;
+  assert(sol == ref);
 
   return fail;
 }

@@ -157,9 +157,9 @@ class COptimisable {
   int getIter() const {
     return iter;
   }
-
-  // bounded L-BFGS
-  void setBounds(CMatrix bounds_in) {
+  // bounds for bounded L-BFGS
+  void setBounds(CMatrix bounds_in)
+  {
     DIMENSIONMATCH(bounds_in.getCols()==2);
     bounds_set = true;
     // shape (n_params, 2) of parameter lower bounds in first column, upper in second
@@ -169,10 +169,10 @@ class COptimisable {
     upper_bounds = CMatrix(bounds.getRows(), 1);
     upper_bounds.copyColCol(0, bounds, 1);
   }
-  CMatrix getbounds() {
+  CMatrix getbounds()
+  {
     return bounds;
   }
-
   void setDefaultOptimiserStr(string val)
   {
     if(val == "conjgrad")

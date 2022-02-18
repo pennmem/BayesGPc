@@ -259,10 +259,10 @@ class CTransformable
       throw ndlexceptions::RuntimeError("getTransParams(): Dimension match check failed, numbers of columns should be " + ndlstrutil::itoa(getNumParams()) + ", currently it is " + ndlstrutil::itoa(transParam.getRows()));
     getParams(transParam);
     double val;
-    for(unsigned int i=0; i<transArray.transIndex.size(); i++) {
-      val=transParam.getVal(transArray.transIndex[i]);
+    for (unsigned int i=0; i<transArray.transIndex.size(); i++) {
+      val = transParam.getVal(transArray.transIndex[i]);
       transParam.setVal(transArray.transforms[i]->xtoa(val), transArray.transIndex[i]);
-    }  
+    }
   }
   virtual void setTransParam(double val, unsigned int paramNo) 
   {
@@ -278,7 +278,7 @@ class CTransformable
       setParam(transArray.transforms[ind]->atox(val), paramNo);
     }
   }
-  virtual void setTransParams(const CMatrix& transParam) 
+  virtual void setTransParams(const CMatrix& transParam)
   {
     if(transParam.getRows()!=1)
       throw ndlexceptions::RuntimeError("setTransParams(): Dimension match check failed, numbers of rows should be 1, currently it is " + ndlstrutil::itoa(transParam.getRows()));
@@ -286,14 +286,14 @@ class CTransformable
       throw ndlexceptions::RuntimeError("setTransParams(): Dimension match check failed, numbers of columns should be " + ndlstrutil::itoa(getNumParams()) + ", currently it is " + ndlstrutil::itoa(transParam.getRows()));
     CMatrix param(transParam);
     double val = 0.0;
-    for(unsigned int i=0; i<transArray.transIndex.size(); i++) 
+    for (unsigned int i=0; i<transArray.transIndex.size(); i++) 
     {
       val = param.getVal(transArray.transIndex[i]);
       param.setVal(transArray.transforms[i]->atox(val), transArray.transIndex[i]);
     }
     setParams(param);
   }
-  virtual void getGradTransParams(CMatrix& g) const 
+  virtual void getGradTransParams(CMatrix& g) const
   {
     if(g.getRows()!=1)
       throw ndlexceptions::RuntimeError("getGradTransParams(): Dimension match check failed, numbers of rows should be 1, currently it is " + ndlstrutil::itoa(g.getRows()));
@@ -307,7 +307,7 @@ class CTransformable
       val=g.getVal(transArray.transIndex[i]);
       param=getParam(transArray.transIndex[i]);
       g.setVal(val*transArray.transforms[i]->gradfact(param), transArray.transIndex[i]);
-    }  
+    }
   }
   
   // These are non-modifiable methods.
@@ -317,7 +317,6 @@ class CTransformable
   }
   inline const CTransform* getTransform(unsigned int ind) const 
   {
-    
     BOUNDCHECK(ind<getNumTransforms());
     return transArray.transforms[ind];
   }

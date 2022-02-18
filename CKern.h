@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <nlohmann/json.hpp>
 #include "ndlassert.h"
 #include "CTransform.h"
 #include "CDataModel.h"
@@ -23,6 +24,7 @@
 #include "ndlstrutil.h"
 #include "ndlutil.h"
 using namespace std;
+using namespace nlohmann;
 
 
 const string KERNVERSION="0.1";
@@ -403,6 +405,8 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
   void getPriorLogProb(CMatrix& L) const;
   // Display the kernel on an ostream.
   virtual ostream& display(ostream& os) const;
+  // Display the kernel structure (contained kernel(s) and hyperparameter bounds)
+  virtual json display_structure() const;
   
 #ifdef _NDLMATLAB
   // Create a kernel from an mxArray* object
