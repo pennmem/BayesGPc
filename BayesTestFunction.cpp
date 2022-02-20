@@ -381,6 +381,8 @@ CMatrix TestFunction::func(const CMatrix& x, bool add_noise) {
   return y;
 }
 
+void TestFunction::reseed(int i) { e.seed(i); }
+
 double TestFunction::solution_error(const CMatrix& x_best) {
   // solution error is relative error of the objective value at the search solution
   // normalized by the output range

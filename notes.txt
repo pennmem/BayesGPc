@@ -2,6 +2,7 @@
 
 make minimal CBayesianSearch updates to test
     DONE out_sem
+        needs to debugging, getting negative resulting predictive variances...
     DONE standard way to control search space bounds
     start tests
     make minimal analyses of results

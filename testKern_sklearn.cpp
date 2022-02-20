@@ -538,14 +538,17 @@ int testKernNaming() {
   assert(ls_bounds.equals(cmpd2.getBoundsByName(ls_name)));
   assert(white_bounds.equals(cmpd2.getBoundsByName(white_name)));
 
-  // test display of kernel structure
-  json sol = cmpd2.display_structure();
+  // test output of kernel structure
+  json sol = cmpd2.json_structure();
   
   json ref;
-  ref[var_name]["bounds"] = vector<double>(var_bounds.getVals(), var_bounds.getVals() + 2);
-  ref[ls_name]["bounds"] = vector<double>(ls_bounds.getVals(), ls_bounds.getVals() + 2);;
-  ref[white_name]["bounds"] = vector<double>(white_bounds.getVals(), white_bounds.getVals() + 2);;
+  ref["parameters"][var_name]["bounds"] = vector<double>(var_bounds.getVals(), var_bounds.getVals() + 2);
+  ref["parameters"][ls_name]["bounds"] = vector<double>(ls_bounds.getVals(), ls_bounds.getVals() + 2);;
+  ref["parameters"][white_name]["bounds"] = vector<double>(white_bounds.getVals(), white_bounds.getVals() + 2);;
   assert(sol == ref);
+
+  json j = cmpd2.json_state();
+  cout << j << endl;
 
   return fail;
 }

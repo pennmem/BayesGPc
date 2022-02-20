@@ -406,7 +406,9 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
   // Display the kernel on an ostream.
   virtual ostream& display(ostream& os) const;
   // Display the kernel structure (contained kernel(s) and hyperparameter bounds)
-  virtual json display_structure() const;
+  virtual json json_structure() const;
+  virtual json json_state() const;
+  virtual vector<double> state() const;
   
 #ifdef _NDLMATLAB
   // Create a kernel from an mxArray* object
@@ -794,7 +796,6 @@ class CWhitefixedKern: public CKern {
   void writeParamsToStream(ostream& out) const;
   void readParamsFromStream(istream& in);
   ostream& display(ostream& os) const;
-
 
  private:
   void _init();

@@ -243,7 +243,6 @@ int main(int argc, char* argv[])
     std::string what(err.what());
     command.exitError("Unhandled exception: " + what);
   }
-
 }
 
 int testBayesianSearch(CML::EventLog& log,
@@ -336,8 +335,11 @@ int testBayesianSearch(CML::EventLog& log,
 
   // runs with exceptions
   vector<int> except_runs;
+  // shape: (runs, samples, sample dimension)
   vector<vector<vector<double>>> x_samples_runs;
   vector<vector<vector<double>>> y_samples_runs;
+  // shape: (runs, samples, n_kernel_params)
+  vector<vector<vector<double>>> sample_search_states(n_runs, vector<vector<double>>());
 
   for (int run = 0; run < n_runs; run++) {
     cout << "Run " << run << endl;
@@ -361,15 +363,24 @@ int testBayesianSearch(CML::EventLog& log,
       }
       // kern.setBoundsByName("white_1:variance", b);
 
+      seeding not working across runs... some internal seed not being reset as expected...
+      probably related to TestFunction since I believe this was working at some point
+      potentially before TestFunction was introduced
       BayesianSearchModel BO(kern, &test.x_interval, obsNoise * obsNoise, exp_bias, n_init_samples, seed, verbosity);
+      test.reseed(seed);
+      if (run == 0) { json_log[fd]["kernel_structure"] = BO.kern->json_structure(); }
 
       clock_t start = clock();
       clock_t sample_update_start;
-      for (int i = 0; i<n_iters; i++) {
+      for (int i = 0; i < n_iters; i++) {
         sample_update_start = clock();
         CMatrix* x_sample = BO.get_next_sample();
         CMatrix* y_sample = new CMatrix(test.func(*x_sample));
         BO.add_sample(*x_sample, *y_sample);
+        cout << endl << endl;
+
+        // logging
+        if (i >= n_init_samples) { sample_search_states[run].push_back(BO.gp->pkern->state()); }
         sample_times(run, i) = (double)(clock() - sample_update_start)/CLOCKS_PER_SEC;
 
         if (plotting && (verbosity >= 2) && x_dim <= 2 && (i > n_init_samples)) {
@@ -382,6 +393,7 @@ int testBayesianSearch(CML::EventLog& log,
 
       // FIXME needed for now with janky way I'm deleting CGp gp and CNoise attributes to allow for updating with new 
       // samples
+      cout << "Computing next sample after last sample in run:" << endl;
       CMatrix* x_sample = BO.get_next_sample();
       CMatrix* y_sample = new CMatrix(test.func(*x_sample));
 
@@ -418,10 +430,11 @@ int testBayesianSearch(CML::EventLog& log,
     }
   }
 
-  // performance logging
+  // performance and model logging
   json_log[fd]["x_samples"] = x_samples_runs;
   json_log[fd]["y_samples"] = y_samples_runs;
   json_log[fd]["relative errors"] = to_vector(search_rel_errors);
+  json_log[fd]["kernel_states"] = sample_search_states; 
 
   double pass_prob = ((double)failures)/((double)n_runs);
   log.Log_Handler("Proportion of runs passed: " + to_string(pass_prob) + "\n");

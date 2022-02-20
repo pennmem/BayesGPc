@@ -5,7 +5,7 @@
 #  Dec 23, 2008
 # dependencies created with gcc -MM XXX.cpp
 	
-include make.osx
+include make.linux
 
 all: gplvm ivm gp libgp$(LIBSEXT) libgp$(LIBDEXT)
 

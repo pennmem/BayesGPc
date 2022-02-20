@@ -66,6 +66,7 @@ class TestFunction {
     double solution_error(const CMatrix& x_best);
     double func_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_out, void* opt_data);
     CMatrix* get_func_optimum(bool get_min = true);
+    void reseed(int i);
 };
 
 #endif

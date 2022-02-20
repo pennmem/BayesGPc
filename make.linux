@@ -13,7 +13,7 @@ LIBDCOMMAND = gcc -shared -o
 LIBSEXT = .a
 LIBDEXT = .so
 
-OPT_LEVEL=3
+OPT_LEVEL=1
 
 DEP_DIR =/mnt/c/Users/dasha/Documents/research/stim_cml/source/dependencies
 

@@ -12,7 +12,30 @@ ostream& CKern::display(ostream& os) const
   return os;
 }
 
-json CKern::display_structure() const
+vector<double> CKern::state() const
+{
+  vector<double> v;
+  for(unsigned int i=0; i<nParams; i++)
+  {
+    v.push_back(getParam(i));
+  }
+  return v;
+}
+
+json CKern::json_state() const
+{
+  json j;
+  string n;
+  double* temp;
+  for(unsigned int i=0; i<nParams; i++)
+  {
+    n = getParamName(i);
+    j[n] = getParam(i);
+  }
+  return j;
+}
+
+json CKern::json_structure() const
 {
   json j;
   string n;
@@ -21,9 +44,8 @@ json CKern::display_structure() const
   {
     n = getParamName(i);
     CMatrix b(getBoundsByName(n));
-    j[n]["bounds"] = vector<double>(b.getVals(), b.getVals() + 2);
+    j["parameters"][n]["bounds"] = vector<double>(b.getVals(), b.getVals() + 2);
   }
-
   return j;
 }
 
