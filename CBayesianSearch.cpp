@@ -9,6 +9,9 @@ double expected_improvement(const CMatrix& x, const CGp& model, double y_b, doub
     double y_best = y_b + exp_bias;
 
     model.out(mu_mat, std_mat, x);
+    // use predictive mean uncertainty rather than sample uncertainty 
+    // (which includes observation noise/white noise)
+    // model.out_sem(mu_mat, std_mat, x);
     double mu = mu_mat.getVal(0, 0);
     double std = std_mat.getVal(0, 0);
 
@@ -94,9 +97,6 @@ CMatrix* BayesianSearchModel::get_next_sample() {
         int default_optimiser = CGp::LBFGS_B;
         gp->setDefaultOptimiser(default_optimiser);  //options: LBFGS_B, BFGS, SCG, CG, GD
 
-        if (default_optimiser == CGp::LBFGS_B) {
-            gp->setBoundsByName();
-        }
         gp->setObjectiveTol(1e-6);
         gp->setParamTol(1e-6);
         gp->setOutputBiasLearnt(outputBiasScaleLearnt);

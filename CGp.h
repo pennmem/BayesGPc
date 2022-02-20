@@ -102,20 +102,24 @@ public:
   }
 
   // set kernel parameter optimization bounds of particular parameter by name
-  void setBoundsByName(const string full_name, const CMatrix b) {
+  void setBoundsByName(const string full_name, const CMatrix b)
+  {
     pkern->setBoundsByName(full_name, b);
-
-    // use transformed bounds for hyperparameter optimization space
     CMatrix bo = pkern->getBounds();
+    setBounds(bo);
+  }
+
+  void setBounds(const CMatrix b)
+  {
+    // use transformed bounds for hyperparameter optimization space
+    CMatrix bo(b);
     double val;
     for(unsigned int i=0; i<pkern->getNumTransforms(); i++)
     {
-      test me
-      set bounds upon init with a kernel...
       val = pkern->getTransform(i)->xtoa(bo.getVal(pkern->getTransformIndex(i), 0));
       bo.setVal(val, pkern->getTransformIndex(i), 0);
     }
-    setBounds(bo);
+    CProbabilisticOptimisable::setBounds(bo);
   };
 
   // get kernel parameter optimization bounds of particular parameter by name

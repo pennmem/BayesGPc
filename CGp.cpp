@@ -35,6 +35,8 @@ CGp::CGp(unsigned int q, unsigned int d,
   scale.setVals(1.0);
   bias.zeros();
   initVals();
+  setBounds(pkern->getBounds());
+
   
   switch(approxType) 
   {
@@ -75,6 +77,7 @@ CGp::CGp(CKern* pkernel, CNoise* pnois,
   scale.setVals(1.0);
   bias.zeros();
   initVals();
+  setBounds(pkern->getBounds());
   
   switch(approxType) 
   {

@@ -2,7 +2,7 @@
 
 make minimal CBayesianSearch updates to test
     DONE out_sem
-    standard way to control search space bounds
+    DONE standard way to control search space bounds
     start tests
     make minimal analyses of results
 debug CBayesianSearch optimization errors (non-PSD)
@@ -36,6 +36,7 @@ LATER:
 interface:
     add min/max check boxes for amplitude
         currently just assuming max ampitude is approved amplitude, min is 0
+    add multidimensional length scales
 
 1/28/22
 

@@ -158,7 +158,7 @@ class COptimisable {
     return iter;
   }
   // bounds for bounded L-BFGS
-  void setBounds(CMatrix bounds_in)
+  void setBounds(const CMatrix bounds_in)
   {
     DIMENSIONMATCH(bounds_in.getCols()==2);
     bounds_set = true;

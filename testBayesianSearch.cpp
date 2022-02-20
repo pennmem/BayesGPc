@@ -346,11 +346,20 @@ int testBayesianSearch(CML::EventLog& log,
       cnpy::npz_t npz_dict;
       CKern* k = getSklearnKernel((unsigned int)x_dim, npz_dict, kernel, std::string(""), true);
       CCmpndKern kern(x_dim);
-      // CMatern32Kern* k = new CMatern32Kern(x_dim);
       kern.addKern(k);
       CWhiteKern* whitek = new CWhiteKern(x_dim);
       kern.addKern(whitek);
-      // getSklearnKernels(&kern, npz_dict, &X, true);
+      
+      // set kernel hyperparameter bounds
+      // no meaningful bounds on interpolation variance for now, might want min var
+      CMatrix b(1, 2);
+      double range = test.x_interval(0, 1) - test.x_interval(0, 0);
+      if (kernel.compare("Matern32") == 0) {
+        b(0, 0) = 0.1 * range;
+        b(0, 1) = 2.0 * range;
+        kern.setBoundsByName("matern32_0:lengthScale", b);
+      }
+      // kern.setBoundsByName("white_1:variance", b);
 
       BayesianSearchModel BO(kern, &test.x_interval, obsNoise * obsNoise, exp_bias, n_init_samples, seed, verbosity);
 

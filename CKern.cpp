@@ -635,6 +635,7 @@ CWhiteKern::CWhiteKern(const CWhiteKern& kern) : CKern(kern)
   _init();
   setInputDim(kern.getInputDim());
   variance = kern.variance;
+  bounds = kern.bounds;
 }
 // Class destructor
 CWhiteKern::~CWhiteKern()
@@ -774,6 +775,7 @@ CWhitefixedKern::CWhitefixedKern(const CWhitefixedKern& kern) : CKern(kern)
   _init();
   setInputDim(kern.getInputDim());
   variance = kern.variance;
+  bounds = kern.bounds;
 }
 // Class destructor
 CWhitefixedKern::~CWhitefixedKern()
@@ -922,7 +924,7 @@ CBiasKern::CBiasKern(const CBiasKern& kern) : CKern(kern)
   _init();
   setInputDim(kern.getInputDim());
   variance = kern.variance;
-  
+  bounds = kern.bounds;
 }
 // Class destructor
 CBiasKern::~CBiasKern()
@@ -1063,6 +1065,7 @@ CRbfKern::CRbfKern(const CRbfKern& kern) : CKern(kern)
   setInputDim(kern.getInputDim());
   variance = kern.variance;
   inverseWidth = kern.inverseWidth;
+  bounds = kern.bounds;
 }
 // Class destructor
 CRbfKern::~CRbfKern()
@@ -1298,6 +1301,7 @@ CExpKern::CExpKern(const CExpKern& kern) : CKern(kern)
   setInputDim(kern.getInputDim());
   variance = kern.variance;
   inverseWidth = kern.inverseWidth;
+  bounds = kern.bounds;
 }
 // Class destructor
 CExpKern::~CExpKern()
@@ -1495,6 +1499,7 @@ CRatQuadKern::CRatQuadKern(const CRatQuadKern& kern) : CKern(kern)
   variance = kern.variance;
   alpha = kern.alpha;
   lengthScale = kern.lengthScale;
+  bounds = kern.bounds;
 }
 // Class destructor
 CRatQuadKern::~CRatQuadKern()
@@ -1746,6 +1751,7 @@ CMatern32Kern::CMatern32Kern(const CMatern32Kern& kern) : CKern(kern)
   setInputDim(kern.getInputDim());
   variance = kern.variance;
   lengthScale = kern.lengthScale;
+  bounds = kern.bounds;
 }
 // Class destructor
 CMatern32Kern::~CMatern32Kern()
@@ -1994,6 +2000,7 @@ CMatern52Kern::CMatern52Kern(const CMatern52Kern& kern) : CKern(kern)
   setInputDim(kern.getInputDim());
   variance = kern.variance;
   lengthScale = kern.lengthScale;
+  bounds = kern.bounds;
 }
 // Class destructor
 CMatern52Kern::~CMatern52Kern()
@@ -2259,6 +2266,7 @@ CLinKern::CLinKern(const CLinKern& kern) : CKern(kern)
   _init();
   setInputDim(kern.getInputDim());
   variance = kern.variance;
+  bounds = kern.bounds;
 }
 // Class destructor
 CLinKern::~CLinKern()
@@ -2428,6 +2436,7 @@ CMlpKern::CMlpKern(const CMlpKern& kern) : CKern(kern)
   variance = kern.variance;
   weightVariance = kern.weightVariance;
   biasVariance = kern.biasVariance;
+  bounds = kern.bounds;
 }
 // Class destructor
 CMlpKern::~CMlpKern()
@@ -2685,6 +2694,7 @@ CPolyKern::CPolyKern(const CPolyKern& kern) : CKern(kern)
   weightVariance = kern.weightVariance;
   biasVariance = kern.biasVariance;
   degree = kern.degree;
+  bounds = kern.bounds;
 }
 // Class destructor
 CPolyKern::~CPolyKern()
@@ -2964,6 +2974,7 @@ CLinardKern::CLinardKern(const CLinardKern& kern) : CArdKern(kern)
   setInputDim(kern.getInputDim());
   variance = kern.variance;
   scales = kern.scales;
+  bounds = kern.bounds;
 }
 // Class destructor
 CLinardKern::~CLinardKern()
@@ -3203,6 +3214,7 @@ CRbfardKern::CRbfardKern(const CRbfardKern& kern) : CArdKern(kern)
   variance = kern.variance;
   inverseWidth = kern.inverseWidth;
   scales = kern.scales;
+  bounds = kern.bounds;
 }
 // Class destructor
 CRbfardKern::~CRbfardKern()
@@ -3466,6 +3478,7 @@ CMlpardKern::CMlpardKern(const CMlpardKern& kern) : CArdKern(kern)
   weightVariance=kern.weightVariance;
   biasVariance=kern.biasVariance;
   scales = kern.scales;
+  bounds = kern.bounds;
 }
 // Class destructor
 CMlpardKern::~CMlpardKern()
@@ -3863,6 +3876,7 @@ CPolyardKern::CPolyardKern(const CPolyardKern& kern) : CArdKern(kern)
   weightVariance=kern.weightVariance;
   biasVariance=kern.biasVariance;
   scales = kern.scales;
+  bounds = kern.bounds;
 }
 // Class destructor
 CPolyardKern::~CPolyardKern()
