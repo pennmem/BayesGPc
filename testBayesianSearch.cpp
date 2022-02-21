@@ -312,7 +312,7 @@ int testBayesianSearch(CML::EventLog& log,
   // test.verbosity = 1;
   // test.get_func_optimum(true);
   // test.get_func_optimum(false);
-  test.verbosity = verbosity;
+  // test.verbosity = verbosity;
 
   // normalize exploration bias by output range of test function
   // output range unknown for clinical use case but can be bounded and estimated
@@ -344,6 +344,11 @@ int testBayesianSearch(CML::EventLog& log,
   for (int run = 0; run < n_runs; run++) {
     cout << "Run " << run << endl;
     seed++;
+    // TODO: RDD: fix: currently reseeding test function with reinitialization
+    // currently strange RNG seeding behavior, possibly a type issue,
+    // leads to binary switching of seed states between samples even after reseeding (though explicit seed state from cout isn't changing...)
+    TestFunction test_run(test_func_str, seed, noise_level, x_dim, verbosity);
+
     try {
       cnpy::npz_t npz_dict;
       CKern* k = getSklearnKernel((unsigned int)x_dim, npz_dict, kernel, std::string(""), true);
@@ -355,7 +360,7 @@ int testBayesianSearch(CML::EventLog& log,
       // set kernel hyperparameter bounds
       // no meaningful bounds on interpolation variance for now, might want min var
       CMatrix b(1, 2);
-      double range = test.x_interval(0, 1) - test.x_interval(0, 0);
+      double range = test_run.x_interval(0, 1) - test_run.x_interval(0, 0);
       if (kernel.compare("Matern32") == 0) {
         b(0, 0) = 0.1 * range;
         b(0, 1) = 2.0 * range;
@@ -363,11 +368,7 @@ int testBayesianSearch(CML::EventLog& log,
       }
       // kern.setBoundsByName("white_1:variance", b);
 
-      seeding not working across runs... some internal seed not being reset as expected...
-      probably related to TestFunction since I believe this was working at some point
-      potentially before TestFunction was introduced
-      BayesianSearchModel BO(kern, &test.x_interval, obsNoise * obsNoise, exp_bias, n_init_samples, seed, verbosity);
-      test.reseed(seed);
+      BayesianSearchModel BO(kern, &test_run.x_interval, obsNoise * obsNoise, exp_bias, n_init_samples, seed, verbosity);
       if (run == 0) { json_log[fd]["kernel_structure"] = BO.kern->json_structure(); }
 
       clock_t start = clock();
@@ -375,7 +376,7 @@ int testBayesianSearch(CML::EventLog& log,
       for (int i = 0; i < n_iters; i++) {
         sample_update_start = clock();
         CMatrix* x_sample = BO.get_next_sample();
-        CMatrix* y_sample = new CMatrix(test.func(*x_sample));
+        CMatrix* y_sample = new CMatrix(test_run.func(*x_sample));
         BO.add_sample(*x_sample, *y_sample);
         cout << endl << endl;
 
@@ -395,11 +396,11 @@ int testBayesianSearch(CML::EventLog& log,
       // samples
       cout << "Computing next sample after last sample in run:" << endl;
       CMatrix* x_sample = BO.get_next_sample();
-      CMatrix* y_sample = new CMatrix(test.func(*x_sample));
+      CMatrix* y_sample = new CMatrix(test_run.func(*x_sample));
 
       // metrics
       CMatrix* x_best = BO.get_best_solution();
-      search_rel_errors(run) = test.solution_error(*x_best);
+      search_rel_errors(run) = test_run.solution_error(*x_best);
 
       cout << "Relative error for run " << run << ": " << search_rel_errors(run) << endl;
       cout << "Run time (s): " << run_times(run) << endl;

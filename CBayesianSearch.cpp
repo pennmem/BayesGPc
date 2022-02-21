@@ -135,6 +135,10 @@ CMatrix* BayesianSearchModel::get_next_sample() {
 
         optim_settings.de_settings.initial_lb = lower_bounds;
         optim_settings.de_settings.initial_ub = upper_bounds;
+        // latest version of optim has RNG seeding, but not current version used
+        // optim_settings.rng_seed_value = seed;
+        // seed eigen library instead with std library seeding
+        srand((unsigned int) seed + num_samples);
 
         bool success;
 
@@ -176,6 +180,10 @@ CMatrix* BayesianSearchModel::get_best_solution() {
     CMatrix x_test(1, x_dim, x_optim.data());
 
     optim::algo_settings_t optim_settings;
+    // latest version of optim has RNG seeding, but not current version used
+    // optim_settings.rng_seed_value = seed;
+    // seed eigen library instead with std library seeding
+    srand((unsigned int) seed - num_samples);
     optim_settings.print_level = verbosity;
     if (verbosity >= 1) optim_settings.print_level -= 1;
     optim_settings.vals_bound = true;

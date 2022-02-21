@@ -24,7 +24,9 @@
 class BayesianSearchModel {
     public:
         BayesianSearchModel() {}
-        BayesianSearchModel(CCmpndKern& kernel, CMatrix* param_bounds, double observation_noise, double exp_bias, int init_samples, int rng_seed, int verbose) {
+        BayesianSearchModel(CCmpndKern& kernel, CMatrix* param_bounds,
+                            double observation_noise, double exp_bias,
+                            int init_samples, int rng_seed, int verbose) {
             kern = kernel.clone();
             // TODO check bounds dimensions
             bounds = param_bounds;
@@ -55,7 +57,6 @@ class BayesianSearchModel {
             }
         }
 
-        // TODO use smart pointers
         int num_samples;
         int x_dim;
         int initial_samples;

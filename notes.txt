@@ -4,12 +4,16 @@ make minimal CBayesianSearch updates to test
     DONE out_sem
         needs to debugging, getting negative resulting predictive variances...
     DONE standard way to control search space bounds
+    debug RNG seeding
     start tests
     make minimal analyses of results
+CSearchComparison
+    either fix out_sem if possible or implement degrees of freedom from Hastie et al.
+    test
 debug CBayesianSearch optimization errors (non-PSD)
     clean up CBayesianSearch with better updating of samples
-Elemem on Windows
 Elemem integration
+Elemem on Windows
 find video
 submit my Elemem code for review
 
@@ -28,10 +32,6 @@ update BO or ExperCPS to handle multiple parallel searches
 
 add discretized grid search functionality for selecting next point
     add search space constraints similar to skopt
-
-add enumerations for stim parameters
-add some form of mapping to parameters for various kernels? Could just directly set
-kernel hp bounds?
 
 LATER:
 interface:
@@ -303,7 +303,6 @@ optim
     change line 
     change line 99 of optim/src/unconstrained/de.cpp to 
         X_next.row(i) = OPTIM_MATOPS_TRANSPOSE( par_initial_lb + OPTIM_MATOPS_HADAMARD_PROD( par_initial_ub - par_iniial_lb, OPTIM_MATOPS_RANDU_VEC(n_vals) ) );
-        (obvious bug fix, pull request not made yet)
     ./configure --head-only-version
 
 nlohmann/json
