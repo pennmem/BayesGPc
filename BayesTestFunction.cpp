@@ -376,7 +376,9 @@ CMatrix TestFunction::func(const CMatrix& x, bool add_noise) {
   if (add_noise) {
     for (int i = 0; i < x.getRows(); i++) {
       // strange RNG seeding behavior, possibly a type issue, leads to binary switching of 
-      // seed states between samples even after reseeding
+      // seed states between samples even after reseeding so that, 
+      // after reseeding, identical behavior results only after an even number of samples are drawn
+      // may also be driven by the default RNG generator used...
       y(i, 0) = y(i, 0) + dist(e);
     }
   }

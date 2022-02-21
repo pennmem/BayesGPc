@@ -345,8 +345,11 @@ int testBayesianSearch(CML::EventLog& log,
     cout << "Run " << run << endl;
     seed++;
     // TODO: RDD: fix: currently reseeding test function with reinitialization
-    // currently strange RNG seeding behavior, possibly a type issue,
-    // leads to binary switching of seed states between samples even after reseeding (though explicit seed state from cout isn't changing...)
+    // strange RNG seeding behavior with RNG std::default_random_engine, 
+    // possibly a type issue, leads to binary switching of 
+    // seed states between samples even after reseeding so that, 
+    // after reseeding, identical behavior results only after an even number of samples are drawn
+    // may also be driven by the default RNG generator used...
     TestFunction test_run(test_func_str, seed, noise_level, x_dim, verbosity);
 
     try {
@@ -365,6 +368,37 @@ int testBayesianSearch(CML::EventLog& log,
         b(0, 0) = 0.1 * range;
         b(0, 1) = 2.0 * range;
         kern.setBoundsByName("matern32_0:lengthScale", b);
+        b(0, 0) = 0.25;
+        b(0, 1) = 4.0;
+        kern.setBoundsByName("matern32_0:variance", b);
+      }
+      else if (kernel.compare("Matern52") == 0) {
+        b(0, 0) = 0.1 * range;
+        b(0, 1) = 2.0 * range;
+        kern.setBoundsByName("matern52_0:lengthScale", b);
+        b(0, 0) = 0.25;
+        b(0, 1) = 4.0;
+        kern.setBoundsByName("matern52_0:variance", b);
+      }
+      else if (kernel.compare("RBF") == 0) {
+        // squared reciprocal "length scale"
+        b(0, 0) = 0.0625;
+        b(0, 1) = 16.0;
+        kern.setBoundsByName("rbf_0:inverseWidth", b);
+        b(0, 0) = 0.25;
+        b(0, 1) = 4.0;
+        kern.setBoundsByName("rbf_0:variance", b);
+      }
+      else if (kernel.compare("RationalQuadratic") == 0) {
+        b(0, 0) = 0.1 * range;
+        b(0, 1) = 2.0 * range;
+        kern.setBoundsByName("ratquad_0:lengthScale", b);
+        b(0, 0) = 0.1;
+        b(0, 1) = 10.0;
+        kern.setBoundsByName("ratquad_0:alpha", b);
+        b(0, 0) = 0.25;
+        b(0, 1) = 4.0;
+        kern.setBoundsByName("ratquad_0:variance", b);
       }
       // kern.setBoundsByName("white_1:variance", b);
 

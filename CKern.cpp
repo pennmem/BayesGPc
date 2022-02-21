@@ -1192,6 +1192,7 @@ double CRbfKern::computeElement(const CMatrix& X1, unsigned int index1,
 				const CMatrix& X2, unsigned int index2) const
 {
   double k = X1.dist2Row(index1, X2, index2);
+  // inverseWidth is squared reciprocal "length scale"
   k = 0.5*k*inverseWidth;
   k = variance*exp(-k);
   return k;
