@@ -145,7 +145,7 @@ int testComparison(const string Type, const string fileName)
       if(diff < tol)
         cout << Type << " p-value matches within " << diff << " max relative difference." << endl;
       else
-      { 
+      {
         cout << "FAILURE: " << Type << " p-value." << endl;
         cout << "Maximum absolute difference: " << diff << endl;    
         fail++;

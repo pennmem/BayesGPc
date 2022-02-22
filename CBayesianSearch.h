@@ -24,17 +24,16 @@
 class BayesianSearchModel {
     public:
         BayesianSearchModel() {}
-        BayesianSearchModel(CCmpndKern& kernel, CMatrix* param_bounds,
+        BayesianSearchModel(CCmpndKern& kernel, CMatrix param_bounds,
                             double observation_noise, double exp_bias,
                             int init_samples, int rng_seed, int verbose) {
             kern = kernel.clone();
-            // TODO check bounds dimensions
-            // TODO replace pointer to bounds with just CMatrix (produces separate deep copy)
+            DIMENSIONMATCH(param_bounds.getCols() == 2);
             bounds = param_bounds;
             seed = rng_seed;
             verbosity = verbose;
             _init();
-            x_dim = bounds->getRows();
+            x_dim = bounds.getRows();
             num_samples = 0;
             initial_samples = init_samples;
             obsNoise = observation_noise;
@@ -76,7 +75,7 @@ class BayesianSearchModel {
         CGaussianNoise* noiseInit = nullptr;
         CGp* gp = nullptr;
 
-        CMatrix* bounds;
+        CMatrix bounds;
         CMatrix* get_next_sample();
         void add_sample(const CMatrix& x, const CMatrix& y);
         CMatrix* get_best_solution();

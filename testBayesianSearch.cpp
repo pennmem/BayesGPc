@@ -402,7 +402,7 @@ int testBayesianSearch(CML::EventLog& log,
       }
       // kern.setBoundsByName("white_1:variance", b);
 
-      BayesianSearchModel BO(kern, &test_run.x_interval, obsNoise * obsNoise, exp_bias, n_init_samples, seed, verbosity);
+      BayesianSearchModel BO(kern, test_run.x_interval, obsNoise * obsNoise, exp_bias, n_init_samples, seed, verbosity);
       if (run == 0) { json_log[fd]["kernel_structure"] = BO.kern->json_structure(); }
 
       clock_t start = clock();
