@@ -27,8 +27,8 @@ config:
 test experiment
 
 update BO or ExperCPS to handle multiple parallel searches
-    add wrapper to BO?
-    any need to do this within cpp? could just compute with separate Python script...
+    solve issue with out_sem
+    test
 
 add discretized grid search functionality for selecting next point
     add search space constraints similar to skopt

@@ -51,7 +51,7 @@ if [[ $SMOKESCREEN -eq 1 ]]; then
     exp_biases=(0.1)
 else
     n_iters=250
-    n_runs=25
+    n_runs=50
     kernels=("Matern32" "Matern52" "RBF" "RationalQuadratic")
     func="all"
     noise_levels=(0.0 0.1 0.3)

@@ -490,9 +490,14 @@ void CGp::out(CMatrix& yPred, CMatrix& probPred, const CMatrix& Xin) const
 void CGp::out_sem(CMatrix& yPred, CMatrix& probPred, const CMatrix& Xin) const
 {
   out(yPred, probPred, Xin);
-  probPred -= sqrt(obsNoiseVar + pkern->getWhite() * (scale.getVal(0) * scale.getVal(0)));
-  for(unsigned int i=0; i<probPred.getRows(); i++)
-  {
+  for(unsigned int i=0; i<probPred.getRows(); i++) {
+    // convert to predictive variance
+    probPred(i) = probPred.getVal(i) * probPred.getVal(i);
+    // remove sample error/noise variance
+    probPred(i) -= pkern->getWhite() * (scale.getVal(0) * scale.getVal(0));
+    // sem
+    probPred(i) = sqrt(probPred.getVal(i));
+
     double vsVal = probPred(i);
     if (vsVal < 0) {
       cout << "Negative predictive SEM: " << vsVal << endl;
@@ -761,7 +766,7 @@ void CGp::_updateK() const
       for(unsigned int i=0; i<getNumData(); i++) 
       {
         K.setVal(pkern->diagComputeElement(*pX, i) + obsNoiseVarScaled, i, i);
-        for(unsigned int j=0; j<i; j++) 
+        for(unsigned int j=0; j<i; j++)
         {
           kVal=pkern->computeElement(*pX, i, *pX, j);
           K.setVal(kVal, i, j);

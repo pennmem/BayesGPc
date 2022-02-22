@@ -8,10 +8,10 @@ double expected_improvement(const CMatrix& x, const CGp& model, double y_b, doub
     CMatrix std_mat(1, 1);
     double y_best = y_b + exp_bias;
 
-    model.out(mu_mat, std_mat, x);
+    // model.out(mu_mat, std_mat, x);
     // use predictive mean uncertainty rather than sample uncertainty 
     // (which includes observation noise/white noise)
-    // model.out_sem(mu_mat, std_mat, x);
+    model.out_sem(mu_mat, std_mat, x);
     double mu = mu_mat.getVal(0, 0);
     double std = std_mat.getVal(0, 0);
 

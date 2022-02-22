@@ -119,10 +119,10 @@ void plot_BO_state(const BayesianSearchModel& BO,
     }
     
     int markersize = 2;
-    // test function
-    figure();
-    surf(X1_plot, X2_plot, y_plot_vec);
-    title("True function");
+    // surface plot of test function
+    // figure();
+    // surf(X1_plot, X2_plot, y_plot_vec);
+    // title("True function");
 
     // issue in which contourf (for only some test functions) floors larger values to ~1e250 while smaller values 
     // seem floored to 0. Behavior is consistent across runs. surf() plots do not show this behavior. 
@@ -155,22 +155,23 @@ void plot_BO_state(const BayesianSearchModel& BO,
     hold(off);
     title("Predictive STD");
 
+    // currently causing segfaults?
     // acquisition function
-    vector_2d acq_func_plot_vec = 
-      transform(X1_plot, X2_plot, 
-        [&x_dim, &BO](double x, double y) {
-          CMatrix x_temp(1, x_dim);
-          x_temp.setVal(x, 0);
-          x_temp.setVal(y, 1);
-          return expected_improvement(x_temp, *(BO.gp), BO.y_best, BO.exploration_bias);
-        } );
+    // vector_2d acq_func_plot_vec = 
+    //   transform(X1_plot, X2_plot, 
+    //     [&x_dim, &BO](double x, double y) {
+    //       CMatrix x_temp(1, x_dim);
+    //       x_temp.setVal(x, 0);
+    //       x_temp.setVal(y, 1);
+    //       return expected_improvement(x_temp, *(BO.gp), BO.y_best, BO.exploration_bias);
+    //     } );
 
-    figure();
-    contourf(X1_plot, X2_plot, acq_func_plot_vec);
-    hold(on);
-    plot(x1_samples_vec, x2_samples_vec, "k.")->marker_size(markersize);
-    hold(off);
-    title("Acquisition function");
+    // figure();
+    // contourf(X1_plot, X2_plot, acq_func_plot_vec);
+    // hold(on);
+    // plot(x1_samples_vec, x2_samples_vec, "k.")->marker_size(markersize);
+    // hold(off);
+    // title("Acquisition function");
     show();
   }
   else {

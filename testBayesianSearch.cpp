@@ -319,7 +319,7 @@ int testBayesianSearch(CML::EventLog& log,
   double exp_bias = exp_bias_ratio * test.range;
 
   // assume we know observation noise to some precision; white noise kernel able to adjust for additional noise
-  double obsNoise = 0.5 * test.noise_std;
+  double obsNoise = 0.1 * test.noise_std;
 
   x_dim = test.x_dim;
 
@@ -420,7 +420,8 @@ int testBayesianSearch(CML::EventLog& log,
 
         if (plotting && (verbosity >= 2) && x_dim <= 2 && (i > n_init_samples)) {
           BO.get_next_sample();
-          BO.gp->out(y_pred, std_pred, x);
+          // BO.gp->out(y_pred, std_pred, x);
+          BO.gp->out_sem(y_pred, std_pred, x);
           plot_BO_state(BO, x, y, y_pred, std_pred, x_sample, y_sample);
         }
       }
@@ -450,7 +451,8 @@ int testBayesianSearch(CML::EventLog& log,
       
       // plotting
       if (plotting && x_dim <= 2 && !full_time_test) {
-        BO.gp->out(y_pred, std_pred, x);
+        // BO.gp->out(y_pred, std_pred, x);
+        BO.gp->out_sem(y_pred, std_pred, x);
         plot_BO_state(BO, x, y, y_pred, std_pred, x_sample, y_sample);
       }
 
