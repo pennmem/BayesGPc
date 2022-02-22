@@ -5,9 +5,9 @@
 SHELL = /bin/sh
 
 # for debugging
-#OPT_LEVEL=1
+OPT_LEVEL=1
 # for release
-OPT_LEVEL=3
+#OPT_LEVEL=3
 
 PLAT = _LINUX
 LAPACKLIBS = -llapack -lblas

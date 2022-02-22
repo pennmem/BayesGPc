@@ -20,8 +20,8 @@ struct TestStruct {
 class CSearchComparison {
     CSearchComparison() {}
 
-    CSearchComparison(int n_models, double alpha, vector<CCmpndKern> kernels, vector<CMatrix> param_bounds, 
-            vector<double> observation_noises, vector<double> exploration_biases, vector<int> init_samples, 
+    CSearchComparison(int n_models, double alpha, vector<CCmpndKern> kernels, vector<CMatrix> param_bounds,
+            vector<double> observation_noises, vector<double> exploration_biases, vector<int> init_samples,
             vector<int> rng_seeds, int verbose) {
         num_models = n_models;
         pthreshold = alpha;
@@ -34,8 +34,8 @@ class CSearchComparison {
         verbosity = verbose;
 
         for (int i = 0; i < num_models; i++) {
-            models.push_back(new BayesianSearchModel(kerns[i], &(param_bounds[i]), 
-                    obsNoises[i], exp_biases[i], 
+            models.push_back(new BayesianSearchModel(kerns[i], &(param_bounds[i]),
+                    obsNoises[i], exp_biases[i],
                     initial_samples[i], seeds[i], verbosity));
         }
     }

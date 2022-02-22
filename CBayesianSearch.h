@@ -29,6 +29,7 @@ class BayesianSearchModel {
                             int init_samples, int rng_seed, int verbose) {
             kern = kernel.clone();
             // TODO check bounds dimensions
+            // TODO replace pointer to bounds with just CMatrix (produces separate deep copy)
             bounds = param_bounds;
             seed = rng_seed;
             verbosity = verbose;
@@ -66,7 +67,7 @@ class BayesianSearchModel {
         CMatrix* x_samples;
         CMatrix* y_samples;
         double y_best;
-        // observation noise. Currently applied to only training samples.
+        // observation noise variance. Currently applied to only training samples.
         double obsNoise;
         double exploration_bias;
 
