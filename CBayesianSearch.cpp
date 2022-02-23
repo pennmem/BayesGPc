@@ -66,7 +66,7 @@ CMatrix* BayesianSearchModel::get_next_sample() {
         boost::random::uniform_real_distribution<> dist(0.0, 1.0);
         boost::random::variate_generator<boost::mt19937&, boost::random::uniform_real_distribution<> > gen(rng, dist);
         for (unsigned int i = 0; i < x_dim; i++) {
-            x->setVal(bounds->getVal(i, 0) + gen() * (bounds->getVal(i, 1) - bounds->getVal(i, 0)), i);
+            x->setVal(bounds.getVal(i, 0) + gen() * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
         }
     }
     else {
@@ -109,9 +109,9 @@ CMatrix* BayesianSearchModel::get_next_sample() {
         Eigen::VectorXd upper_bounds = Eigen::VectorXd(x_dim);
         // TODO choose better/random initial values? not strictly needed for global optimization
         for (int i = 0; i < x_dim; i++) {
-            x_optim[i] = (bounds->getVal(i, 0) + bounds->getVal(i, 1))/2.0;
-            lower_bounds[i] = bounds->getVal(i, 0);
-            upper_bounds[i] = bounds->getVal(i, 1);
+            x_optim[i] = (bounds.getVal(i, 0) + bounds.getVal(i, 1))/2.0;
+            lower_bounds[i] = bounds.getVal(i, 0);
+            upper_bounds[i] = bounds.getVal(i, 1);
         }
 
         CMatrix x_test(1, x_dim, x_optim.data());
@@ -172,9 +172,9 @@ CMatrix* BayesianSearchModel::get_best_solution() {
     Eigen::VectorXd upper_bounds = Eigen::VectorXd(x_dim);
     // TODO choose better/random initial values? not strictly needed for global optimization
     for (int i = 0; i < x_dim; i++) {
-        x_optim[i] = (bounds->getVal(i, 0) + bounds->getVal(i, 1))/2.0;
-        lower_bounds[i] = bounds->getVal(i, 0);
-        upper_bounds[i] = bounds->getVal(i, 1);
+        x_optim[i] = (bounds.getVal(i, 0) + bounds.getVal(i, 1))/2.0;
+        lower_bounds[i] = bounds.getVal(i, 0);
+        upper_bounds[i] = bounds.getVal(i, 1);
     }
 
     CMatrix x_test(1, x_dim, x_optim.data());

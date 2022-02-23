@@ -1,3 +1,6 @@
+#ifndef CSEARCHCOMPARISON_H
+#define CSEARCHCOMPARISON_H
+
 #include "CMatrix.h"
 #include "CBayesianSearch.h"
 #include <boost/math/distributions/fisher_f.hpp>
@@ -18,8 +21,8 @@ struct TestStruct {
 };
 
 class CSearchComparison {
+    public:
     CSearchComparison() {}
-
     CSearchComparison(int n_models, double alpha, vector<CCmpndKern> kernels, vector<CMatrix> param_bounds,
             vector<double> observation_noises, vector<double> exploration_biases, vector<int> init_samples,
             vector<int> rng_seeds, int verbose) {
@@ -34,7 +37,7 @@ class CSearchComparison {
         verbosity = verbose;
 
         for (int i = 0; i < num_models; i++) {
-            models.push_back(new BayesianSearchModel(kerns[i], &(param_bounds[i]),
+            models.push_back(new BayesianSearchModel(kerns[i], param_bounds[i],
                     obsNoises[i], exp_biases[i],
                     initial_samples[i], seeds[i], verbosity));
         }
@@ -67,3 +70,5 @@ class CSearchComparison {
 TestStruct anova_welch(vector<double> mus, vector<double> sems, vector<double> ns);
 // one-sided Welch's t-test for testing the alternative mu1 > mu2
 TestStruct ttest_welch(double mu1, double mu2, double sem1, double sem2, double n1, double n2);
+
+#endif

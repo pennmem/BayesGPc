@@ -24,17 +24,15 @@
 class BayesianSearchModel {
     public:
         BayesianSearchModel() {}
-        BayesianSearchModel(CCmpndKern& kernel, CMatrix* param_bounds,
+        BayesianSearchModel(CCmpndKern& kernel, CMatrix param_bounds,
                             double observation_noise, double exp_bias,
                             int init_samples, int rng_seed, int verbose) {
             kern = kernel.clone();
-            // TODO check bounds dimensions
-            // TODO replace pointer to bounds with just CMatrix (produces separate deep copy)
             bounds = param_bounds;
             seed = rng_seed;
             verbosity = verbose;
             _init();
-            x_dim = bounds->getRows();
+            x_dim = bounds.getRows();
             num_samples = 0;
             initial_samples = init_samples;
             obsNoise = observation_noise;
@@ -76,7 +74,7 @@ class BayesianSearchModel {
         CGaussianNoise* noiseInit = nullptr;
         CGp* gp = nullptr;
 
-        CMatrix* bounds;
+        CMatrix bounds;
         CMatrix* get_next_sample();
         void add_sample(const CMatrix& x, const CMatrix& y);
         CMatrix* get_best_solution();
@@ -86,9 +84,5 @@ class BayesianSearchModel {
 };
 
 double expected_improvement(const CMatrix& x, const CGp& model, double y_b, double exp_bias);
-
-// TODO
-// design wrapper around GCp, should really just have sklearn API
-// clean up
 
 #endif
