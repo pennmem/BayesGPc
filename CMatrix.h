@@ -1337,6 +1337,8 @@ double logDet(const CMatrix& U);
 
 std::vector<std::vector<double>> to_vector(const CMatrix& x);
 CMatrix from_vector(const std::vector<std::vector<double>>& vec);
+std::vector<double> to_vector1D(const CMatrix& x);
+
 
 // inline void swap(CMatrix& x, CMatrix& y);
 

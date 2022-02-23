@@ -1,6 +1,5 @@
 #include "CSearchComparison.h"
 
-// TODO: break out Welch's ANOVA into separate function for unit testing
 // compare predicted disributions from set of GPs (having optimal means for each GP) 
 // using Welch's F-test/ANOVA
 ComparisonStruct CSearchComparison::get_best_solution() {
@@ -23,21 +22,33 @@ ComparisonStruct CSearchComparison::get_best_solution() {
         mus.push_back(y_pred.getVal(0));
         sems.push_back(sem_pred.getVal(0));
 
-        if (mus[i] > best_val) { idx_best = i; }
+        if (mus[i] > best_val) {
+            best_val = mus[i];
+            idx_best = i;
+        }
         
         // estimate effective GP sample sizes
         models[i]->gp->out(y_pred, std_pred, *(xs[i]));
         eff_ns.push_back(std::pow(std_pred.getVal(0) / sems[i], 2));
     }
 
-    TestStruct test = anova_welch(mus, sems, eff_ns);
+    TestStruct test;
+    if (num_models == 2) {
+        test = ttest_welch(mus[0], mus[1], sems[0], sems[1], eff_ns[0], eff_ns[1]);
+    }
+    else {
+        test = anova_welch(mus, sems, eff_ns);
+    }
 
-    // means not significantly different so choose most reliable model (smallest SEM)
+    // if means not significantly different, choose most reliable model (smallest SEM)
     if (test.pval > pthreshold) {
         best_val = std::numeric_limits<double>::infinity();
         idx_best = -1;
         for (int i = 0; i < num_models; i++) {
-            if (sems[i] < best_val) { idx_best = i; }
+            if (sems[i] < best_val) {
+                best_val = sems[i];
+                idx_best = i;
+            }
         }
     }
 
@@ -62,6 +73,13 @@ TestStruct CSearchComparison::compare_GP_to_sample(const ComparisonStruct& res, 
     return ttest_res;
 }
 
+CMatrix* CSearchComparison::get_next_sample(unsigned int model_idx) {
+    return models[model_idx]->get_next_sample();
+}
+
+void CSearchComparison::add_sample(unsigned int model_idx, const CMatrix& x, const CMatrix& y) {
+    models[model_idx]->add_sample(x, y);
+}
 
 TestStruct anova_welch(vector<double> mus,
                        vector<double> sems,
@@ -109,7 +127,7 @@ TestStruct anova_welch(vector<double> mus,
 }
 
 
-// one-sided Welch's t-test for testing the alternative mu1 > mu2
+// two-sided Welch's t-test
 TestStruct ttest_welch(double mu1, double mu2, 
                        double sem1, double sem2, 
                        double n1, double n2) {
@@ -119,11 +137,11 @@ TestStruct ttest_welch(double mu1, double mu2,
     double sem2_2 = sem2 * sem2;
 
     // t-stat
-    res.stat = (mu1 - mu2)/std::sqrt(sem1_2 + sem2_2);
+    res.stat = std::abs(mu1 - mu2)/std::sqrt(sem1_2 + sem2_2);
     
     double dof = std::pow(sem1_2 + sem2_2, 2) / (std::pow(sem1_2, 2)/(n1 - 1) + std::pow(sem2_2, 2)/(n2 - 1));
     boost::math::students_t dist(dof);
-    res.pval = cdf(complement(dist, res.stat));
+    res.pval = 2*cdf(complement(dist, res.stat));
 
     return res;
 }

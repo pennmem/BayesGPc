@@ -86,8 +86,4 @@ class BayesianSearchModel {
 
 double expected_improvement(const CMatrix& x, const CGp& model, double y_b, double exp_bias);
 
-// TODO
-// design wrapper around GCp, should really just have sklearn API
-// clean up
-
 #endif

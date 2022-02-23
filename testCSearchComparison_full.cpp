@@ -1,5 +1,22 @@
 #include "testBayesianSearch.h"
+#include "CSearchComparison.h"
 
+int testSearchComparison(CML::EventLog& log,
+                        json& json_log,
+                        string kernel, 
+                        string test_func_str,
+                        int n_runs=25,
+                        int n_iters=250,
+                        int n_init_samples=10,
+                        int x_dim=1,
+                        int n_way=1,
+                        double mean_diff=0.1,
+                        double noise_level=0.3,
+                        double exp_bias_ratio=0.1,
+                        int verbosity=0,
+                        bool full_time_test=false,
+                        bool plotting=false,
+                        int seed=1234);
 
 class CClgptest : public CClctrl 
 {
@@ -17,8 +34,8 @@ int main(int argc, char* argv[])
   try
   {
     // default test arguments
-    string tag_arg        = "test";
-    string results_dir = "results";
+    string tag_arg        = "test_CSearchComparison";
+    string results_dir = "results/search_comparison";
     // white kernel currently added to user-specified kernel to obtain full kernel
     // Current options: Matern32, Matern52, RBF, RationalQuadratic, DotProduct, lin (linear kernel)
     string kern_arg       = "Matern32";
@@ -27,6 +44,8 @@ int main(int argc, char* argv[])
     int n_iters           = 250;
     int n_init_samples    = 25;
     int x_dim             = 1;
+    int n_way             = 2;
+    double mean_diff      = 0.1;  // constant difference between test function(s)
     double noise_level    = 0.1;
     double exp_bias_ratio = 0.25;
     int seed              = 1234;
@@ -72,6 +91,15 @@ int main(int argc, char* argv[])
           command.incrementArgument();
           x_dim = std::stoi(command.getCurrentArgument());
         }
+        if (command.isCurrentArg("-n_way", "--n_way")) {
+          command.incrementArgument();
+          n_way = std::stoi(command.getCurrentArgument());
+          assert(n_way > 1);
+        }
+        if (command.isCurrentArg("-m", "--mean_diff")) {
+          command.incrementArgument();
+          mean_diff = std::stod(command.getCurrentArgument());
+        }
         if (command.isCurrentArg("-n", "--noise_level")) {
           command.incrementArgument();
           noise_level = std::stod(command.getCurrentArgument());
@@ -109,6 +137,8 @@ int main(int argc, char* argv[])
     log_dir += "-runs_" + to_string(n_runs);
     log_dir += "-iters_" + to_string(n_iters);
     log_dir += "-init_samp_" + to_string(n_init_samples);
+    log_dir += "-n_way_" + to_string(n_way);
+    log_dir += "-mean_diff_" + to_string(mean_diff);
     log_dir += "-noise_" + to_string(noise_level);
     log_dir += "-exp_bias_" + to_string(exp_bias_ratio);
     log_dir += "_" + getDateTime();
@@ -136,7 +166,7 @@ int main(int argc, char* argv[])
     // include json logging for parsing
     // keep old .txt logging method for now...
     json config;
-    config["impl"] = string("CBay");
+    config["impl"] = string("CSearchComparison");
     config["tag"] = tag_arg;
     config["logdir"] = log_dir;
     config["verbosity"] = verbosity;
@@ -149,6 +179,8 @@ int main(int argc, char* argv[])
     config["n_runs"] = n_runs;
     config["n_iters"] = n_iters;
     config["n_init_samp"] = n_init_samples;
+    config["n_way"] = n_way;
+    config["mean_diff"] = mean_diff;
     config["noise_level"] = noise_level;
     config["exp_bias"] = exp_bias_ratio;
     config["datetime"] = getDateTime();
@@ -163,32 +195,32 @@ int main(int argc, char* argv[])
 
     if (test_func_arg.compare("all") == 0) {
       vector<std::pair<std::string, int>> funcs{
-                          //  {"sin", 1},
-                          //  {"quadratic", 1},
-                          //  {"quadratic_over_edge", 1},
+                           {"sin", 1},
+                           {"quadratic", 1},
+                           {"quadratic_over_edge", 1},
                           //  {"PS4_1", 1},
                           //  {"PS4_2", 1},
                           //  {"PS4_3", 1},
                           //  {"PS4_4", 1},
                            {"schwefel", 1},
                            {"schwefel", 2},
-                           {"schwefel", 4},
-                           {"hartmann4d", 4},
-                           {"ackley", 1},
-                           {"ackley", 2},
-                           {"ackley", 4},
-                           {"rastrigin", 1},
-                           {"rastrigin", 2},
-                           {"rastrigin", 4},
-                           {"eggholder", 2},
+                        //    {"schwefel", 4},
+                        //    {"hartmann4d", 4},
+                        //    {"ackley", 1},
+                        //    {"ackley", 2},
+                        //    {"ackley", 4},
+                        //    {"rastrigin", 1},
+                        //    {"rastrigin", 2},
+                        //    {"rastrigin", 4},
+                        //    {"eggholder", 2},
                            {"sum_squares", 1},
                            {"sum_squares", 2},
-                           {"sum_squares", 4},
-                           {"rosenbrock", 2},
-                           {"rosenbrock", 4},
+                        //    {"sum_squares", 4},
+                        //    {"rosenbrock", 2},
+                        //    {"rosenbrock", 4},
                           };
       for (auto p : funcs) {
-        fail += testBayesianSearch(log,
+        fail += testSearchComparison(log,
                         json_log,
                         kern_arg, 
                         p.first,
@@ -196,6 +228,8 @@ int main(int argc, char* argv[])
                         n_iters,
                         n_init_samples,
                         p.second,
+                        n_way,
+                        mean_diff,
                         noise_level,
                         exp_bias_ratio,
                         verbosity,
@@ -205,7 +239,7 @@ int main(int argc, char* argv[])
       }
     }
     else {
-      fail += testBayesianSearch(log,
+      fail += testSearchComparison(log,
                       json_log,
                       kern_arg, 
                       test_func_arg,
@@ -213,6 +247,8 @@ int main(int argc, char* argv[])
                       n_iters,
                       n_init_samples,
                       x_dim,
+                      n_way,
+                      mean_diff,
                       noise_level,
                       exp_bias_ratio,
                       verbosity,
@@ -245,7 +281,7 @@ int main(int argc, char* argv[])
   }
 }
 
-int testBayesianSearch(CML::EventLog& log,
+int testSearchComparison(CML::EventLog& log,
                        json& json_log,
                        string kernel, 
                        string test_func_str,
@@ -253,6 +289,8 @@ int testBayesianSearch(CML::EventLog& log,
                        int n_iters,
                        int n_init_samples,
                        int x_dim,
+                       int n_way,
+                       double mean_diff,
                        double noise_level,
                        double exp_bias_ratio,
                        int verbosity,
@@ -263,6 +301,7 @@ int testBayesianSearch(CML::EventLog& log,
 {
   assert(n_init_samples < n_iters);
   int fail = 0;
+  int correct_model = 0;
 
   log.Log_Handler("Test function:\t" + test_func_str + "\n");
   log.Log_Handler("x_dim:\t" + to_string(x_dim) + "\n");
@@ -270,6 +309,9 @@ int testBayesianSearch(CML::EventLog& log,
   log.Log_Handler("n_runs:\t" + to_string(n_runs) + "\n");
   log.Log_Handler("n_iters:\t" + to_string(n_iters) + "\n");
   log.Log_Handler("n_init_samples:\t" + to_string(n_init_samples) + "\n");
+  log.Log_Handler("n_way:\t" + to_string(n_way) + "\n");
+  log.Log_Handler("correct_model:\t" + to_string(correct_model) + "\n");
+  log.Log_Handler("Mean difference:\t" + to_string(mean_diff) + "\n");
   log.Log_Handler("Noise level:\t" + to_string(noise_level) + "\n");
   log.Log_Handler("exp_bias_ratio:\t" + to_string(exp_bias_ratio) + "\n");
 
@@ -278,6 +320,8 @@ int testBayesianSearch(CML::EventLog& log,
   log.Log_Handler("\n");
 
   string fd = test_func_str + ":d" + to_string(x_dim);
+  json_log[fd] = json({});
+  json_log[fd]["run"] = json::array();
 
   TestFunction test(test_func_str, seed, noise_level, x_dim, verbosity);
 
@@ -335,11 +379,9 @@ int testBayesianSearch(CML::EventLog& log,
 
   // runs with exceptions
   vector<int> except_runs;
-  // shape: (runs, samples, sample dimension)
-  vector<vector<vector<double>>> x_samples_runs;
-  vector<vector<vector<double>>> y_samples_runs;
-  // shape: (runs, samples, n_kernel_params)
-  vector<vector<vector<double>>> sample_search_states(n_runs, vector<vector<double>>());
+  vector<double> correct_inferences;
+  vector<double> pvals;
+  double alpha = 0.05;
 
   for (int run = 0; run < n_runs; run++) {
     cout << "Run " << run << endl;
@@ -354,59 +396,91 @@ int testBayesianSearch(CML::EventLog& log,
 
     try {
       CCmpndKern kern = getTestKernel(kernel, test_run.x_interval(0, 1) - test_run.x_interval(0, 0), x_dim);
-      BayesianSearchModel BO(kern, test_run.x_interval, obsNoise * obsNoise, exp_bias, n_init_samples, seed, verbosity);
-      if (run == 0) { json_log[fd]["kernel_structure"] = BO.kern->json_structure(); }
+      // TODO change over all function arguments to CKern
+      vector<CCmpndKern> kernels;
+      vector<CMatrix> param_bounds;
+      vector<double> observation_noises;
+      vector<double> exploration_biases;
+      vector<int> init_samples;
+      vector<int> rng_seeds;
+      for (int w = 0; w < n_way; w++) {
+          kernels.push_back(kern);
+          param_bounds.push_back(test_run.x_interval);
+          observation_noises.push_back(obsNoise * obsNoise);
+          exploration_biases.push_back(exp_bias);
+          init_samples.push_back(n_init_samples);
+          rng_seeds.push_back(seed + run * n_way * n_iters);
+      }
+
+      CSearchComparison search(n_way, alpha, kernels, param_bounds, observation_noises,
+              exploration_biases, init_samples, rng_seeds, verbosity);
+      // use identical kernels across functions for now
+      if (run == 0) { json_log[fd]["kernel_structure"] = kern.json_structure(); }
 
       clock_t start = clock();
       clock_t sample_update_start;
-      for (int i = 0; i < n_iters; i++) {
-        sample_update_start = clock();
-        CMatrix* x_sample = BO.get_next_sample();
+      json_log[fd]["run"].push_back(json::array());
+      cout << json_log << endl;
+      for (int w = 0; w < n_way; w++) {
+        json_log[fd]["run"][run].push_back(json({}));
+        json_log[fd]["run"][run][w]["relative errors"] = json::array();
+        json_log[fd]["run"][run][w]["kernel_states"] = json::array();
+        json_log[fd]["run"][run][w]["x_samples"] = json::array();
+        json_log[fd]["run"][run][w]["y_samples"] = json::array();
+        for (int i = 0; i < n_iters; i++) {
+          CMatrix* x_sample = search.get_next_sample(w);
+          // difference in means between group/model 0 vs. others
+          double val = test_run.func(*x_sample).getVal(0) + (w == correct_model ? mean_diff * test_run.noise_std : 0.0);
+          CMatrix* y_sample = new CMatrix(val);
+          search.add_sample(w, *x_sample, *y_sample);
+          cout << endl << endl;
+
+          // logging
+          if (i >= n_init_samples) { json_log[fd]["run"][run][w]["kernel_states"].push_back(search.models[w]->gp->pkern->state()); }
+          json_log[fd]["run"][run][w]["x_samples"].push_back(to_vector(*x_sample));
+          json_log[fd]["run"][run][w]["y_samples"].push_back(to_vector(*y_sample));
+        }
+
+        // FIXME needed for now with janky way I'm deleting CGp gp and CNoise attributes to allow for updating with new 
+        // samples
+        cout << "Computing next sample after last sample in run:" << endl;
+        CMatrix* x_sample = search.models[w]->get_next_sample();
         CMatrix* y_sample = new CMatrix(test_run.func(*x_sample));
-        BO.add_sample(*x_sample, *y_sample);
-        cout << endl << endl;
 
-        // logging
-        if (i >= n_init_samples) { sample_search_states[run].push_back(BO.gp->pkern->state()); }
-        sample_times(run, i) = (double)(clock() - sample_update_start)/CLOCKS_PER_SEC;
+        // run metrics
+        CMatrix* x_best;
+        x_best = search.models[w]->get_best_solution();
+        // allow extra dimension for generalizing to getting error at each sample
+        json_log[fd]["run"][run][w]["relative errors"][0] = test_run.solution_error(*x_best);
+        cout << "Relative error for run " << run << ", group " << w << ": " << json_log[fd]["run"][run][w]["relative errors"][0] << endl;
 
-        if (plotting && (verbosity >= 2) && x_dim <= 2 && (i > n_init_samples)) {
-          BO.get_next_sample();
-          // BO.gp->out(y_pred, std_pred, x);
-          BO.gp->out_sem(y_pred, std_pred, x);
-          plot_BO_state(BO, x, y, y_pred, std_pred, x_sample, y_sample);
+        // plotting
+        if (plotting && x_dim <= 2 && !full_time_test) {
+          search.models[w]->gp->out_sem(y_pred, std_pred, x);
+          plot_BO_state(*search.models[w], x, y, y_pred, std_pred, x_sample, y_sample);
         }
       }
-      run_times(run) = (double)(clock() - start)/CLOCKS_PER_SEC;
 
-      // FIXME needed for now with janky way I'm deleting CGp gp and CNoise attributes to allow for updating with new 
-      // samples
-      cout << "Computing next sample after last sample in run:" << endl;
-      CMatrix* x_sample = BO.get_next_sample();
-      CMatrix* y_sample = new CMatrix(test_run.func(*x_sample));
-
-      // metrics
-      CMatrix* x_best = BO.get_best_solution();
-      search_rel_errors(run) = test_run.solution_error(*x_best);
-
-      cout << "Relative error for run " << run << ": " << search_rel_errors(run) << endl;
-      cout << "Run time (s): " << run_times(run) << endl;
-      // log.Log_Handler("Relative error for run " + to_string(run) + ": " + to_string(search_rel_errors(run)) + "\n");
-      // log.Log_Handler("Run time (s): " + to_string(run_times(run)) + "\n");
-
-      if (search_rel_errors(run) < max_pass_error) {
-        failures += 1;
+      // compare groups
+      ComparisonStruct sol = search.get_best_solution();
+      vector<vector<double>> xs;
+      for (int w = 0; w < n_way; w++) {
+        xs.push_back(to_vector1D(*(sol.xs[w])));
       }
-
-      x_samples_runs.push_back(to_vector(*(BO.x_samples)));
-      y_samples_runs.push_back(to_vector(*(BO.y_samples)));
+      // store comparison_structs in json for first group to simplify json structure
+      json_log[fd]["run"][run][0]["comparison_struct"] = json({});
+      json_log[fd]["run"][run][0]["comparison_struct"]["idx_best"] = sol.idx_best;
+      json_log[fd]["run"][run][0]["comparison_struct"]["xs"] = xs;
+      json_log[fd]["run"][run][0]["comparison_struct"]["mus"] = sol.mus;
+      json_log[fd]["run"][run][0]["comparison_struct"]["sems"] = sol.sems;
+      json_log[fd]["run"][run][0]["comparison_struct"]["ns"] = sol.ns;
+      json_log[fd]["run"][run][0]["comparison_struct"]["pval"] = sol.pval;
       
-      // plotting
-      if (plotting && x_dim <= 2 && !full_time_test) {
-        // BO.gp->out(y_pred, std_pred, x);
-        BO.gp->out_sem(y_pred, std_pred, x);
-        plot_BO_state(BO, x, y, y_pred, std_pred, x_sample, y_sample);
-      }
+      correct_inferences.push_back((sol.idx_best == correct_model ? 1.0 : 0.0));
+      pvals.push_back(sol.pval);
+      cout << "Model selected: " << sol.idx_best << " (Correct model: " << to_string(correct_model) << ")" << endl;
+      cout << "p-val: " << sol.pval << endl;
+
     }
     catch(...) { // catch errors for logging/debugging and continue tests
       std::exception_ptr p = std::current_exception();
@@ -414,39 +488,23 @@ int testBayesianSearch(CML::EventLog& log,
           + string(p ? p.__cxa_exception_type()->name() : "null") + "\n" 
           + string("Check log.\n"));
       except_runs.push_back(run);
-      run_times(run) = nan("");
-      search_rel_errors(run) = nan("");
+      // for (int w = 0; w < n_way; w++) {
+      //   json_log[fd]["run"][run][w]["relative errors"][0] = nan("");
+      // }
     }
   }
 
-  // performance and model logging
-  json_log[fd]["x_samples"] = x_samples_runs;
-  json_log[fd]["y_samples"] = y_samples_runs;
-  json_log[fd]["relative errors"] = to_vector(search_rel_errors);
-  json_log[fd]["kernel_states"] = sample_search_states; 
-
-  double pass_prob = ((double)failures)/((double)n_runs);
-  log.Log_Handler("Proportion of runs passed: " + to_string(pass_prob) + "\n");
-  log.Log_Handler("Relative error:\n");
-  double rel_error_mean = meanCol(search_rel_errors).getVal(0);
-  double rel_error_std = stdCol(search_rel_errors).getVal(0);
-  double rel_error_sem = rel_error_std/sqrt((double)n_runs);
-  log.Log_Handler("Mean +/- STD (SEM):\t" + to_string(rel_error_mean)
-                  + " +/- " + to_string(rel_error_std) + " (" + to_string(rel_error_sem) + ")\n");
-
-  double rel_error_min = search_rel_errors.min();
-  log.Log_Handler("Min:\t\t" + to_string(rel_error_min) + "\n");
-
-  double rel_error_max = search_rel_errors.max();
-  log.Log_Handler("Max:\t\t" + to_string(rel_error_max) + "\n");
-
-  // runtime logging
-  double ave_run_time = meanCol(run_times)(0);
-  log.Log_Handler("Average run time (s):\t\t" + to_string(ave_run_time) + "\n");
-  log.Log_Handler("Average max sample update time (s):\t" 
-                  + to_string(meanCol(sample_times)(sample_times.getCols() - 1)) + "\n");
-  json_log[fd]["sample times"] = to_vector(sample_times);
-  json_log[fd]["run times"] = to_vector(run_times);
+  double temp = 0;
+  double num_reject = 0;
+  for (int i = 0; i < correct_inferences.size(); i++) {
+    temp += correct_inferences[i];
+    if (pvals[i] < alpha) { num_reject++; }
+  }
+  json_log[fd]["correct_model"] = correct_model;
+  json_log[fd]["pvals"] = pvals;
+  json_log[fd]["Proportion_correct"] = temp/((double)correct_inferences.size());
+  json_log[fd]["power"] = num_reject/((double)pvals.size());
+  cout << "Power for " << fd << " with mean difference: " << mean_diff << ": " << json_log[fd]["power"] << endl;
 
   if (except_runs.size() > 0) { 
     log.Log_Handler("Runs with exceptions occurred. See log.json for specific run numbers in item 'exception runs'.\n");
@@ -458,7 +516,7 @@ int testBayesianSearch(CML::EventLog& log,
 
   if (full_time_test && plotting) { plot_BO_sample_times(sample_times, test_func_str); }
 
-  if (pass_prob < min_pass_prob) {
+  if (json_log[fd]["power"] < min_pass_prob) {
     fail += 1;
   }
   return fail;

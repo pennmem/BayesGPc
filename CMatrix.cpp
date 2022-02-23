@@ -1296,6 +1296,21 @@ CMatrix from_vector(const std::vector<std::vector<double>>& vec) {
   }
   return x;
 }
+std::vector<double> to_vector1D(const CMatrix& x) {
+  DIMENSIONMATCH(x.getRows() == 1 || x.getCols() == 1);
+  std::vector<double> vec;
+  if (x.getRows() == 1) {
+    for (int j = 0; j < x.getCols(); j++) {
+      vec.push_back(x.getVal(0, j));
+    }
+  }
+  else {
+    for (int i = 0; i < x.getRows(); i++) {
+      vec.push_back(x.getVal(i, 0));
+    }
+  }
+  return vec;
+}
 
 #ifdef _NDLMATLAB
 mxArray* CMatrix::toMxArray() const 
