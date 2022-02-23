@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# test Bayesian search implementation with main test functions
-# $ nohup $(testBayesianSearch.sh) [TAG] [IMPL] &
+# test Bayesian search comparison implementation with main test functions
+# $ nohup $(testCSearchComparison.sh) [TAG] [IMPL] &
 # TAG: tag for test run, IMPL: implementation to test.
 
 if [[ "$#" -lt 1 ]]; then
@@ -42,7 +42,7 @@ ARGS_FILE=$LOGDIR/args.txt
 touch ARGS_FILE
 
 if [[ $SMOKESCREEN -eq 1 ]]; then
-    n_iters=27
+    n_iters=(27)
     n_runs=2
     kernels=("Matern32")
     func="schwefel"
@@ -93,7 +93,5 @@ done
 curdir=$(pwd)
 echo "pwd: ${curdir}"
 if [ $IMPL == "ANOVA" ]; then
-    source parallel_exec.sh ${curdir}/testBayesianSearch $ARGS_FILE $LOGDIR testCSearchComparison
-# else
-#     source parallel_exec.sh ${curdir}/ReferenceBayesianSearch.py $ARGS_FILE $LOGDIR testBayesianSearch_py
+    source parallel_exec.sh ${curdir}/testCSearchComparison $ARGS_FILE $LOGDIR testCSearchComparison
 fi
