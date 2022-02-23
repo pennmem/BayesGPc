@@ -93,5 +93,5 @@ done
 curdir=$(pwd)
 echo "pwd: ${curdir}"
 if [ $IMPL == "ANOVA" ]; then
-    source parallel_exec.sh ${curdir}/testCSearchComparison $ARGS_FILE $LOGDIR testCSearchComparison
+    source parallel_exec.sh ${curdir}/testCSearchComparison_full $ARGS_FILE $LOGDIR testCSearchComparison_full
 fi
