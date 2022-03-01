@@ -70,8 +70,8 @@ CCmpndKern getTestKernel(const string kernel, const double range, const int x_di
     }
     else if (kernel.compare("RBF") == 0) {
     // squared reciprocal "length scale"
-    b(0, 0) = 0.0625;
-    b(0, 1) = 16.0;
+    b(0, 0) = 1/(4.0 * range*range);
+    b(0, 1) = 1/(0.01 * range*range);
     kern.setBoundsByName("rbf_0:inverseWidth", b);
     b(0, 0) = 0.25;
     b(0, 1) = 4.0;
@@ -88,7 +88,9 @@ CCmpndKern getTestKernel(const string kernel, const double range, const int x_di
     b(0, 1) = 4.0;
     kern.setBoundsByName("ratquad_0:variance", b);
     }
-    // kern.setBoundsByName("white_1:variance", b);
+    b(0, 0) = 0.001;
+    b(0, 1) = 4.0;
+    kern.setBoundsByName("white_1:variance", b);
     return kern;
 }
 

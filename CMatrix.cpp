@@ -828,12 +828,12 @@ double CMatrix::jitChol(CMatrix& A, unsigned int maxTries)
       cout << "jitChol() failed jit chol tries " << tries << " with jitter " << jitter << endl;
       if(jitter>10) {
         // check error in matrix symmetry
-        cout << "A original" << endl;
-        cout << Acopy << endl;
-        cout << "A after jitter added to diagonal" << endl;
-        cout << A;
-        A.checkSymmetric(true);
-        cout << "testing jitter 2, jitter = " << jitter << " > 10" << endl;
+        // cout << "A original" << endl;
+        // cout << Acopy << endl;
+        // cout << "A after jitter added to diagonal" << endl;
+        // cout << A;
+        // A.checkSymmetric(true);
+        cout << "adding jitter failed, max jitter added = " << jitter/10 << " > 10" << endl;
         throw ndlexceptions::MatrixNonPosDef();
       }
     }

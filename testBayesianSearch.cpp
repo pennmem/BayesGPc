@@ -397,7 +397,6 @@ int testBayesianSearch(CML::EventLog& log,
       if (search_rel_errors(run) < max_pass_error) {
         failures += 1;
       }
-
       x_samples_runs.push_back(to_vector(*(BO.x_samples)));
       y_samples_runs.push_back(to_vector(*(BO.y_samples)));
       
@@ -411,7 +410,7 @@ int testBayesianSearch(CML::EventLog& log,
     catch(...) { // catch errors for logging/debugging and continue tests
       std::exception_ptr p = std::current_exception();
       log.Log_Handler(string("Error in run ") + to_string(run) + string("\n") 
-          + string(p ? p.__cxa_exception_type()->name() : "null") + "\n" 
+          // + string(p ? p.__cxa_exception_type()->name() : "null") + "\n" 
           + string("Check log.\n"));
       except_runs.push_back(run);
       run_times(run) = nan("");

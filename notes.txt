@@ -2,7 +2,34 @@
 
 make minimal CBayesianSearch updates to test
     DONE out_sem
-        needs to debugging, getting negative resulting predictive variances...
+        needs debugging, getting negative resulting predictive variances...
+        getting non-PSD matrices again
+        errors seem to be driven by nans in covariance matrices
+            nan covariance elements occur with identical x's
+            however, nan does not always occur even when three x's have the same value
+            occurs with Matern32, Matern52, not with RBF, RationalQuadratic
+                (RBF and RatQuad seem to obtain lower performance than Matern 32 on most test functions with low to medium relative errors?)
+                RBF had incorrect specification of inverse width bounds
+            non-PSD errors with nans occurring on Mac and rhino
+
+            errors with non-negative predictive variance far more common for noise_level = 0.0, white noise collapses to min bound, should probably raise for numerical stability
+                but not always
+                increased white noise min bound to deal with numerical instability with noise_level = 0
+                    eliminated negative predictive var errs with RBF
+                    seems along with error catching on all model fits to have 
+                        potentially eliminated all errors with Matern32 as well?
+                        warning message if error caught during fitting process not sent to console
+                        Tried only 15 runs with noise_level=0 and 0.3, no errors, model seemed to be making estimates...
+            
+            TODO eliminate model deletion/construction before every samples
+                then add parameter saving before try catch blocks so previous GP params 
+                can be fallen back on instead of just random sampling
+            TODO add random parameter fit restarts to COptimisable.cpp
+            TODO figure out why nans were occurring, probably sqrt of negative num
+            TODO clean up dependencies, ask Ryan and James what they're doing to link to other projects
+
+        check with white noise included in uncertainty predictions? 
+            don't think non-PSD error has anything to do with predictive variance computations
     DONE standard way to control search space bounds
     debug RNG seeding
     start tests
@@ -236,8 +263,7 @@ random testBayesianSearch processes running in background, don't seem like addit
 
 Installation notes:
 
-Mac build requires Xcode version 12.05 (12.0.5?) (newer versions broke the build)
-clang version 12.0.5
+Mac build requires Xcode/clang version 12.0.5 (newer versions broke the build)
 
 look into version packaging for reproducibility
 

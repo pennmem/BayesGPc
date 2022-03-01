@@ -70,94 +70,104 @@ CMatrix* BayesianSearchModel::get_next_sample() {
         }
     }
     else {
-        // update Gaussian process model
-        // TODO valid? want to free old gp memory if it was previously allocated
-        if (gp != nullptr) {delete gp;}
-        // want persistent access to model after fitting and getting next sample in order to fit new model
+        try {
+            // update Gaussian process model
+            // TODO valid? want to free old gp memory if it was previously allocated
+            if (gp != nullptr) { delete gp; }
+            // want persistent access to model after fitting and getting next sample in order to fit new model
 
-        // TODO move model set up to separate function, only set up function once after first sample
-        if (noiseInit != nullptr) {delete noiseInit;}
-        noiseInit = new CGaussianNoise(y_samples);
-        for(int i=0; i<noiseInit->getOutputDim(); i++) {noiseInit->setBiasVal(0.0, i);}
-        noiseInit->setParam(0.0, noiseInit->getOutputDim());
-        
-        int iters = 100;
-        // bias is not actually learned currently (was not implemented in original CGp library)
-        bool outputBiasScaleLearnt = false;
-        int approxType = 0;
+            // TODO move model set up to separate function, only set up function once after first sample
+            if (noiseInit != nullptr) {delete noiseInit;}
+            noiseInit = new CGaussianNoise(y_samples);
+            for(int i=0; i<noiseInit->getOutputDim(); i++) {noiseInit->setBiasVal(0.0, i);}
+            noiseInit->setParam(0.0, noiseInit->getOutputDim());
+            
+            int iters = 100;
+            // bias is not actually learned currently (was not implemented in original CGp library)
+            bool outputBiasScaleLearnt = false;
+            int approxType = 0;
 
-        gp = new CGp(kern, noiseInit, x_samples, approxType, -1, 3);
-        gp->setBetaVal(1);
-        gp->setScale(1.0);
-        gp->setBias(0.0);
-        gp->setObsNoiseVar(obsNoise);
-        gp->updateM();
+            gp = new CGp(kern, noiseInit, x_samples, approxType, -1, 3);
+            gp->setBetaVal(1);
+            gp->setScale(1.0);
+            gp->setBias(0.0);
+            gp->setObsNoiseVar(obsNoise);
+            gp->updateM();
 
-        gp->setVerbosity(verbosity);
-        int default_optimiser = CGp::LBFGS_B;
-        gp->setDefaultOptimiser(default_optimiser);  //options: LBFGS_B, BFGS, SCG, CG, GD
+            gp->setVerbosity(verbosity);
+            int default_optimiser = CGp::LBFGS_B;
+            gp->setDefaultOptimiser(default_optimiser);  //options: LBFGS_B, BFGS, SCG, CG, GD
 
-        gp->setObjectiveTol(1e-6);
-        gp->setParamTol(1e-6);
-        gp->setOutputBiasLearnt(outputBiasScaleLearnt);
-        gp->setOutputScaleLearnt(outputBiasScaleLearnt);
-        gp->optimise(iters);
+            gp->setObjectiveTol(1e-6);
+            gp->setParamTol(1e-6);
+            gp->setOutputBiasLearnt(outputBiasScaleLearnt);
+            gp->setOutputScaleLearnt(outputBiasScaleLearnt);
+                gp->optimise(iters);
 
-        // optimize acquisition function
-        Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
-        Eigen::VectorXd lower_bounds = Eigen::VectorXd(x_dim);
-        Eigen::VectorXd upper_bounds = Eigen::VectorXd(x_dim);
-        // TODO choose better/random initial values? not strictly needed for global optimization
-        for (int i = 0; i < x_dim; i++) {
-            x_optim[i] = (bounds.getVal(i, 0) + bounds.getVal(i, 1))/2.0;
-            lower_bounds[i] = bounds.getVal(i, 0);
-            upper_bounds[i] = bounds.getVal(i, 1);
-        }
-
-        CMatrix x_test(1, x_dim, x_optim.data());
-        if (verbosity>=2) {
-            double temp_EI = expected_improvement(x_test, *gp, y_best, exploration_bias);
-            cout << "Current acquisition function value: " << temp_EI << endl;
-        }
-
-        optim::algo_settings_t optim_settings;
-        optim_settings.print_level = max(verbosity - 2, 0);
-        optim_settings.vals_bound = true;
-        // optim_settings.iter_max = 15;  // doesn't seem to control anything with DE
-        optim_settings.rel_objfn_change_tol = 1e-05;
-        optim_settings.rel_sol_change_tol = 1e-05;
-
-        optim_settings.de_settings.n_pop = 25 * x_dim;
-        optim_settings.de_settings.n_gen = 25 * x_dim;
-
-        optim_settings.lower_bounds = lower_bounds;
-        optim_settings.upper_bounds = upper_bounds;
-
-        optim_settings.de_settings.initial_lb = lower_bounds;
-        optim_settings.de_settings.initial_ub = upper_bounds;
-        // latest version of optim has RNG seeding, but not current version used
-        // optim_settings.rng_seed_value = seed;
-        // seed eigen library instead with std library seeding
-        srand((unsigned int) seed + num_samples);
-
-        bool success;
-
-        if (acq_func_name.compare("expected_improvement") == 0) {
-            EIOptimStruct opt_data = {*gp, y_best, exploration_bias};
-            success = optim::de(x_optim, expected_improvement_optim, &opt_data, optim_settings);
-        }
-        else {
-            throw std::invalid_argument("Acquisition function " + acq_func_name + " not implemented. Current options: 'expected_improvement'");
-        }
-
-        if (success) {
+            // optimize acquisition function
+            Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
+            Eigen::VectorXd lower_bounds = Eigen::VectorXd(x_dim);
+            Eigen::VectorXd upper_bounds = Eigen::VectorXd(x_dim);
+            // TODO choose better/random initial values? not strictly needed for global optimization
             for (int i = 0; i < x_dim; i++) {
-                x->setVal(x_optim[i], i);
+                x_optim[i] = (bounds.getVal(i, 0) + bounds.getVal(i, 1))/2.0;
+                lower_bounds[i] = bounds.getVal(i, 0);
+                upper_bounds[i] = bounds.getVal(i, 1);
+            }
+
+            CMatrix x_test(1, x_dim, x_optim.data());
+            if (verbosity>=2) {
+                double temp_EI = expected_improvement(x_test, *gp, y_best, exploration_bias);
+                cout << "Current acquisition function value: " << temp_EI << endl;
+            }
+
+            optim::algo_settings_t optim_settings;
+            optim_settings.print_level = max(verbosity - 2, 0);
+            optim_settings.vals_bound = true;
+            // optim_settings.iter_max = 15;  // doesn't seem to control anything with DE
+            optim_settings.rel_objfn_change_tol = 1e-05;
+            optim_settings.rel_sol_change_tol = 1e-05;
+
+            optim_settings.de_settings.n_pop = 25 * x_dim;
+            optim_settings.de_settings.n_gen = 25 * x_dim;
+
+            optim_settings.lower_bounds = lower_bounds;
+            optim_settings.upper_bounds = upper_bounds;
+
+            optim_settings.de_settings.initial_lb = lower_bounds;
+            optim_settings.de_settings.initial_ub = upper_bounds;
+            // latest version of optim has RNG seeding, but not current version used
+            // optim_settings.rng_seed_value = seed;
+            // seed eigen library instead with std library seeding
+            srand((unsigned int) seed + num_samples);
+
+            bool success;
+
+            if (acq_func_name.compare("expected_improvement") == 0) {
+                EIOptimStruct opt_data = {*gp, y_best, exploration_bias};
+                success = optim::de(x_optim, expected_improvement_optim, &opt_data, optim_settings);
+            }
+            else {
+                throw std::invalid_argument("Acquisition function " + acq_func_name + " not implemented. Current options: 'expected_improvement'");
+            }
+
+            if (success) {
+                for (int i = 0; i < x_dim; i++) {
+                    x->setVal(x_optim[i], i);
+                }
+            }
+            else {
+                cout << "Optimization of acquisition function failed." << endl;
+                throw std::runtime_error("Optimization of acquisition function " + acq_func_name + " failed.");
             }
         }
-        else {
-            cout << "Optimization of acquisition function failed." << endl;
-            throw std::runtime_error("Optimization of acquisition function " + acq_func_name + " failed.");
+        catch(...) {  // catch all errors in fitting and get random sample
+            cout << "Warning: error in fitting process for getting next sample. Falling back on random parameter sampling." << endl;
+            boost::random::uniform_real_distribution<> dist(0.0, 1.0);
+            boost::random::variate_generator<boost::mt19937&, boost::random::uniform_real_distribution<> > gen(rng, dist);
+            for (unsigned int i = 0; i < x_dim; i++) {
+                x->setVal(bounds.getVal(i, 0) + gen() * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
+            }
         }
     }
     return x;

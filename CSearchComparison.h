@@ -30,9 +30,9 @@ class CSearchComparison {
         pthreshold = alpha;
         kerns = kernels;
         param_bounds = param_bounds;
-        obsNoises = observation_noises; 
+        obsNoises = observation_noises;
         exp_biases = exploration_biases;
-        initial_samples = init_samples; 
+        initial_samples = init_samples;
         seeds = rng_seeds;
         verbosity = verbose;
 

@@ -20,14 +20,14 @@ LIBDEXT = .so
 
 # Python-numpy interface
 NPYLIBS = -lcnpy -lz
-NPYLIBDIR = /usr/local/lib
+#NPYLIBDIR = /usr/local/lib
 #NPYLINKFLAG =-L${NPYLIBDIR} ${NPYLIBS}
 NPYLINKFLAG =${NPYLIBS}
 
 # optim library
-OPTIMDIR =/Users/rdehaan/projects/dependencies/optim/header_only_version
-# OPTIMDIR =/usr/local/include/optim
-# ARMADILLODIR =/usr/local/include/armadillo
+OPTIMDIR =../optim/header_only_version
+# OPTIMDIR =../optim
+# ARMADILLODIR =../armadillo
 OPTIMFLAG =-O${OPT_LEVEL} -march=native -ffp-contract=fast -I${OPTIMDIR}
 # OPTIMFLAG =-O${OPT_LEVEL} -march=native -ffp-contract=fast -I${ARMADILLODIR} -I${OPTIMDIR}
 # OPTIMLINKFLAG = -loptim  # not linking currently since linking would involve with current setup, linking to blas/lapack a second time, causing linker errors
@@ -42,7 +42,7 @@ MATPLOTLINKFLAG = -lmatplot
 #BOOSTLIB =-L/usr/local/lib -lboost_math_tr1  # not needed with boost installed via homebrew on macos
 
 # TODO fix, put json library in dependencies directory
-JSON_INCLUDE_DIRS =-I../elemem/include/
+JSON_INCLUDE_DIRS =-I../
 
 # Uncomment these lines to set up the MATLAB interface.
 #MATLABLIBS = -lmat -lmx

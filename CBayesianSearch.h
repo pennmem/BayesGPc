@@ -43,12 +43,11 @@ class BayesianSearchModel {
             x_samples = new CMatrix(1, x_dim);
             y_samples = new CMatrix(1, 1);
         }
-        BayesianSearchModel(const BayesianSearchModel&) = delete;
-        BayesianSearchModel& operator=(const BayesianSearchModel&) = delete;
+        // BayesianSearchModel(const BayesianSearchModel&) = delete;
 
         ~BayesianSearchModel() {
-            delete x_samples;
-            delete y_samples;
+            if (x_samples) { delete x_samples; }
+            if (y_samples) { delete y_samples; }
         }
 
         void _init() {
