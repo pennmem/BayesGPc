@@ -24,7 +24,7 @@
 class BayesianSearchModel {
     public:
         BayesianSearchModel() {}
-        BayesianSearchModel(CCmpndKern& kernel, CMatrix param_bounds,
+        BayesianSearchModel(CCmpndKern& kernel, const CMatrix& param_bounds,
                             double observation_noise, double exp_bias,
                             int init_samples, int rng_seed, int verbose) {
             kern = kernel.clone();
@@ -43,7 +43,25 @@ class BayesianSearchModel {
             x_samples = new CMatrix(1, x_dim);
             y_samples = new CMatrix(1, 1);
         }
-        // BayesianSearchModel(const BayesianSearchModel&) = delete;
+
+        // explicit copy constructor to force compiler to not apply implicit move operations
+        BayesianSearchModel(const BayesianSearchModel& bay) {
+            kern = bay.kern->clone();
+            DIMENSIONMATCH(bay.bounds.getCols() == 2);
+            bounds = bay.bounds;
+            seed = bay.seed;
+            verbosity = bay.verbosity;
+            _init();
+            x_dim = bay.x_dim;
+            num_samples = 0;
+            initial_samples = bay.initial_samples;
+            obsNoise = bay.obsNoise;
+            exploration_bias = bay.exploration_bias;
+            acq_func_name = "expected_improvement";
+            y_best = -INFINITY;
+            x_samples = new CMatrix(1, x_dim);
+            y_samples = new CMatrix(1, 1);
+        }
 
         ~BayesianSearchModel() {
             if (x_samples) { delete x_samples; }

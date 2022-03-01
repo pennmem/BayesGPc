@@ -26,7 +26,8 @@ make minimal CBayesianSearch updates to test
                 can be fallen back on instead of just random sampling
             TODO add random parameter fit restarts to COptimisable.cpp
             TODO figure out why nans were occurring, probably sqrt of negative num
-            TODO clean up dependencies, ask Ryan and James what they're doing to link to other projects
+            TODO finish cleaning up dependencies
+            TODO finish adding location selection of top K candidates rather than top 1
 
         check with white noise included in uncertainty predictions? 
             don't think non-PSD error has anything to do with predictive variance computations

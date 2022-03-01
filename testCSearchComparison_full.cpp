@@ -436,7 +436,7 @@ int testSearchComparison(CML::EventLog& log,
           cout << endl << endl;
 
           // logging
-          if (i >= n_init_samples) { json_log[fd]["run"][run][w]["kernel_states"].push_back(search.models[w]->gp->pkern->state()); }
+          if (i >= n_init_samples) { json_log[fd]["run"][run][w]["kernel_states"].push_back(search.models[w].gp->pkern->state()); }
           json_log[fd]["run"][run][w]["x_samples"].push_back(to_vector(*x_sample));
           json_log[fd]["run"][run][w]["y_samples"].push_back(to_vector(*y_sample));
         }
@@ -444,20 +444,20 @@ int testSearchComparison(CML::EventLog& log,
         // FIXME needed for now with janky way I'm deleting CGp gp and CNoise attributes to allow for updating with new 
         // samples
         cout << "Computing next sample after last sample in run:" << endl;
-        CMatrix* x_sample = search.models[w]->get_next_sample();
+        CMatrix* x_sample = search.models[w].get_next_sample();
         CMatrix* y_sample = new CMatrix(test_run.func(*x_sample));
 
         // run metrics
         CMatrix* x_best;
-        x_best = search.models[w]->get_best_solution();
+        x_best = search.models[w].get_best_solution();
         // allow extra dimension for generalizing to getting error at each sample
         json_log[fd]["run"][run][w]["relative errors"][0] = test_run.solution_error(*x_best);
         cout << "Relative error for run " << run << ", group " << w << ": " << json_log[fd]["run"][run][w]["relative errors"][0] << endl;
 
         // plotting
         if (plotting && x_dim <= 2 && !full_time_test) {
-          search.models[w]->gp->out_sem(y_pred, std_pred, x);
-          plot_BO_state(*search.models[w], x, y, y_pred, std_pred, x_sample, y_sample);
+          search.models[w].gp->out_sem(y_pred, std_pred, x);
+          plot_BO_state(search.models[w], x, y, y_pred, std_pred, x_sample, y_sample);
         }
       }
 
@@ -483,9 +483,9 @@ int testSearchComparison(CML::EventLog& log,
 
     }
     catch(...) { // catch errors for logging/debugging and continue tests
-      std::exception_ptr p = std::current_exception();
+      // std::exception_ptr p = std::current_exception();
       log.Log_Handler(string("Error in run ") + to_string(run) + string("\n") 
-          + string(p ? p.__cxa_exception_type()->name() : "null") + "\n" 
+          // + string(p ? p.__cxa_exception_type()->name() : "null") + "\n" 
           + string("Check log.\n"));
       except_runs.push_back(run);
       // for (int w = 0; w < n_way; w++) {

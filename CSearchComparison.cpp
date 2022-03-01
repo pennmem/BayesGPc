@@ -17,8 +17,8 @@ ComparisonStruct CSearchComparison::get_best_solution() {
     CMatrix std_pred(1, 1);
     for (int i = 0; i < num_models; i++) {
         // get best predictions
-        xs.push_back(models[i]->get_best_solution());
-        models[i]->gp->out_sem(y_pred, sem_pred, *(xs[i]));
+        xs.push_back(models[i].get_best_solution());
+        models[i].gp->out_sem(y_pred, sem_pred, *(xs[i]));
         mus.push_back(y_pred.getVal(0));
         sems.push_back(sem_pred.getVal(0));
 
@@ -28,12 +28,16 @@ ComparisonStruct CSearchComparison::get_best_solution() {
         }
         
         // estimate effective GP sample sizes
-        models[i]->gp->out(y_pred, std_pred, *(xs[i]));
+        models[i].gp->out(y_pred, std_pred, *(xs[i]));
         eff_ns.push_back(std::pow(std_pred.getVal(0) / sems[i], 2));
     }
 
     TestStruct test;
-    if (num_models == 2) {
+    if (num_models == 1) {
+        ComparisonStruct res {0, xs, mus, sems, eff_ns, 0.0};
+        return res;
+    }
+    else if (num_models == 2) {
         test = ttest_welch(mus[0], mus[1], sems[0], sems[1], eff_ns[0], eff_ns[1]);
     }
     else {
@@ -74,11 +78,11 @@ TestStruct CSearchComparison::compare_GP_to_sample(const ComparisonStruct& res, 
 }
 
 CMatrix* CSearchComparison::get_next_sample(unsigned int model_idx) {
-    return models[model_idx]->get_next_sample();
+    return models[model_idx].get_next_sample();
 }
 
 void CSearchComparison::add_sample(unsigned int model_idx, const CMatrix& x, const CMatrix& y) {
-    models[model_idx]->add_sample(x, y);
+    models[model_idx].add_sample(x, y);
 }
 
 TestStruct anova_welch(vector<double> mus,

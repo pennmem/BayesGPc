@@ -23,13 +23,13 @@ struct TestStruct {
 class CSearchComparison {
     public:
     CSearchComparison() {}
-    CSearchComparison(int n_models, double alpha, vector<CCmpndKern> kernels, vector<CMatrix> param_bounds,
+    CSearchComparison(int n_models, double alpha, vector<CCmpndKern> kernels, vector<CMatrix> bounds,
             vector<double> observation_noises, vector<double> exploration_biases, vector<int> init_samples,
             vector<int> rng_seeds, int verbose) {
         num_models = n_models;
         pthreshold = alpha;
         kerns = kernels;
-        param_bounds = param_bounds;
+        param_bounds = bounds;
         obsNoises = observation_noises;
         exp_biases = exploration_biases;
         initial_samples = init_samples;
@@ -37,18 +37,19 @@ class CSearchComparison {
         verbosity = verbose;
 
         for (int i = 0; i < num_models; i++) {
-            models.push_back(new BayesianSearchModel(kerns[i], param_bounds[i],
-                    obsNoises[i], exp_biases[i],
-                    initial_samples[i], seeds[i], verbosity));
+            BayesianSearchModel bay(kerns[i], param_bounds[i],
+                                    obsNoises[i], exp_biases[i],
+                                    initial_samples[i], seeds[i], verbosity);
+            models.push_back(bay);
         }
     }
-    ~CSearchComparison() {
-        for (int i = 0; i < num_models; i++) {
-            BayesianSearchModel* temp = models.back();
-            models.pop_back();
-            delete temp;
-        }
-    }
+    // ~CSearchComparison() {
+    //     for (int i = 0; i < num_models; i++) {
+    //         BayesianSearchModel* temp = models.back();
+    //         models.pop_back();
+    //         delete temp;
+    //     }
+    // }
 
     CMatrix* get_next_sample(unsigned int model_idx);
     void add_sample(unsigned int model_idx, const CMatrix& x, const CMatrix& y);
@@ -57,7 +58,7 @@ class CSearchComparison {
 
     unsigned int num_models;
     double pthreshold;
-    vector<BayesianSearchModel*> models;
+    vector<BayesianSearchModel> models;
     vector<CCmpndKern> kerns;
     vector<CMatrix> param_bounds;
     vector<double> obsNoises;
