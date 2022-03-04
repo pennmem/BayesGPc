@@ -407,11 +407,9 @@ int testBayesianSearch(CML::EventLog& log,
         plot_BO_state(BO, x, y, y_pred, std_pred, x_sample, y_sample);
       }
     }
-    catch(...) { // catch errors for logging/debugging and continue tests
-      std::exception_ptr p = std::current_exception();
-      log.Log_Handler(string("Error in run ") + to_string(run) + string("\n") 
-          // + string(p ? p.__cxa_exception_type()->name() : "null") + "\n" 
-          + string("Check log.\n"));
+    catch(const std::exception& e) { // catch errors for logging/debugging and continue tests
+      log.Log_Handler(string("Error in run ") + to_string(run) + string("\n") + string("Check log.\n"));
+      cout << "Error message: " << e.what() << endl;
       except_runs.push_back(run);
       run_times(run) = nan("");
       search_rel_errors(run) = nan("");

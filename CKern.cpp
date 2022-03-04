@@ -45,6 +45,7 @@ json CKern::json_structure() const
     n = getParamName(i);
     CMatrix b(getBoundsByName(n));
     j["parameters"][n]["bounds"] = vector<double>(b.getVals(), b.getVals() + 2);
+    j["parameters"][n]["init_value"] = getInitParamVal(i);
   }
   return j;
 }
@@ -676,10 +677,11 @@ void CWhiteKern::_init()
   addTransform(CTransform::defaultPositive(), 0);
   setStationary(true);
   setDefaultBounds();
+  setInitParam();
 }
 void CWhiteKern::setInitParam()
 {
-  variance = exp(-2.0);  
+  variance = init_variance;  
 }
 
 inline double CWhiteKern::diagComputeElement(const CMatrix& X, unsigned int index) const
@@ -712,6 +714,31 @@ double CWhiteKern::getParam(unsigned int paramNo) const
   {
   case 0:
     return variance;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
+void CWhiteKern::setInitParamVal(double val, unsigned int paramNo)
+{
+  DIMENSIONMATCH(paramNo==0);
+  switch(paramNo)
+  {
+  case 0:
+    init_variance = val;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
+// Parameters are kernel parameters
+double CWhiteKern::getInitParamVal(unsigned int paramNo) const
+{
+  BOUNDCHECK(paramNo==0);
+  switch(paramNo)
+  {
+  case 0:
+    return init_variance;
     break;
   default:
     throw ndlexceptions::Error("Requested parameter doesn't exist.");
@@ -842,10 +869,11 @@ void CWhitefixedKern::_init()
   setName("fixed white noise");
   setStationary(true);
   setDefaultBounds();
+  setInitParam();
 }
 void CWhitefixedKern::setInitParam()
 {
-  variance = exp(-2.0);  
+  variance = init_variance;  
 }
 
 inline double CWhitefixedKern::diagComputeElement(const CMatrix& X, unsigned int index) const
@@ -864,6 +892,15 @@ void CWhitefixedKern::setParam(double val, unsigned int paramNo)
 }
 // Parameters are kernel parameters
 double CWhitefixedKern::getParam(unsigned int paramNo) const
+{
+  throw ndlexceptions::Error("Requested parameter doesn't exist.");
+}
+void CWhitefixedKern::setInitParamVal(double val, unsigned int paramNo)
+{
+  throw ndlexceptions::Error("Requested parameter doesn't exist.");
+}
+// Parameters are kernel parameters
+double CWhitefixedKern::getInitParamVal(unsigned int paramNo) const
 {
   throw ndlexceptions::Error("Requested parameter doesn't exist.");
 }
@@ -965,11 +1002,12 @@ void CBiasKern::_init()
   addTransform(CTransform::defaultPositive(), 0);
   setStationary(true);
   setDefaultBounds();
+  setInitParam();
 }
 
 void CBiasKern::setInitParam()
 {
-  variance = exp(-2.0);  
+  variance = init_variance;  
 }
 
 double CBiasKern::diagComputeElement(const CMatrix& X, unsigned int index) const
@@ -1002,6 +1040,30 @@ double CBiasKern::getParam(unsigned int paramNo) const
   {
   case 0:
     return variance;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
+void CBiasKern::setInitParamVal(double val, unsigned int paramNo)
+{
+  BOUNDCHECK(paramNo==0);
+  switch(paramNo)
+  {
+  case 0:
+    init_variance = val;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
+double CBiasKern::getInitParamVal(unsigned int paramNo) const
+{
+  BOUNDCHECK(paramNo==0);
+  switch(paramNo)
+  {
+  case 0:
+    return init_variance;
     break;
   default:
     throw ndlexceptions::Error("Requested parameter doesn't exist.");
@@ -1108,11 +1170,12 @@ void CRbfKern::_init()
   addTransform(CTransform::defaultPositive(), 1);
   setStationary(true);
   setDefaultBounds();
+  setInitParam();
 }
 void CRbfKern::setInitParam()
 {
-  inverseWidth = 1.0;
-  variance = 1.0;
+  inverseWidth = init_inverseWidth;
+  variance = init_variance;
 }
 
 inline double CRbfKern::diagComputeElement(const CMatrix& X, unsigned int index) const
@@ -1151,6 +1214,36 @@ double CRbfKern::getParam(unsigned int paramNo) const
     break;
   case 1:
     return variance;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
+void CRbfKern::setInitParamVal(double val, unsigned int paramNo)
+{
+  BOUNDCHECK(paramNo < nParams);
+  switch(paramNo)
+  {
+  case 0:
+    init_inverseWidth = val;
+    break;
+  case 1:
+    init_variance = val;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
+double CRbfKern::getInitParamVal(unsigned int paramNo) const
+{
+  BOUNDCHECK(paramNo < nParams);
+  switch(paramNo)
+  {
+  case 0:
+    return init_inverseWidth;
+    break;
+  case 1:
+    return init_variance;
     break;
   default:
     throw ndlexceptions::Error("Requested parameter doesn't exist.");
@@ -1345,11 +1438,12 @@ void CExpKern::_init()
   addTransform(CTransform::defaultPositive(), 1);
   setStationary(true);
   setDefaultBounds();
+  setInitParam();
 }
 void CExpKern::setInitParam()
 {
-  inverseWidth = 1.0;
-  variance = 1.0;
+  inverseWidth = init_inverseWidth;
+  variance = init_variance;
 }
 
 inline double CExpKern::diagComputeElement(const CMatrix& X, unsigned int index) const
@@ -1388,6 +1482,36 @@ double CExpKern::getParam(unsigned int paramNo) const
     break;
   case 1:
     return variance;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
+void CExpKern::setInitParamVal(double val, unsigned int paramNo)
+{
+  BOUNDCHECK(paramNo < nParams);
+  switch(paramNo)
+  {
+  case 0:
+    init_inverseWidth = val;
+    break;
+  case 1:
+    init_variance = val;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
+double CExpKern::getInitParamVal(unsigned int paramNo) const
+{
+  BOUNDCHECK(paramNo < nParams);
+  switch(paramNo)
+  {
+  case 0:
+    return init_inverseWidth;
+    break;
+  case 1:
+    return init_variance;
     break;
   default:
     throw ndlexceptions::Error("Requested parameter doesn't exist.");
@@ -1545,12 +1669,13 @@ void CRatQuadKern::_init()
   addTransform(CTransform::defaultPositive(), 2);
   setStationary(true);
   setDefaultBounds();
+  setInitParam();
 }
 void CRatQuadKern::setInitParam()
 {
-  alpha = 1.0;
-  lengthScale = 1.0;
-  variance = 1.0;
+  alpha = init_alpha;
+  lengthScale = init_lengthScale;
+  variance = init_variance;
 }
 
 inline double CRatQuadKern::diagComputeElement(const CMatrix& X, unsigned int index) const
@@ -1600,7 +1725,42 @@ double CRatQuadKern::getParam(unsigned int paramNo) const
     throw ndlexceptions::Error("Requested parameter doesn't exist.");
   }
 }
-
+void CRatQuadKern::setInitParamVal(double val, unsigned int paramNo)
+{
+  BOUNDCHECK(paramNo < nParams);
+  switch(paramNo)
+  {
+  case 0:
+    init_alpha = val;
+    break;
+  case 1:
+    init_lengthScale = val;
+    break;
+  case 2:
+    init_variance = val;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
+double CRatQuadKern::getInitParamVal(unsigned int paramNo) const
+{
+  BOUNDCHECK(paramNo < nParams);
+  switch(paramNo)
+  {
+  case 0:
+    return init_alpha;
+    break;
+  case 1:
+    return init_lengthScale;
+    break;
+  case 2:
+    return init_variance;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
 void CRatQuadKern::getGradX(CMatrix& gX, const CMatrix& X, unsigned int row, const CMatrix& X2, bool addG) const
 {
   DIMENSIONMATCH(gX.getRows() == X2.getRows());
@@ -1795,11 +1955,12 @@ void CMatern32Kern::_init()
   addTransform(CTransform::defaultPositive(), 1);
   setDefaultBounds();
   setStationary(true);
+  setInitParam();
 }
 void CMatern32Kern::setInitParam()
 {
-  lengthScale = 1.0;
-  variance = 1.0;
+  lengthScale = init_lengthScale;
+  variance = init_variance;
 }
 
 inline double CMatern32Kern::diagComputeElement(const CMatrix& X, unsigned int index) const
@@ -1838,6 +1999,36 @@ double CMatern32Kern::getParam(unsigned int paramNo) const
     break;
   case 1:
     return variance;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
+void CMatern32Kern::setInitParamVal(double val, unsigned int paramNo)
+{
+  BOUNDCHECK(paramNo < nParams);
+  switch(paramNo)
+  {
+  case 0:
+    init_lengthScale = val;
+    break;
+  case 1:
+    init_variance = val;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
+double CMatern32Kern::getInitParamVal(unsigned int paramNo) const
+{
+  BOUNDCHECK(paramNo < nParams);
+  switch(paramNo)
+  {
+  case 0:
+    return init_lengthScale;
+    break;
+  case 1:
+    return init_variance;
     break;
   default:
     throw ndlexceptions::Error("Requested parameter doesn't exist.");
@@ -2044,11 +2235,12 @@ void CMatern52Kern::_init()
   addTransform(CTransform::defaultPositive(), 1);
   setStationary(true);
   setDefaultBounds();
+  setInitParam();
 }
 void CMatern52Kern::setInitParam()
 {
-  lengthScale = 1.0;
-  variance = 1.0;
+  lengthScale = init_lengthScale;
+  variance = init_variance;
 }
 
 inline double CMatern52Kern::diagComputeElement(const CMatrix& X, unsigned int index) const
@@ -2087,6 +2279,36 @@ double CMatern52Kern::getParam(unsigned int paramNo) const
     break;
   case 1:
     return variance;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
+void CMatern52Kern::setInitParamVal(double val, unsigned int paramNo)
+{
+  BOUNDCHECK(paramNo < nParams);
+  switch(paramNo)
+  {
+  case 0:
+    init_lengthScale = val;
+    break;
+  case 1:
+    init_variance = val;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
+double CMatern52Kern::getInitParamVal(unsigned int paramNo) const
+{
+  BOUNDCHECK(paramNo < nParams);
+  switch(paramNo)
+  {
+  case 0:
+    return init_lengthScale;
+    break;
+  case 1:
+    return init_variance;
     break;
   default:
     throw ndlexceptions::Error("Requested parameter doesn't exist.");
@@ -2308,10 +2530,11 @@ void CLinKern::_init()
   addTransform(CTransform::defaultPositive(), 0);
   setStationary(false);
   setDefaultBounds();
+  setInitParam();
 }
 void CLinKern::setInitParam()
 {
-  variance = 1.0;
+  variance = init_variance;
 }
 
 double CLinKern::diagComputeElement(const CMatrix& X, unsigned int index1) const
@@ -2343,6 +2566,30 @@ double CLinKern::getParam(unsigned int paramNo) const
     throw ndlexceptions::Error("Requested parameter doesn't exist.");
   }
 }
+void CLinKern::setInitParamVal(double val, unsigned int paramNo)
+{
+  BOUNDCHECK(paramNo==0);
+  switch(paramNo)
+  {
+  case 0:
+    init_variance = val;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
+double CLinKern::getInitParamVal(unsigned int paramNo) const
+{
+  BOUNDCHECK(paramNo==0);
+  switch(paramNo)
+  {
+  case 0:
+    return init_variance;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
 void CLinKern::getGradX(CMatrix& gX, const CMatrix& X, unsigned int row, const CMatrix& X2, bool addG) const
 {
   DIMENSIONMATCH(gX.getRows() == X2.getRows());
@@ -2354,8 +2601,7 @@ void CLinKern::getGradX(CMatrix& gX, const CMatrix& X, unsigned int row, const C
     for(unsigned int j=0; j<X2.getCols(); j++)
     {
       double val = 0.0;
-      if(addG)
-	val = gX.getVal(k, j);
+      if(addG) { val = gX.getVal(k, j); }
       val += variance*X2.getVal(k, j);
       gX.setVal(val, k, j);
     }
@@ -2482,12 +2728,13 @@ void CMlpKern::_init()
   addTransform(CTransform::defaultPositive(), 2);
   setStationary(false);
   setDefaultBounds();
+  setInitParam();
 }
 void CMlpKern::setInitParam()
 {
-  weightVariance = 10.0;
-  biasVariance = 10.0;
-  variance = 1.0;  
+  weightVariance = init_weightVariance;
+  biasVariance = init_biasVariance;
+  variance = init_variance;
 }
 
 inline double CMlpKern::diagComputeElement(const CMatrix& X, unsigned int index) const
@@ -2533,7 +2780,42 @@ double CMlpKern::getParam(unsigned int paramNo) const
     throw ndlexceptions::Error("Requested parameter doesn't exist.");
   }
 }
-
+void CMlpKern::setInitParamVal(double val, unsigned int paramNo)
+{
+  BOUNDCHECK(paramNo < nParams);
+  switch(paramNo)
+  {
+  case 0:
+    init_weightVariance = val;
+    break;
+  case 1:
+    init_biasVariance = val;
+    break;
+  case 2:
+    init_variance = val;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
+double CMlpKern::getInitParamVal(unsigned int paramNo) const
+{
+  BOUNDCHECK(paramNo < nParams);
+  switch(paramNo)
+  {
+  case 0:
+    return init_weightVariance;
+    break;
+  case 1:
+    return init_biasVariance;
+    break;
+  case 2:
+    return init_variance;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
 void CMlpKern::getGradX(CMatrix& gX, const CMatrix& X, unsigned int row, const CMatrix& X2, bool addG) const
 {
   DIMENSIONMATCH(gX.getRows() == X2.getRows());
@@ -2778,13 +3060,14 @@ void CPolyKern::_init()
   addTransform(CTransform::defaultPositive(), 2);
   setStationary(false);
   setDefaultBounds();
+  setInitParam();
 }
 void CPolyKern::setInitParam()
 {
-  weightVariance = 1.0;
-  biasVariance = 1.0;
-  variance = 1.0;
-  degree = 2.0;
+  weightVariance = init_weightVariance;
+  biasVariance = init_biasVariance;
+  variance = init_variance;
+  degree = init_degree;
 }
 
 inline double CPolyKern::diagComputeElement(const CMatrix& X, unsigned int index) const
@@ -2824,6 +3107,42 @@ double CPolyKern::getParam(unsigned int paramNo) const
     break;
   case 2:
     return variance;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
+void CPolyKern::setInitParamVal(double val, unsigned int paramNo)
+{
+  BOUNDCHECK(paramNo < nParams);
+  switch(paramNo)
+  {
+  case 0:
+    init_weightVariance = val;
+    break;
+  case 1:
+    init_biasVariance = val;
+    break;
+  case 2:
+    init_variance = val;
+    break;
+  default:
+    throw ndlexceptions::Error("Requested parameter doesn't exist.");
+  }
+}
+double CPolyKern::getInitParamVal(unsigned int paramNo) const
+{
+  BOUNDCHECK(paramNo < nParams);
+  switch(paramNo)
+  {
+  case 0:
+    return init_weightVariance;
+    break;
+  case 1:
+    return init_biasVariance;
+    break;
+  case 2:
+    return init_variance;
     break;
   default:
     throw ndlexceptions::Error("Requested parameter doesn't exist.");
@@ -3010,24 +3329,28 @@ double CLinardKern::getVariance() const
 void CLinardKern::_init()
 {
   nParams = 1;
+  init_scales.resize(1, getInputDim());
+  for (int i = 0; i < getInputDim(); i++) { init_scales(0, i) = 0.5; }
+
   setType("linard");
   setName("linear ARD");
   setParamName("variance", 0);
   addTransform(CTransform::defaultPositive(), 0);
   setStationary(false);
   setDefaultBounds();
+  setInitParam();
 }
 void CLinardKern::setInitParam()
 { 
   nParams = 1+getInputDim();
-  variance = 1.0;
+  variance = init_variance;
   scales.resize(1, getInputDim());
   for(unsigned int i=1; i<getInputDim()+1; i++)
   {
     string name = "inputScale";
     setParamName(name, i);
+    scales(0, i - 1) = init_scales.getVal(0, i - 1);
   }
-  scales.setVals(0.5);
   for(unsigned int i=1; i<getInputDim()+1; i++)
   {
     addTransform(CTransform::defaultZeroOne(), i);
@@ -3074,6 +3397,41 @@ double CLinardKern::getParam(unsigned int paramNo) const
   default:
     if(paramNo<getInputDim()+1)
       return scales.getVal(paramNo-1);
+    else
+    {
+      throw ndlexceptions::Error("Requested parameter doesn't exist.");
+    }  
+  }
+}
+void CLinardKern::setInitParamVal(double val, unsigned int paramNo)
+{
+  BOUNDCHECK(paramNo<nParams);
+  switch(paramNo)
+  {
+  case 0:
+    init_variance = val;
+    break;
+  default:
+    if(paramNo<getInputDim()+1)
+      init_scales.setVal(val, paramNo-1);
+    else
+    {
+      throw ndlexceptions::Error("Requested parameter doesn't exist.");
+    }  
+  }
+}
+double CLinardKern::getInitParamVal(unsigned int paramNo) const
+{
+  
+  BOUNDCHECK(paramNo<nParams);
+  switch(paramNo)
+  {
+  case 0:
+    return init_variance;
+    break;
+  default:
+    if(paramNo<getInputDim()+1)
+      return init_scales.getVal(paramNo-1);
     else
     {
       throw ndlexceptions::Error("Requested parameter doesn't exist.");
@@ -3250,6 +3608,9 @@ double CRbfardKern::getVariance() const
 void CRbfardKern::_init()
 {
   nParams = 2;
+  init_scales.resize(1, getInputDim());
+  for (int i = 0; i < getInputDim(); i++) { init_scales(0, i) = 0.5; }
+
   setType("rbfard");
   setName("RBF ARD");
   setParamName("inverseWidth", 0);
@@ -3258,24 +3619,22 @@ void CRbfardKern::_init()
   addTransform(CTransform::defaultPositive(), 1);
   setStationary(true);
   setDefaultBounds();
+  setInitParam();
 }
 void CRbfardKern::setInitParam()
 {
   nParams = 2+getInputDim();
-  inverseWidth=1.0;
-  variance = 1.0;
+  inverseWidth = init_inverseWidth;
+  variance = init_variance;
 
   // input scales.
   scales.resize(1, getInputDim());
   gscales.resize(1, getInputDim());
-  scales.setVals(0.5);
   for(unsigned int i=2; i<getInputDim()+2; i++)
   {
     string name = "inputScale";
     setParamName(name, i);
-  }
-  for(unsigned int i=2; i<getInputDim()+2; i++)
-  {
+    scales(0, i - 2) = init_scales.getVal(0, i - 2);
     addTransform(CTransform::defaultZeroOne(), i);
   }
 
@@ -3322,6 +3681,48 @@ double CRbfardKern::getParam(unsigned int paramNo) const
   default:
     if(paramNo<nParams)
       return scales.getVal(paramNo-2);
+    else
+    {
+      throw ndlexceptions::Error("Requested parameter doesn't exist.");
+    }  
+  }
+}
+void CRbfardKern::setInitParamVal(double val, unsigned int paramNo)
+{
+  
+  BOUNDCHECK(paramNo<nParams);
+  switch(paramNo)
+  {
+  case 0:
+    init_inverseWidth=val;
+    break;
+  case 1:
+    init_variance=val;
+    break;
+  default:
+    if(paramNo<nParams)
+      init_scales.setVal(val, paramNo-2);
+    else
+    {
+      throw ndlexceptions::Error("Requested parameter doesn't exist.");
+    }    
+  }
+}
+double CRbfardKern::getInitParamVal(unsigned int paramNo) const
+{
+  
+  BOUNDCHECK(paramNo<nParams);
+  switch(paramNo)
+  {
+  case 0:
+    return init_inverseWidth;
+    break;
+  case 1:
+    return init_variance;
+    break;
+  default:
+    if(paramNo<nParams)
+      return init_scales.getVal(paramNo-2);
     else
     {
       throw ndlexceptions::Error("Requested parameter doesn't exist.");
@@ -3514,6 +3915,8 @@ double CMlpardKern::getVariance() const
 void CMlpardKern::_init()
 {
   nParams = 3;
+  init_scales.resize(1, getInputDim());
+  for (int i = 0; i < getInputDim(); i++) { init_scales(0, i) = 0.5; }
   setType("mlpard");
   setName("MLP ARD");
   setParamName("weightVariance", 0);
@@ -3524,13 +3927,14 @@ void CMlpardKern::_init()
   addTransform(CTransform::defaultPositive(), 2);
   setStationary(false);
   setDefaultBounds();
+  setInitParam();
 }
 void CMlpardKern::setInitParam()
 {
   nParams = 3+getInputDim();
-  weightVariance=10.0;
-  biasVariance=10.0;
-  variance = 1.0;
+  weightVariance=init_weightVariance;
+  biasVariance=init_biasVariance;
+  variance = init_variance;
   scales.resize(1, getInputDim());
   gscales.resize(1, getInputDim());
   scales.setVals(0.5);
@@ -3538,9 +3942,7 @@ void CMlpardKern::setInitParam()
   {
     string name = "inputScale";
     setParamName(name, i);
-  }
-  for(unsigned int i=3; i<getInputDim()+3; i++)
-  {
+    scales(0, i - 3) = init_scales.getVal(0, i - 3);
     addTransform(CTransform::defaultZeroOne(), i);
   }
 }
@@ -3600,6 +4002,54 @@ double CMlpardKern::getParam(unsigned int paramNo) const
   default:
     if(paramNo<nParams)
       return scales.getVal(paramNo-3);
+    else
+    {
+      throw ndlexceptions::Error("Requested parameter doesn't exist.");
+    }  
+  }
+}
+void CMlpardKern::setInitParamVal(double val, unsigned int paramNo)
+{
+  
+  BOUNDCHECK(paramNo<nParams);
+  switch(paramNo)
+  {
+  case 0:
+    init_weightVariance=val;
+    break;
+  case 1:
+    init_biasVariance=val;
+    break;
+  case 2:
+    init_variance=val;
+    break;
+  default:
+    if(paramNo<nParams)
+      init_scales.setVal(val, paramNo-3);
+    else
+    {
+      throw ndlexceptions::Error("Requested parameter doesn't exist.");
+    }  
+  }
+}
+double CMlpardKern::getInitParamVal(unsigned int paramNo) const
+{
+  
+  BOUNDCHECK(paramNo<nParams);
+  switch(paramNo)
+  {
+  case 0:
+    return init_weightVariance;
+    break;
+  case 1:
+    return init_biasVariance;
+    break;
+  case 2:
+    return init_variance;
+    break;
+  default:
+    if(paramNo<nParams)
+      return init_scales.getVal(paramNo-3);
     else
     {
       throw ndlexceptions::Error("Requested parameter doesn't exist.");
@@ -3952,6 +4402,8 @@ double CPolyardKern::getVariance() const
 void CPolyardKern::_init()
 {
   nParams = 3;
+  init_scales.resize(1, getInputDim());
+  for (int i = 0; i < getInputDim(); i++) { init_scales(0, i) = 0.5; }
   setType("polyard");
   setName("Polynomial ARD");
   setParamName("weightVariance", 0);
@@ -3962,13 +4414,14 @@ void CPolyardKern::_init()
   addTransform(CTransform::defaultPositive(), 2);
   setStationary(false);
   setDefaultBounds();
+  setInitParam();
 }
 void CPolyardKern::setInitParam()
 {
   nParams = 3+getInputDim();
-  weightVariance=1.0;
-  biasVariance=1.0;
-  variance = 1.0;
+  weightVariance=init_weightVariance;
+  biasVariance=init_biasVariance;
+  variance = init_variance;
   scales.resize(1, getInputDim());
   gscales.resize(1, getInputDim());
   scales.setVals(0.5);
@@ -3976,9 +4429,7 @@ void CPolyardKern::setInitParam()
   {
     string name = "inputScale";
     setParamName(name, i);
-  }
-  for(unsigned int i=3; i<getInputDim()+3; i++)
-  {
+    scales(0, i - 3) = init_scales.getVal(0, i - 3);
     addTransform(CTransform::defaultZeroOne(), i);
   }
   degree = 2.0;
@@ -4044,7 +4495,54 @@ double CPolyardKern::getParam(unsigned int paramNo) const
     }  
   }
 }
-void CPolyardKern::getGradX(CMatrix& gX, const CMatrix& X, unsigned int row, const CMatrix& X2, bool addG) const
+void CPolyardKern::setInitParamVal(double val, unsigned int paramNo)
+{
+  
+  BOUNDCHECK(paramNo<nParams);
+  switch(paramNo)
+  {
+  case 0:
+    init_weightVariance=val;
+    break;
+  case 1:
+    init_biasVariance=val;
+    break;
+  case 2:
+    init_variance=val;
+    break;
+  default:
+    if(paramNo<nParams)
+      init_scales.setVal(val, paramNo-3);
+    else
+    {
+      throw ndlexceptions::Error("Requested parameter doesn't exist.");
+    }    
+  }
+}
+double CPolyardKern::getInitParamVal(unsigned int paramNo) const
+{
+  
+  BOUNDCHECK(paramNo<nParams);
+  switch(paramNo)
+  {
+  case 0:
+    return init_weightVariance;
+    break;
+  case 1:
+    return init_biasVariance;
+    break;
+  case 2:
+    return init_variance;
+    break;
+  default:
+    if(paramNo<nParams)
+      return init_scales.getVal(paramNo-3);
+    else
+    {
+      throw ndlexceptions::Error("Requested parameter doesn't exist.");
+    }  
+  }
+}void CPolyardKern::getGradX(CMatrix& gX, const CMatrix& X, unsigned int row, const CMatrix& X2, bool addG) const
 {
   DIMENSIONMATCH(gX.getRows() == X2.getRows());
   BOUNDCHECK(row < X.getRows());

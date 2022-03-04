@@ -12,6 +12,10 @@
 #include "ndlfortran.h"
 #include "ndlfortran_lbfgsb.h"
 #include <cstring>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/variate_generator.hpp>
+#include <boost/random/uniform_real_distribution.hpp>
+#include <boost/math/distributions.hpp>
 
 // abstract base class for making a class optimisable.
 class COptimisable {
@@ -41,6 +45,7 @@ class COptimisable {
     setMomentum(0.9);
     iter = 0;
     funcEval = 0;
+    _init();
   }
   virtual ~COptimisable() {}
   virtual inline void setVerbosity(int val) const 
@@ -157,6 +162,19 @@ class COptimisable {
   int getIter() const {
     return iter;
   }
+  void set_seed(int val) {
+    seed = val;
+    rng.seed(seed);
+  }
+  int get_seed() {
+    return seed;
+  }
+  void set_n_restarts(int val) {
+    n_restarts = val;
+  }
+  int get_n_restarts() {
+    return n_restarts;
+  }
   // bounds for bounded L-BFGS
   void setBounds(const CMatrix bounds_in)
   {
@@ -230,8 +248,16 @@ class COptimisable {
       throw ndlexceptions::NotImplementedError("Unknown optimisation.");
     }
   }
+  void _init() {
+    if (seed != -1) {
+      rng.seed(seed);
+    }
+  }
  private:
-  
+
+  int seed = -1;
+  boost::mt19937 rng;
+
   double objectiveTol;
   double parameterTol;
   
@@ -271,6 +297,7 @@ class COptimisable {
   CMatrix bounds;
   CMatrix upper_bounds;
   CMatrix lower_bounds;
+  int n_restarts = 0;
 }; 
 
 class CProbabilisticOptimisable : public COptimisable

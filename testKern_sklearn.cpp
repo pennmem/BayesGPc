@@ -518,10 +518,16 @@ int testKernNaming() {
   cmpd2.setParamByName(var_name, 6.0);
   cmpd2.setParamByName(ls_name, 7.0);
   cmpd2.setParamByName(white_name, 8.0);
-
   assert(cmpd2.getParamByName(var_name) == 6.0);
   assert(cmpd2.getParamByName(ls_name) == 7.0);
   assert(cmpd2.getParamByName(white_name) == 8.0);
+
+  cmpd2.setInitParamValByName(var_name, 10.0);
+  cmpd2.setInitParamValByName(ls_name, 11.0);
+  cmpd2.setInitParamValByName(white_name, 12.0);
+  assert(cmpd2.getInitParamValByName(var_name) == 10.0);
+  assert(cmpd2.getInitParamValByName(ls_name) == 11.0);
+  assert(cmpd2.getInitParamValByName(white_name) == 12.0);
 
   ls_bounds(0,0) = 2.1;
   ls_bounds(0,1) = 2.5;
@@ -543,10 +549,15 @@ int testKernNaming() {
   
   json ref;
   ref["parameters"][var_name]["bounds"] = vector<double>(var_bounds.getVals(), var_bounds.getVals() + 2);
-  ref["parameters"][ls_name]["bounds"] = vector<double>(ls_bounds.getVals(), ls_bounds.getVals() + 2);;
-  ref["parameters"][white_name]["bounds"] = vector<double>(white_bounds.getVals(), white_bounds.getVals() + 2);;
+  ref["parameters"][ls_name]["bounds"] = vector<double>(ls_bounds.getVals(), ls_bounds.getVals() + 2);
+  ref["parameters"][white_name]["bounds"] = vector<double>(white_bounds.getVals(), white_bounds.getVals() + 2);
+
+  ref["parameters"][var_name]["init_value"] = 10.0;
+  ref["parameters"][ls_name]["init_value"] = 11.0;
+  ref["parameters"][white_name]["init_value"] = 12.0;
   assert(sol == ref);
 
+  cout << sol << endl;
   json j = cmpd2.json_state();
   cout << j << endl;
 

@@ -28,11 +28,11 @@ namespace ndlexceptions
     }
     virtual const char* what() const throw()
     {
-      return "Unknown ndlexception";
+      return msg.c_str();
     }
 
   private:
-    std::string msg;
+    std::string msg = "Unknown ndlexception";
   };
   class RuntimeError : public ndlexceptions::Error
   {

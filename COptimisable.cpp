@@ -195,11 +195,11 @@ void COptimisable::lbfgs_b_Optimise()
   int maxFuncEval = 10000;
   
   int nParams = getOptNumParams();
-  int iflag = 0;
   int memSize = 10;  // number of corrections
   
   double* Xvals = new double[nParams];
   double f = 0.0; // function value, not clear whether this is modified within lbgsb
+  double f_best = INFINITY;
   double* gvals = new double[nParams]; // gradient, not clear whether this is modified within lbgsb
   int* nbd = new int[nParams];
   for (int i = 0; i < nParams; i++) {
@@ -229,121 +229,127 @@ void COptimisable::lbfgs_b_Optimise()
   double* dsave = new double[29]; // working array, length 29
   int maxls = 20;  // max number of line search iterations
 
+  // current restart
+  int restart = -1;
+  // convergence flag
+  bool conv = false;
+
   CMatrix X(1, nParams);
+  CMatrix X_best(1, nParams);
   CMatrix g(1, nParams);
   getOptParams(X);
-  f = computeObjectiveGradParams(g);
-  X.toArray(Xvals);
-  g.toArray(gvals);
-  while(true)
-  {
-    setulb_( //how to properly pass arrays to fortran from cpp? when should they be passed by reference vs. with a pointer?
-			nParams,
-			memSize,  // number of corrections
-			Xvals, // length n
-			lower_bounds.getVals(), // length n
-			upper_bounds.getVals(), // length n
-			nbd, // length n, integer flags coding bounds (0: none, 1: lower, 2: both, 3: upper) for each variable
-			f, // function value, not clear whether this is modified within lbgsb
-			gvals, // gradient, not clear whether this is modified within lbgsb
-			factr, // solution accuracy based on function values
-			pgtol, // solution accuracy based on gradient values
-			work, // length (2mmax + 5)nmax + 12mmax^2 + 12mmax
-			iwa, // length 3nmax
-			task,  // length 60
-			iprint,  // verbosity
-			csave, // message
-			lsave, // flags for controlling constraints and other algorithm settings
-			isave, // integer array of length 44, contains diagnostic info
-			dsave, // working array, length 29
-			maxls  // max number of line search iterations
-		);
-    if (getVerbosity() >= 2) { cout << "task " << task << endl; }
-    
-    if (strncmp(task, "FG", 2) == 0) {
-      X.fromArray(Xvals);
-      setOptParams(X);
-      f = computeObjectiveGradParams(g);
-      g.toArray(gvals);
-      funcEval++;
-    }
-    else if (strncmp(task, "NEW_X", 5) == 0) {
-      X.fromArray(Xvals);
-      setOptParams(X);
-      iter++;
+  while (restart < n_restarts && !conv) {
+    iter = 0;
+    restart++;
+    getOptParams(X_best);
+    f = computeObjectiveGradParams(g);
+    X.toArray(Xvals);
+    g.toArray(gvals);
+    while(true)
+    {
+      setulb_( // pass arrays to fortran with a pointer
+        nParams,
+        memSize,  // number of corrections
+        Xvals, // length n
+        lower_bounds.getVals(), // length n
+        upper_bounds.getVals(), // length n
+        nbd, // length n, integer flags coding bounds (0: none, 1: lower, 2: both, 3: upper) for each variable
+        f, // function value, not clear whether this is modified within lbgsb
+        gvals, // gradient, not clear whether this is modified within lbgsb
+        factr, // solution accuracy based on function values
+        pgtol, // solution accuracy based on gradient values
+        work, // length (2mmax + 5)nmax + 12mmax^2 + 12mmax
+        iwa, // length 3nmax
+        task,  // length 60
+        iprint,  // verbosity
+        csave, // message
+        lsave, // flags for controlling constraints and other algorithm settings
+        isave, // integer array of length 44, contains diagnostic info
+        dsave, // working array, length 29
+        maxls  // max number of line search iterations
+      );
+      if (getVerbosity() >= 2) { cout << "task " << task << endl; }
+      
+      if (strncmp(task, "FG", 2) == 0) {
+        X.fromArray(Xvals);
+        f = computeObjectiveGradParams(g);
+        if (f < f_best) {
+          f_best = f;
+          X_best = X;
+        }
+        g.toArray(gvals);
+        funcEval++;
+      }
+      else if (strncmp(task, "NEW_X", 5) == 0) {
+        X.fromArray(Xvals);
+        if (f < f_best) {
+          f_best = f;
+          X_best = X;
+        }
+        iter++;
 
-      if (iter >= maxIters) {
-        memset(task, ' ', 60);
-        strcpy(task, "STOP: TOTAL NO. of ITERATIONS REACHED LIMIT");
+        if (iter >= maxIters) {
+          memset(task, ' ', 60);
+          strcpy(task, "STOP: TOTAL NO. of ITERATIONS REACHED LIMIT");
+        }
+        else if (funcEval >= maxFuncEval) {
+          memset(task, ' ', 60);
+          strcpy(task, "STOP: TOTAL NO. of f AND g EVALUATIONS EXCEEDS LIMIT");
+        }
       }
-      else if (funcEval >= maxFuncEval) {
-        memset(task, ' ', 60);
-        strcpy(task, "STOP: TOTAL NO. of f AND g EVALUATIONS EXCEEDS LIMIT");
+      else if (strncmp(task, "ABNORMAL_TERMINATION_IN_LNSRCH", 30) == 0) {
+        // does not appear to be an error state, though it is not clear what exactly this message indicates from the FORTRAN code
+        X.fromArray(Xvals);
+        if (f < f_best) {
+          f_best = f;
+          X_best = X;
+        }
+        cout << endl << task << endl << "Numbers of iterations: " << iter << endl;
+        cout << "log params" << endl << X << endl;
+        cout << "grads" << endl << g << endl << endl;
+        iter++;
+        break;
       }
+      else {
+        break;
+      }
+    }
+    if (strncmp(task, "CONV", 4) == 0) {
+      setOptParams(X_best);
+      conv = true;
+    }
+    else if (iter >= maxIters || funcEval >= maxFuncEval) {
+      if (getVerbosity() >= 0) { cout << "COptimisable: lbfgs_b message: " << task << endl; }
+      setOptParams(X_best);
+      conv = true;
     }
     else if (strncmp(task, "ABNORMAL_TERMINATION_IN_LNSRCH", 30) == 0) {
-      X.fromArray(Xvals);
-      setOptParams(X);
-      cout << endl << task << endl << "Numbers of iterations: " << iter << endl;
-      cout << "log params" << endl << X << endl;
-      cout << "grads" << endl << g << endl << endl;
-      iter++;
-      break;
+      if (getVerbosity() >= 0) { cout << "COptimisable: lbfgs_b message: " << task << endl; }
+
+      setOptParams(X_best);
+      conv = true;
+      // if (restart == n_restarts - 1) { setOptParams(X_best); }
+      // cout << "Restarting optimization with random X (restart " << restart << ")" << endl;
+      // boost::random::uniform_real_distribution<> dist(0.0, 1.0);
+      // boost::random::variate_generator<boost::mt19937&, boost::random::uniform_real_distribution<> > gen(rng, dist);
+      // for (unsigned int i = 0; i < nParams; i++) {
+      //     X.setVal(bounds.getVal(i, 0) + gen() * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
+      // }
     }
     else {
-      break;
+      cout << "COptimisable lbfgs_bsetulb error: " << endl << task << endl;
+      if (restart == n_restarts - 1) {
+        throw ndlexceptions::Error(string("Unhandled error in lbfgsb:   ") + string(task));
+      }
+      else {
+        cout << "Restarting optimization with random X (restart " << restart << ")" << endl;
+        boost::random::uniform_real_distribution<> dist(0.0, 1.0);
+        boost::random::variate_generator<boost::mt19937&, boost::random::uniform_real_distribution<> > gen(rng, dist);
+        for (unsigned int i = 0; i < nParams; i++) {
+            X.setVal(bounds.getVal(i, 0) + gen() * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
+        }
+      }
     }
-
-    // TODO implement remaining errors below
-    // from lbfgsOptimise() below this function
-    // if(iflag<=0)
-    // {
-    //   if(iflag==-1)
-    //   {
-    //     cout << "Warning: lbfgsOptimise: linesearch failed." << endl;
-    //     break;
-    //   }
-    //   else if(iflag == -2)
-    //   {
-    //   	throw ndlexceptions::Error("An element of the inverse Hessian provided is not positive.");
-    //   }
-    //   else if(iflag == -3)
-    //   {
-	  //     throw ndlexceptions::Error("Inproper input to lbfgs_.");
-    //   }
-    // }
-    // else if(iflag==0)
-    // {
-    //   cout << "iflag = 0, opt params not assigned!" << endl;
-    //   // X.fromArray(Xvals);
-    //   // setOptParams(X);
-    //   break;
-    // }
-    // else if(iflag==1)
-    // {
-    //   X.fromArray(Xvals);
-    //   setOptParams(X);
-    //   // cout << "log params" << endl << X << endl;
-    //   // cout << "grads" << endl << g << endl;
-    //   funcEval++;
-    // }
-    // else
-    // {
-    //   throw ndlexceptions::Error("Unhandled iflag.");
-    // }
-  }
-  if (strncmp(task, "CONV", 4) == 0) {
-    iflag = 0;
-  }
-  else if (iter >= maxIters || funcEval >= maxFuncEval) {
-    iflag = 1;
-  }
-  else if (strncmp(task, "ABNORMAL_TERMINATION_IN_LNSRCH", 30) == 0) {
-    iflag = 2;
-  }
-  else {
-    cout << "setulb error: " << endl << task << endl;
-    throw ndlexceptions::Error("Unhandled error in lfbgsb.");
   }
 
   if (max(X) > log(1e10)) {

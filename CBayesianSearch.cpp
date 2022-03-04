@@ -102,7 +102,10 @@ CMatrix* BayesianSearchModel::get_next_sample() {
             gp->setParamTol(1e-6);
             gp->setOutputBiasLearnt(outputBiasScaleLearnt);
             gp->setOutputScaleLearnt(outputBiasScaleLearnt);
-                gp->optimise(iters);
+            gp->set_seed(seed + 10000);
+            gp->set_n_restarts(2);
+            gp->pkern->setInitParam();
+            gp->optimise(iters);
 
             // optimize acquisition function
             Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
@@ -161,8 +164,10 @@ CMatrix* BayesianSearchModel::get_next_sample() {
                 throw std::runtime_error("Optimization of acquisition function " + acq_func_name + " failed.");
             }
         }
-        catch(...) {  // catch all errors in fitting and get random sample
+        catch(const std::exception& e) {  // catch all errors in fitting and get random sample
             cout << "Warning: error in fitting process for getting next sample. Falling back on random parameter sampling." << endl;
+            cout << "Error message: " << e.what() << endl;
+
             boost::random::uniform_real_distribution<> dist(0.0, 1.0);
             boost::random::variate_generator<boost::mt19937&, boost::random::uniform_real_distribution<> > gen(rng, dist);
             for (unsigned int i = 0; i < x_dim; i++) {

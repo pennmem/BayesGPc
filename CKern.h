@@ -90,6 +90,15 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
   {
     return getParam(getParamIndex(name));
   }
+  virtual void setInitParamVal(double, unsigned int)=0;
+  virtual double getInitParamVal(unsigned int) const=0;
+  virtual void setInitParamValByName(const string name, double val) {
+    setInitParamVal(val, getParamIndex(name));
+  };
+  virtual double getInitParamValByName(const string name) const
+  {
+    return getInitParamVal(getParamIndex(name));
+  }
   // Get gradients of the kernel with respect to input values.
   //   g[i].val(k,j) = d kern(X_row_i,X2_row_k)/ d x_component_j
   virtual void getGradX(vector<CMatrix*>& gX, const CMatrix& X, const CMatrix& X2, bool addG=false) const
@@ -454,8 +463,9 @@ class CArdKern : public CKern {
   virtual void extractParamFromMxArray(const mxArray* matlabArray);
   // returns sum(sum(cvGrd.*dK/dparam)) 
 #endif
- protected: 
+ protected:
   CMatrix scales;
+  CMatrix init_scales;
 };
 
 // Component kernel (such as cmpnd or tensor)
@@ -506,6 +516,37 @@ class CComponentKern : public CKern
       if(paramNo <= end)
       {
       	return components[i]->getParam(paramNo-start);
+      }
+      start = end + 1;
+    }
+    return -1;
+  }
+  virtual void setInitParamVal(double val, unsigned int paramNo)
+  {
+    unsigned int start = 0;
+    unsigned int end = 0;
+    for(size_t i=0; i<components.size(); i++)
+    {
+      end = start+components[i]->getNumParams()-1;
+      if(paramNo <= end)
+      {
+        components[i]->setInitParamVal(val, paramNo-start);
+        return;
+      }      
+      start = end + 1;
+    }
+  }
+  // Parameters are kernel parameters
+  virtual double getInitParamVal(unsigned int paramNo) const
+  {
+    unsigned int start = 0;
+    unsigned int end = 0;
+    for(size_t i=0; i<components.size(); i++)
+    {
+      end = start+components[i]->getNumParams()-1;
+      if(paramNo <= end)
+      {
+      	return components[i]->getInitParamVal(paramNo-start);
       }
       start = end + 1;
     }
@@ -745,6 +786,8 @@ class CWhiteKern: public CKern {
   void diagCompute(CMatrix& d, const CMatrix& X) const;
   void setParam(double val, unsigned int paramNum);
   double getParam(unsigned int paramNum) const;
+  void setInitParamVal(double val, unsigned int paramNum);
+  double getInitParamVal(unsigned int paramNum) const;
   void getGradX(CMatrix& g, const CMatrix& X, unsigned int pointNo, const CMatrix& X2, bool addG=false) const;
   void getDiagGradX(CMatrix& g, const CMatrix& X, bool addG=false) const;
   double getWhite() const;
@@ -760,6 +803,7 @@ class CWhiteKern: public CKern {
  private:
   void _init();
   double variance;
+  double init_variance = exp(-2.0);
 };
 // Whitefixed Noise Kernel.
 class CWhitefixedKern: public CKern {
@@ -783,6 +827,8 @@ class CWhitefixedKern: public CKern {
   void diagCompute(CMatrix& d, const CMatrix& X) const;
   void setParam(double val, unsigned int paramNum);
   double getParam(unsigned int paramNum) const;
+  void setInitParamVal(double val, unsigned int paramNum);
+  double getInitParamVal(unsigned int paramNum) const;
   void getGradX(CMatrix& g, const CMatrix& X, unsigned int pointNo, const CMatrix& X2, bool addG=false) const;
   void getDiagGradX(CMatrix& g, const CMatrix& X, bool addG=false) const;
   double getWhite() const;
@@ -800,6 +846,7 @@ class CWhitefixedKern: public CKern {
  private:
   void _init();
   double variance;
+  double init_variance = exp(-2.0);
 };
 
 // Bias Kernel.
@@ -824,6 +871,8 @@ class CBiasKern: public CKern {
   void diagCompute(CMatrix& d, const CMatrix& X) const;
   void setParam(double val, unsigned int paramNum);
   double getParam(unsigned int paramNum) const;
+  void setInitParamVal(double val, unsigned int paramNum);
+  double getInitParamVal(unsigned int paramNum) const;
   void getGradX(CMatrix& g, const CMatrix& X, unsigned int pointNo, const CMatrix& X2, bool addG=false) const;
   void getDiagGradX(CMatrix& g, const CMatrix& X, bool addG=false) const;
   double getWhite() const;
@@ -840,6 +889,7 @@ class CBiasKern: public CKern {
  private:
   void _init();
   double variance;
+  double init_variance = exp(-2.0);
 
 };
 
@@ -881,6 +931,8 @@ class CRbfKern: public CKern {
   void diagCompute(CMatrix& d, const CMatrix& X) const;
   void setParam(double val, unsigned int paramNum);
   double getParam(unsigned int paramNum) const;
+  void setInitParamVal(double val, unsigned int paramNum);
+  double getInitParamVal(unsigned int paramNum) const;
   void getGradX(CMatrix& g, const CMatrix& X, unsigned int pointNo, const CMatrix& X2, bool addG=false) const;
   void getDiagGradX(CMatrix& g, const CMatrix& X, bool addG=false) const;
   double getWhite() const;
@@ -895,7 +947,9 @@ class CRbfKern: public CKern {
  private:
   void _init();
   double variance;
+  double init_variance = 1.0;
   double inverseWidth;
+  double init_inverseWidth = 1.0;
   mutable CMatrix Xdists;
 
 };
@@ -938,6 +992,8 @@ class CExpKern: public CKern {
   void diagCompute(CMatrix& d, const CMatrix& X) const;
   void setParam(double val, unsigned int paramNum);
   double getParam(unsigned int paramNum) const;
+  void setInitParamVal(double val, unsigned int paramNum);
+  double getInitParamVal(unsigned int paramNum) const;
   void getGradX(CMatrix& g, const CMatrix& X, unsigned int pointNo, const CMatrix& X2, bool addG=false) const;
   void getDiagGradX(CMatrix& g, const CMatrix& X, bool addG=false) const;
   double getWhite() const;
@@ -950,7 +1006,9 @@ class CExpKern: public CKern {
  private:
   void _init();
   double variance;
+  double init_variance = 1.0;
   double inverseWidth;
+  double init_inverseWidth = 1.0;
 
 };
 
@@ -976,6 +1034,8 @@ class CRatQuadKern: public CKern {
   void diagCompute(CMatrix& d, const CMatrix& X) const;
   void setParam(double val, unsigned int paramNum);
   double getParam(unsigned int paramNum) const;
+  void setInitParamVal(double val, unsigned int paramNum);
+  double getInitParamVal(unsigned int paramNum) const;
   void getGradX(CMatrix& g, const CMatrix& X, unsigned pointNo, const CMatrix& X2, bool addG=false) const;
   void getDiagGradX(CMatrix& g, const CMatrix& X, bool addG=false) const;
   double getWhite() const;
@@ -990,8 +1050,11 @@ class CRatQuadKern: public CKern {
  private:
   void _init();
   double variance;
+  double init_variance = 1.0;
   double alpha;
+  double init_alpha = 1.0;
   double lengthScale;
+  double init_lengthScale = 1.0;
   mutable CMatrix Xdists;
   
 };
@@ -1018,6 +1081,8 @@ class CMatern32Kern: public CKern {
   void diagCompute(CMatrix& d, const CMatrix& X) const;
   void setParam(double val, unsigned int paramNum);
   double getParam(unsigned int paramNum) const;
+  void setInitParamVal(double val, unsigned int paramNum);
+  double getInitParamVal(unsigned int paramNum) const;
   void getGradX(CMatrix& g, const CMatrix& X, unsigned int pointNo, const CMatrix& X2, bool addG=false) const;
   void getDiagGradX(CMatrix& g, const CMatrix& X, bool addG=false) const;
   double getWhite() const;
@@ -1032,7 +1097,9 @@ class CMatern32Kern: public CKern {
  private:
   void _init();
   double variance;
+  double init_variance = 1.0;
   double lengthScale;
+  double init_lengthScale = 1.0;
   mutable CMatrix Xdists;
   
 };
@@ -1059,6 +1126,8 @@ class CMatern52Kern: public CKern {
   void diagCompute(CMatrix& d, const CMatrix& X) const;
   void setParam(double val, unsigned int paramNum);
   double getParam(unsigned int paramNum) const;
+  void setInitParamVal(double val, unsigned int paramNum);
+  double getInitParamVal(unsigned int paramNum) const;
   void getGradX(CMatrix& g, const CMatrix& X, unsigned int pointNo, const CMatrix& X2, bool addG=false) const;
   void getDiagGradX(CMatrix& g, const CMatrix& X, bool addG=false) const;
   double getWhite() const;
@@ -1073,7 +1142,9 @@ class CMatern52Kern: public CKern {
  private:
   void _init();
   double variance;
+  double init_variance = 1.0;
   double lengthScale;
+  double init_lengthScale = 1.0;
   mutable CMatrix Xdists;
   
 };
@@ -1099,6 +1170,8 @@ class CLinKern: public CKern {
   double diagComputeElement(const CMatrix& X, unsigned int index) const;
   void setParam(double val, unsigned int paramNum);
   double getParam(unsigned int paramNum) const;
+  void setInitParamVal(double val, unsigned int paramNum);
+  double getInitParamVal(unsigned int paramNum) const;
   void getGradX(CMatrix& g, const CMatrix& X, unsigned int pointNo, const CMatrix& X2, bool addG=false) const;
   void getDiagGradX(CMatrix& g, const CMatrix& X, bool addG=false) const;
   double getWhite() const;
@@ -1114,6 +1187,7 @@ class CLinKern: public CKern {
  private:
   void _init();
   double variance;
+  double init_variance = 1.0;
 };
 
 // MLP Kernel or arcsin kernel. Based on a multi-layer perceptron with infinite hidden nodes. See Williams (1996) "Computing with Infinite Networks" in NIPS 9.
@@ -1137,6 +1211,8 @@ class CMlpKern: public CKern {
   double diagComputeElement(const CMatrix& X, unsigned int index) const;
   void setParam(double val, unsigned int paramNum);
   double getParam(unsigned int paramNum) const;
+  void setInitParamVal(double val, unsigned int paramNum);
+  double getInitParamVal(unsigned int paramNum) const;
   void getGradX(CMatrix& g, const CMatrix& X, unsigned int pointNo, const CMatrix& X2, bool addG=false) const;
   void getDiagGradX(CMatrix& g, const CMatrix& X, bool addG=false) const;
   double getWhite() const;
@@ -1150,8 +1226,11 @@ class CMlpKern: public CKern {
  private:
   void _init();
   double weightVariance;
+  double init_weightVariance = 10.0;
   double biasVariance;
+  double init_biasVariance = 10.0;
   double variance;
+  double init_variance = 1.0;
   mutable CMatrix innerProdi;
   mutable CMatrix innerProdj;
 };
@@ -1185,6 +1264,8 @@ class CPolyKern: public CKern {
   double diagComputeElement(const CMatrix& X, unsigned int index) const;
   void setParam(double val, unsigned int paramNum);
   double getParam(unsigned int paramNum) const;
+  void setInitParamVal(double val, unsigned int paramNum);
+  double getInitParamVal(unsigned int paramNum) const;
   void getGradX(CMatrix& g, const CMatrix& X, unsigned int pointNo, const CMatrix& X2, bool addG=false) const;
   void getDiagGradX(CMatrix& g, const CMatrix& X, bool addG=false) const;
   double getWhite() const;
@@ -1203,9 +1284,13 @@ class CPolyKern: public CKern {
  private:
   void _init();
   double weightVariance;
+  double init_weightVariance = 1.0;
   double biasVariance;
+  double init_biasVariance = 1.0;
   double variance;
+  double init_variance = 1.0;
   double degree;
+  double init_degree = 2.0;
   mutable CMatrix innerProdi;
 };
 
@@ -1230,6 +1315,8 @@ class CLinardKern: public CArdKern {
   double diagComputeElement(const CMatrix& X, unsigned int index) const;
   void setParam(double val, unsigned int paramNum);
   double getParam(unsigned int paramNum) const;
+  void setInitParamVal(double val, unsigned int paramNum);
+  double getInitParamVal(unsigned int paramNum) const;
   void getGradX(CMatrix& g, const CMatrix& X, unsigned int pointNo, const CMatrix& X2, bool addG=false) const;
   void getDiagGradX(CMatrix& g, const CMatrix& X, bool addGrad=false) const;
   double getWhite() const;
@@ -1244,6 +1331,7 @@ class CLinardKern: public CArdKern {
  private:
   void _init();
   double variance;
+  double init_variance = 1.0;
 };
 
 // RBF ARD Kernel --- automatic relevance determination of the RBF kernel.
@@ -1267,6 +1355,8 @@ class CRbfardKern: public CArdKern {
   double diagComputeElement(const CMatrix& X, unsigned int index) const;
   void setParam(double val, unsigned int paramNum);
   double getParam(unsigned int paramNum) const;
+  void setInitParamVal(double val, unsigned int paramNum);
+  double getInitParamVal(unsigned int paramNum) const;
   void getGradX(CMatrix& g, const CMatrix& X, unsigned int pointNo, const CMatrix& X2, bool addG=false) const;
   void getDiagGradX(CMatrix& g, const CMatrix& X, bool addGrad=false) const;
   double getWhite() const;
@@ -1281,7 +1371,9 @@ class CRbfardKern: public CArdKern {
  private:
   void _init();
   double variance;
+  double init_variance = 1.0;
   double inverseWidth;
+  double init_inverseWidth = 1.0;
   mutable CMatrix gscales;
 };
 
@@ -1306,6 +1398,8 @@ class CMlpardKern: public CArdKern {
   double diagComputeElement(const CMatrix& X, unsigned int index) const;
   void setParam(double val, unsigned int paramNum);
   double getParam(unsigned int paramNum) const;
+  void setInitParamVal(double val, unsigned int paramNum);
+  double getInitParamVal(unsigned int paramNum) const;
   void getGradX(CMatrix& g, const CMatrix& X, unsigned int pointNo, const CMatrix& X2, bool addG=false) const;
   void getDiagGradX(CMatrix& g, const CMatrix& X, bool addGrad=false) const;
   double getWhite() const;
@@ -1320,8 +1414,11 @@ class CMlpardKern: public CArdKern {
  private:
   void _init();
   double weightVariance;
+  double init_weightVariance = 10.0;
   double biasVariance;
+  double init_biasVariance = 10.0;
   double variance;
+  double init_variance = 1.0;
   mutable CMatrix innerProdi;
   mutable CMatrix innerProdj;
   mutable CMatrix gscales;
@@ -1356,6 +1453,8 @@ class CPolyardKern: public CArdKern {
   double diagComputeElement(const CMatrix& X, unsigned int index) const;
   void setParam(double val, unsigned int paramNum);
   double getParam(unsigned int paramNum) const;
+  void setInitParamVal(double val, unsigned int paramNum);
+  double getInitParamVal(unsigned int paramNum) const;
   void getGradX(CMatrix& g, const CMatrix& X, unsigned int pointNo, const CMatrix& X2, bool addG=false) const;
   void getDiagGradX(CMatrix& g, const CMatrix& X, bool addGrad=false) const;
   double getWhite() const;
@@ -1372,8 +1471,11 @@ class CPolyardKern: public CArdKern {
  private:
   void _init();
   double weightVariance;
+  double init_weightVariance = 1.0;
   double biasVariance;
+  double init_biasVariance = 1.0;
   double variance;
+  double init_variance = 1.0;
   double degree;
   mutable CMatrix innerProdi;
   mutable CMatrix innerProdj;

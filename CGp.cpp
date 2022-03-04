@@ -35,7 +35,14 @@ CGp::CGp(unsigned int q, unsigned int d,
   scale.setVals(1.0);
   bias.zeros();
   initVals();
-  setBounds(pkern->getBounds());
+  need to get transformed bounds
+  CMatrix b(pkern->getBounds());
+  for(unsigned int i=0; i<pkern->getNumParams(); i++)
+  {
+    b.setVal(pkern->getTransParam(i), counter);
+    counter++;
+  }
+  setBounds();
 
   
   switch(approxType) 
