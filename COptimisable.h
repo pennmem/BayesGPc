@@ -187,7 +187,7 @@ class COptimisable {
     upper_bounds = CMatrix(bounds.getRows(), 1);
     upper_bounds.copyColCol(0, bounds, 1);
   }
-  CMatrix getbounds()
+  CMatrix getBounds()
   {
     return bounds;
   }

@@ -1359,13 +1359,13 @@ void CRbfKern::getGradParams(CMatrix& g, const CMatrix& X, const CMatrix& covGra
       double dist2 = 0;
       if(isUpdateXused()) // WVB's mod for precomputing parts of the kernel.
       {
-	dist2 = Xdists.getVal(i,j);
-	k = Xdists.getVal(j,i);
+        dist2 = Xdists.getVal(i,j);
+        k = Xdists.getVal(j,i);
       }
       else
       {
-	dist2 = X.dist2Row(i, X, j);
-	k = exp(-dist2*halfInverseWidth);
+        dist2 = X.dist2Row(i, X, j);
+        k = exp(-dist2*halfInverseWidth);
       }
       double kcg_ij = k*covGrad.getVal(i,j);
       g1 -= 2.0*halfVariance*dist2*kcg_ij; // dk()/dgamma in SBIK paper

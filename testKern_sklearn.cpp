@@ -17,12 +17,12 @@ int main()
     // fail += testType("white");
     // // fail += testType("bias");
 
-    // fail += testType("matern32");
-    // fail += testType("matern52");
+    fail += testType("matern32");
+    fail += testType("matern52");
 
-    // fail += testType("rbf");
-    // fail += testType("ratquad");
-    // fail += testType("poly");  // TODO not currently matching sklearn
+    fail += testType("rbf");
+    fail += testType("ratquad");
+    fail += testType("poly");  // TODO not currently matching sklearn
 
     // // fail += testType("lin");
 
@@ -44,7 +44,7 @@ int main()
    
     // fail += testType("cmpnd");
     // // fail += testType("tensor");
-    fail += testKernNaming();
+    // fail += testKernNaming();
     cout << "Number of failures: " << fail << "." << endl;
   }
   catch(ndlexceptions::FileFormatError err)
@@ -91,7 +91,6 @@ int testType(const string kernelType)
 
   double* temp = npz["X"].data<double>();
   CMatrix X(temp, npz["X"].shape[0], npz["X"].shape[1]);
-  // X.readMatlabFile(fileName, "X");
 
   CKern* kern;
   bool structureOnly = false;
@@ -231,6 +230,8 @@ int testType(const string kernelType)
   {
     throw ndlexceptions::Error("Unrecognised kernel type requested.");
   }
+  // for (std::map<std::string,cnpy::NpyArray>::iterator it=npz.begin(); it!=npz.end(); ++it)
+  //   std::cout << it->first << endl;
   kern = getSklearnKernel(X.getCols(), npz, kernel_key, param_key, false);
   // kern2 not used currently
   // kern2 = getSklearnKernel(X.getCols(), npz, kernel_key, param_key, false);
@@ -295,7 +296,7 @@ int testKern(CKern* kern, const string fileName)
   else
   { 
     cout << "FAILURE: " << kern->getName() << " double compute." << endl;
-    cout << "Maximum absolute difference: " << diff << endl;    
+    cout << "Maximum absolute difference: " << diff << endl;
     fail++;
   }
   // test diagonal kernel computations match

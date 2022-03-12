@@ -9,7 +9,7 @@
 #include <stdexcept>
 
 
-int testGaussian(string type, string kernel);
+int testGaussian(string type, string kernel, int verbosity);
 class CClgptest : public CClctrl 
 {
  public:
@@ -24,27 +24,33 @@ int main(int argc, char* argv[])
   int fail = 0;
   try
   {
+    int verbose = 0;
+    string kern;
     if (argc > 1) {
       command.setFlags(true);
       while (command.isFlags()) {
-        string arg = command.getCurrentArgument();
         if (command.isCurrentArg("-k", "--kernel")) {
           command.incrementArgument();
-          arg = command.getCurrentArgument();
-          fail += testGaussian("ftc", arg);
+          kern = command.getCurrentArgument();
+        }
+        command.incrementArgument();
+        if (command.isCurrentArg("-v", "--verbosity")) {
+          command.incrementArgument();
+          verbose = std::stoi(command.getCurrentArgument());
         }
         command.incrementArgument();
       }
+      fail += testGaussian("ftc", kern, verbose);
     }
     else {
-      // fail += testGaussian("ftc", "matern32");
-      // fail += testGaussian("ftc", "matern52");
-      // fail += testGaussian("ftc", "poly");
-      fail += testGaussian("ftc", "ratquad");
-      // fail += testGaussian("ftc", "rbf");
-      //fail += testGaussian("dtc");
-      //fail += testGaussian("fitc");
-      //fail += testGaussian("pitc");
+      fail += testGaussian("ftc", "poly", verbose);
+      fail += testGaussian("ftc", "matern32", verbose);
+      fail += testGaussian("ftc", "matern52", verbose);
+      fail += testGaussian("ftc", "ratquad", verbose);
+      fail += testGaussian("ftc", "rbf", verbose);
+      //fail += testGaussian("dtc", "matern32", verbose);
+      //fail += testGaussian("fitc", "matern32", verbose);
+      //fail += testGaussian("pitc", "matern32", verbose);
     }
 
     cout << "Number of failures: " << fail << "." << endl;
@@ -66,7 +72,7 @@ int main(int argc, char* argv[])
 
 }
 
-int testGaussian(string type, string kernel)
+int testGaussian(string type, string kernel, int verbosity)
 {
   // TODO add testing with different optimization algorithms
   string fileName = "np_files" + ndlstrutil::dirSep() + "testSklearn_gpr_" + kernel + ".npz";  // + type + ".npz";
@@ -82,24 +88,11 @@ int testGaussian(string type, string kernel)
 
   // CMatrix* test = readNpzFile(fileName, "X2");
 
-  // for (int i=0; i < 5; i++){
-  //   cout << temp[i] << " " << X.getVal(i) << endl;
-  // }
-
   CMatrix y(npz_dict["y"].data<double>(), npz_dict["y"].shape[0], npz_dict["y"].shape[1]);
-  // y.readMatlabFile(fileName.c_str(), "y");
-  // CMatrix actSetMat;
-  // actSetMat.readMatlabFile(fileName.c_str(), "numActive");
-  // int numActive = (int)actSetMat.getVal(0);
   int numActive = -1;  // no sparsity testing for now
-  // CMatrix apprxTypeMat;
-  // apprxTypeMat.readMatlabFile(fileName.c_str(), "approxInt");
-  // int approxType = (int)apprxTypeMat.getVal(0); 
   int approxType = 0;
   CMatrix scale = 1.0;
-  // scale.readMatlabFile(fileName.c_str(), "scale");
   CMatrix bias = 0.0;
-  // bias.readMatlabFile(fileName.c_str(), "bias");
 
   // TODO add another data set for testing
 
@@ -108,6 +101,9 @@ int testGaussian(string type, string kernel)
   // parse .npy kernel parameters, obtain kernel structure
   getSklearnKernels(&kern, npz_dict, &X, true);
   getSklearnKernels(&kern_ref, npz_dict, &X, false);
+
+  cout << "kern: " << kern.json_structure() << endl;
+  cout << "reference kern: " << kern_ref.json_structure() << endl;
 
   // initialize model and reference model with parameters from sklearn
   CGaussianNoise noiseInit(&y);
@@ -124,8 +120,8 @@ int testGaussian(string type, string kernel)
   bool outputScaleLearnt = false;
   string modelFileName = "testSklearn.model";
 
-  CGp model(&kern, &noiseInit, &X, approxType, numActive, 3);
-  CGp model_ref(&kern_ref, &noiseInit_ref, &X, approxType, numActive, 3);
+  CGp model(&kern, &noiseInit, &X, approxType, numActive, verbosity);
+  CGp model_ref(&kern_ref, &noiseInit_ref, &X, approxType, numActive, verbosity);
 
   model.setBetaVal(1);
   model_ref.setBetaVal(1);
@@ -138,8 +134,9 @@ int testGaussian(string type, string kernel)
   temp = npz_dict["obsNoiseVar"].data<double>();
   model.setObsNoiseVar(*temp);
 
-  model.setVerbosity(2);
-  model.setDefaultOptimiser(CGp::BFGS);  //options: SCG, CG, GD
+  model.setVerbosity(verbosity);
+  int default_optimiser = CGp::BFGS;  //LBFGS_B;
+  model.setDefaultOptimiser(default_optimiser);  // options: LBFGS_B, BFGS, SCG, CG, GD
   // (roughly) match sklearn tolerances for L-BFGS-B.
   model.setObjectiveTol(1e-5);
   model.setParamTol(2.22e-9);
@@ -149,12 +146,6 @@ int testGaussian(string type, string kernel)
   string comment = "";
   writeGpToFile(model, modelFileName, comment);
   
-  // /* loading in model from MATLAB
-  // CCmpndKern kern(X);
-  // kern.readMatlabFile(fileName.c_str(), "kernInit");
-  // //CGaussianNoise noise(y);
-  // //noise.readMatlabFile("testGp.mat", "noiseInit");
-
   // // Initialise a model from gpInfo.
   // CGp model(&X, &y, &kern, &noiseInit, fileName.c_str(), "gpInfoInit", 0);
   // if(model.equals(modelInit))
@@ -193,16 +184,13 @@ int testGaussian(string type, string kernel)
   // poly kernel failing to converge, returning non-PSD errors (sklearn had no issues)
   // poly kernel also returning values off by ~16000 in kernel test
 
-  // everything else is matching or roughyl matching even if a comparison is failing my particular choices for tolerances
+  // everything else is matching or roughly matching even if a comparison is failing my particular choices for tolerances
 
   // TODO
   // check Nia tests
-  // add relative error comparisons to kernel tests
   // identical starting values
   //    comparison of initial gradient values gives a partial test of this
   // using different optimization algorithms currently.
-  //    GCp is using LBFGS (unconstrained optimization) vs. sklearn with L-BFGS-B (box constrained, different algo, 
-  //        more recent implementation out of same lab at Northwestern)
   //    try using different optimization algorithms in GCp, see variability of results
   //        roughly similar results qualitatively, same tests passing and failing, similar values. 
   //        alpha values in ratquad different, further suggests numerical instability of that parameter for this data set
@@ -219,7 +207,6 @@ int testGaussian(string type, string kernel)
   // appear to be giving almost indistinguishable answers (e.g. rat-quad vs. rbf)
 
   // play around with different kernels, hyperparameters, datasets in general, just try setting the hyperparameters directly
-  // write down the algorithm for tuning GPR hyperparameters
 
   model.getOptParams(params);
   model_ref.getOptParams(params_ref);
@@ -241,11 +228,34 @@ int testGaussian(string type, string kernel)
     fail++;
   }
   
+
+
+  // #DEFINE DBG
+  // CMatrix gKX(temp, npz_dict["gXX"].shape[0], npz_dict["gKX"].shape[1]);
+  // model_ref.covGrad;
+
+  // CMatrix K_ref(npz["K"].data<double>(), npz["K"].shape[0], npz["K"].shape[1]);
+
+  // diff = K.maxAbsDiff(K_ref);
+  // if(diff < tol)
+  //   cout << model_ref.pkern->getName() << " full compute matches within " << diff  << " max absolute difference." << endl;
+  // else
+  // { 
+  //   cout << "FAILURE: " << model_ref.pkern->getName() << " full compute." << endl;
+  //   cout << "Maximum absolute difference: " << diff << endl;    
+  //   fail++;
+  // }
+
   // Compare GCp gradients (from reference model to have same parameters) with reference implementation gradients.
   CMatrix grads_ref(npz_dict["gradTheta"].data<double>(), 1, model_ref.getOptNumParams());
   // grads_ref.readMatlabFile(fileName.c_str(), "grads");
   CMatrix grads(1, model_ref.getOptNumParams());
   model_ref.logLikelihoodGradient(grads);
+  cout << grads << endl;
+  cout << model_ref.pkern->json_state() << endl;
+  cout << model_ref.pkern->json_structure() << endl;
+  double f = model_ref.computeObjectiveGradParams(grads);
+  cout << grads << endl;
 
   cout << grads;
   cout << grads_ref << endl;
@@ -265,6 +275,37 @@ int testGaussian(string type, string kernel)
     cout << "C++ Gradient:" << endl << grads;
     cout << "Max relative difference: " << grads.maxRelDiff(grads_ref) << endl;
     cout << "Max absolute difference: " << diff << endl << endl;
+    fail++;
+  }
+
+  CMatrix K(X.getRows(), X.getRows());
+  model_ref.pkern->compute(K, X);
+
+  CMatrix K_ref(npz_dict["K"].data<double>(), npz_dict["K"].shape[0], npz_dict["K"].shape[1]);
+
+  clearly CGp grads are differing from sklearn and leading to abnormal line searches
+  hone in on how the LLs differ if the covariances and outcomes do not
+    shouldn't differ
+    am I using the same y values?
+  check over algorithm again
+  where are the bias and scale set?
+
+  compare invK/cholesky_K to sklearn
+  compare resulting K after any jitter added? 
+    shouldn't be added silently, still confirm internal K == K_sklearn
+  can also compare kernel gradients
+    sklearn computes kernel gradients as grad of covar wrt log-hps
+    CGp computes covGrad as grad of log likelihood wrt covariance 
+      kernel covariance is grad of LL wrt hps, can compute with all-ones gradCov (grads of transformed params),
+      compare with sum of sklearn kernel grads
+  check earlier commits in which only RBF differed
+
+  diff = K.maxAbsDiff(K_ref);
+  if(diff < tol)
+    cout << model_ref.pkern->getName() << " kernel covar compute matches within " << diff  << " max absolute difference." << endl;
+  else { 
+    cout << "FAILURE: " << model_ref.pkern->getName() << " full compute." << endl;
+    cout << "Maximum absolute difference: " << diff << endl;    
     fail++;
   }
 
@@ -367,7 +408,7 @@ int testGaussian(string type, string kernel)
   }
   else {
     cout << "FAILURE: GP random parameter gradient match." << endl;
-    cout << "Reference gradient:" << endl << grads_ref;
+    cout << "Reference gradient:" << endl << grads_rand_ref;
     cout << "C++ Gradient:" << endl << grads;
     cout << "Max relative difference: " << diff << endl << endl;
     fail++;

@@ -1,4 +1,20 @@
-2/16/22
+numerical fitting issues:
+    abnormal line search terminations
+        kernel gradients might be off/numerical errors
+    singular covariance structure
+        not being fixed consistently by raised lower bound on white noise variance
+        Issue seems to arise when samples are identical or nearly identical
+        Does not seem to be solved by large amounts of jitter
+        have not tried random restarts yet for this error
+    
+
+For clinical study: I think we would want to renormalize classifier features with FR1
+    before conducting parameter search as we do for standard across-session classifier generalization
+
+Rank-sum test adapted to GP instead of ANOVA?
+    Need to check distribution of classifier deltas from prior studies,
+    would need to adapt GP for rank-sum test in some way... doesn't really seem possible
+    could just put 30 samples on best location after stabilized2/16/22
 
 make minimal CBayesianSearch updates to test
     DONE out_sem

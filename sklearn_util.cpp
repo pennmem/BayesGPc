@@ -10,7 +10,7 @@ CMatrix* readNpzFile(const string fileName, const string variableName)
 
 void getSklearnKernels(CCmpndKern *kern, cnpy::npz_t npz_dict, CMatrix *X, bool structureOnly)
 {
-  // create covariance function.
+    // create covariance function.
     string key;
     string kernel_key;
     string param_key;
@@ -33,10 +33,15 @@ void getSklearnKernels(CCmpndKern *kern, cnpy::npz_t npz_dict, CMatrix *X, bool 
 CKern* getSklearnKernel(unsigned int x_dim, cnpy::npz_t npz_dict, string kernel_key, string param_key, bool structureOnly)
 {
     CKern *kern;
+    CMatrix b(1, 2);
+    // cout << "here get kernel start   " << kernel_key << endl;
     if(kernel_key.compare("lin") == 0) {
         kern = new CLinKern(x_dim);
         if(!structureOnly)
-          kern->setParam(*npz_dict[param_key + "__constant_value"].data<double>(), 0);
+            kern->setParam(*npz_dict[param_key + "__constant_value"].data<double>(), 0);
+            b(0, 0) = npz_dict[param_key + "__constant_value_bounds"].data<double>()[0];
+            b(0, 1) = npz_dict[param_key + "__constant_value_bounds"].data<double>()[1];
+            kern->setBoundsByName("variance", b);
     }
     else if(kernel_key.compare("RBF") == 0) {
         kern = new CRbfKern(x_dim);
@@ -45,7 +50,16 @@ CKern* getSklearnKernel(unsigned int x_dim, cnpy::npz_t npz_dict, string kernel_
             // sklearn encodes length scale rather than inverse width used in CGp
             double length_scale = *npz_dict[param_key + "__length_scale"].data<double>();
             kern->setParam(1.0/(length_scale*length_scale), 0);
+            b(0, 0) = npz_dict[param_key + "__length_scale_bounds"].data<double>()[0];
+            b(0, 1) = npz_dict[param_key + "__length_scale_bounds"].data<double>()[1];
+            b(0, 0) = 1.0/(b.getVal(0, 0) * b.getVal(0, 0));
+            b(0, 1) = 1.0/(b.getVal(0, 1) * b.getVal(0, 1));
+            kern->setBoundsByName("inverseWidth", b);
+
             kern->setParam(*npz_dict[param_key + "__constant_value"].data<double>(), 1);
+            b(0, 0) = npz_dict[param_key + "__constant_value_bounds"].data<double>()[0];
+            b(0, 1) = npz_dict[param_key + "__constant_value_bounds"].data<double>()[1];
+            kern->setBoundsByName("variance", b);
         }
     }
     else if(kernel_key.compare("RationalQuadratic") == 0) {
@@ -54,7 +68,13 @@ CKern* getSklearnKernel(unsigned int x_dim, cnpy::npz_t npz_dict, string kernel_
         {
             kern->setParam(*npz_dict[param_key + "__alpha"].data<double>(), 0);
             kern->setParam(*npz_dict[param_key + "__length_scale"].data<double>(), 1);
+            b(0, 0) = npz_dict[param_key + "__length_scale_bounds"].data<double>()[0];
+            b(0, 1) = npz_dict[param_key + "__length_scale_bounds"].data<double>()[1];
+            kern->setBoundsByName("lengthScale", b);
             kern->setParam(*npz_dict[param_key + "__constant_value"].data<double>(), 2);
+            b(0, 0) = npz_dict[param_key + "__constant_value_bounds"].data<double>()[0];
+            b(0, 1) = npz_dict[param_key + "__constant_value_bounds"].data<double>()[1];
+            kern->setBoundsByName("variance", b);
         }
     }
     else if(kernel_key.compare("DotProduct") == 0) {
@@ -72,7 +92,7 @@ CKern* getSklearnKernel(unsigned int x_dim, cnpy::npz_t npz_dict, string kernel_
         }
     }
     else if(kernel_key.compare("Matern") == 0) {
-        if (!structureOnly) { throw std::invalid_argument("kernel key 'Matern' must be used with sklearn loading. Use 'Matern32' or 'Matern52' to use without sklearn loading."); }
+        // if (!structureOnly) { throw std::invalid_argument("kernel key 'Matern' must be used with full sklearn kernel parameter loading (nu is a kernel parameter in sklearn). Use 'Matern32' or 'Matern52' to use sklearn for loading kernel structure only."); }
         double nu = *npz_dict[param_key + "__nu"].data<double>();
         if (nu == 1.5) {
             kern = new CMatern32Kern(x_dim);
@@ -87,7 +107,13 @@ CKern* getSklearnKernel(unsigned int x_dim, cnpy::npz_t npz_dict, string kernel_
         if(!structureOnly)
         {
             kern->setParam(*npz_dict[param_key + "__length_scale"].data<double>(), 0);
+            b(0, 0) = npz_dict[param_key + "__length_scale_bounds"].data<double>()[0];
+            b(0, 1) = npz_dict[param_key + "__length_scale_bounds"].data<double>()[1];
+            kern->setBoundsByName("lengthScale", b);
             kern->setParam(*npz_dict[param_key + "__constant_value"].data<double>(), 1);
+            b(0, 0) = npz_dict[param_key + "__constant_value_bounds"].data<double>()[0];
+            b(0, 1) = npz_dict[param_key + "__constant_value_bounds"].data<double>()[1];
+            kern->setBoundsByName("variance", b);
         }
     }
     else if(kernel_key.compare("Matern32") == 0) {
@@ -95,7 +121,13 @@ CKern* getSklearnKernel(unsigned int x_dim, cnpy::npz_t npz_dict, string kernel_
         if(!structureOnly)
         {
             kern->setParam(*npz_dict[param_key + "__length_scale"].data<double>(), 0);
+            b(0, 0) = npz_dict[param_key + "__length_scale_bounds"].data<double>()[0];
+            b(0, 1) = npz_dict[param_key + "__length_scale_bounds"].data<double>()[1];
+            kern->setBoundsByName("lengthScale", b);
             kern->setParam(*npz_dict[param_key + "__constant_value"].data<double>(), 1);
+            b(0, 0) = npz_dict[param_key + "__constant_value_bounds"].data<double>()[0];
+            b(0, 1) = npz_dict[param_key + "__constant_value_bounds"].data<double>()[1];
+            kern->setBoundsByName("variance", b);
         }
     }
     else if(kernel_key.compare("Matern52") == 0) {
@@ -103,7 +135,13 @@ CKern* getSklearnKernel(unsigned int x_dim, cnpy::npz_t npz_dict, string kernel_
         if(!structureOnly)
         {
             kern->setParam(*npz_dict[param_key + "__length_scale"].data<double>(), 0);
+            b(0, 0) = npz_dict[param_key + "__length_scale_bounds"].data<double>()[0];
+            b(0, 1) = npz_dict[param_key + "__length_scale_bounds"].data<double>()[1];
+            kern->setBoundsByName("lengthScale", b);
             kern->setParam(*npz_dict[param_key + "__constant_value"].data<double>(), 1);
+            b(0, 0) = npz_dict[param_key + "__constant_value_bounds"].data<double>()[0];
+            b(0, 1) = npz_dict[param_key + "__constant_value_bounds"].data<double>()[1];
+            kern->setBoundsByName("variance", b);
         }
     }
     else if(kernel_key.compare("WhiteKernel") == 0) {
@@ -111,6 +149,9 @@ CKern* getSklearnKernel(unsigned int x_dim, cnpy::npz_t npz_dict, string kernel_
         if(!structureOnly)
         {
             kern->setParam(*(npz_dict[param_key + "__noise_level"].data<double>()), 0);
+            b(0, 0) = npz_dict[param_key + "__noise_level_bounds"].data<double>()[0];
+            b(0, 1) = npz_dict[param_key + "__noise_level_bounds"].data<double>()[1];
+            kern->setBoundsByName("variance", b);
         }
     }
     else {

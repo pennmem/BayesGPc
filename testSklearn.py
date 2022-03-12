@@ -34,17 +34,17 @@ y /= y_std
 
 # build model
 sigma_0 = 1.0
-noise_level = 1.0
+noise_level = np.exp(-2)
 
 # generate test of either model with arbitrary hyperparameters or trained model
-train = False
+train = True
 
 if train:
     # for generating tests of GPR, uncomment white kernel and one of the non-trivial kernels
     kern = gp.kernels.WhiteKernel(noise_level=noise_level)
 
-    # kern += gp.kernels.Matern() * gp.kernels.ConstantKernel(); kern_name = "matern32"
-    # param_permutation = np.arange(3)
+    kern += gp.kernels.Matern() * gp.kernels.ConstantKernel(); kern_name = "matern32"
+    param_permutation = np.arange(3)
 
     # kern += gp.kernels.Matern(nu=2.5) * gp.kernels.ConstantKernel(); kern_name = "matern52"
     # param_permutation = np.arange(3)
@@ -75,8 +75,8 @@ else:
     # kern = gp.kernels.RationalQuadratic(length_scale=np.random.rand() * 2, length_scale_bounds="fixed",
     #                                     alpha=np.random.rand() * 2, alpha_bounds="fixed"); kern_name = "ratquad"
 
-    p = 2
-    kern = gp.kernels.Exponentiation(gp.kernels.DotProduct(sigma_0=np.random.rand() * 2, sigma_0_bounds="fixed"), p); kern_name = "poly"
+    # p = 2
+    # kern = gp.kernels.Exponentiation(gp.kernels.DotProduct(sigma_0=np.random.rand() * 2, sigma_0_bounds="fixed"), p); kern_name = "poly"
 
     # make kernel clones with non-fixed hyperparameters so that gradients can be computed
     constant_value = np.random.rand() * 2
@@ -170,10 +170,6 @@ output_dict = {"test:"+("fit" if train else "inference"): np.array([0]), "X": X,
 # TODO this is a mess... rewrite for arbitrary kernels
 def add_kernel_attributes(output_dict, kern):
     for k, v in kern.get_params().items():
-        # cnpy doesn't automatically handle tuples properly, so skip bounds on 
-        # hyperparameters for now (bounds not currently used in testing GCp)
-        if "_bounds" in k:
-            continue
         if train:
             if isinstance(v, gp.kernels.Kernel):
                 if "__" in k: # skip composite kernels
@@ -184,24 +180,35 @@ def add_kernel_attributes(output_dict, kern):
                     for ki, vi in kern.get_params().items():
                         # print(k, ki)
                         if (not isinstance(vi, gp.kernels.Kernel)) and len(ki) >= len(k) and ki[:len(k)] == k:
-                            output_dict[k + "__" + ki.split("__")[-1]] = vi
+                            output_dict[k + "__" + ki.split("__")[-1]] = (vi if not ("_bounds" in ki) else np.array(list(vi)))
                 print(str(v))
+                # kernel parameter names
                 output_dict[k + "&" + str(v).split("(")[0]] = np.array([0])
             else:
                 # will place some parameters in the dictionary redundantly
-                output_dict[k] = v
+                output_dict[k] = (v if not ("_bounds" in k) else np.array(list(v)))
         else:  # deal with sklearn composite kernel separately for two kernels instead of three
             if k[:2] == "k2" and len(k) > 2:
-                output_dict["k1" + k[2:]] = v
+                output_dict["k1" + k[2:]] = ((np.array([v]) if isinstance(v, float) else v) 
+                                             if not ("_bounds" in k) else np.array(list(v)))
             elif isinstance(v, gp.kernels.Kernel) and k != "k2":
                 output_dict[k + "&" + str(v).split("(")[0]] = np.array([0])
             elif k == "k2":
                 pass
             else:
                 # will place some parameters in the dictionary redundantly
-                output_dict[k] = v
+                output_dict[k] = ((np.array([v]) if isinstance(v, float) else v)
+                                  if not ("_bounds" in k) else np.array(list(v)))
+
+# "unfix" kernel hyperparameters (fixed hps lead to issues with cnpy numpy loading)
+ke = gpr.kernel_
+for k, v in ke.__dict__.items():
+    for kk, vk in v.__dict__.items():
+        if isinstance(ke.__dict__[k].__dict__[kk], str) and ke.__dict__[k].__dict__[kk] == 'fixed':
+            ke.__dict__[k].__dict__[kk] = (1e-5, 1e5)
 
 add_kernel_attributes(output_dict, gpr.kernel_)
+print(gpr.kernel_)
 
 # print([(k, v) for k, v in output_dict.items() if k not in ["y", "X_pred", "y_pred", "std_pred", "bias", "scale", \
 #                                                   "numActive", "approxInt", "X", "X2", "kX", "gradX", "logL", "gradTheta"]])

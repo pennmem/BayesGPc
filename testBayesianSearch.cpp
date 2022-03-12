@@ -221,7 +221,7 @@ int main(int argc, char* argv[])
                       seed);
     }
 
-    log.Log_Handler("Number of failures: " + to_string(fail) + ".");
+    log.Log_Handler("Number of failures: " + to_string(fail) + ".\n");
     log.CloseFile_Handler();
 
     ofstream json_out(log_dir + std::filesystem::path::preferred_separator + "log.json");
@@ -351,9 +351,10 @@ int testBayesianSearch(CML::EventLog& log,
     // after reseeding, identical behavior results only after an even number of samples are drawn
     // may also be driven by the default RNG generator used...
     TestFunction test_run(test_func_str, seed, noise_level, x_dim, verbosity);
+    double x_range = test_run.x_interval(0, 1) - test_run.x_interval(0, 0);
 
     try {
-      CCmpndKern kern = getTestKernel(kernel, test_run.x_interval(0, 1) - test_run.x_interval(0, 0), x_dim);
+      CCmpndKern kern = getTestKernel(kernel, x_range, x_dim);
       BayesianSearchModel BO(kern, test_run.x_interval, obsNoise * obsNoise, exp_bias, n_init_samples, seed, verbosity);
       if (run == 0) { json_log[fd]["kernel_structure"] = BO.kern->json_structure(); }
 
@@ -364,7 +365,7 @@ int testBayesianSearch(CML::EventLog& log,
         CMatrix* x_sample = BO.get_next_sample();
         CMatrix* y_sample = new CMatrix(test_run.func(*x_sample));
         BO.add_sample(*x_sample, *y_sample);
-        cout << endl << endl;
+        if (verbosity >= 1) { cout << endl << endl; }
 
         // logging
         if (i >= n_init_samples) { sample_search_states[run].push_back(BO.gp->pkern->state()); }

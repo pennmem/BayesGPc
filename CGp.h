@@ -104,6 +104,8 @@ public:
   // set kernel parameter optimization bounds of particular parameter by name
   void setBoundsByName(const string full_name, const CMatrix b)
   {
+    DIMENSIONMATCH(b.getRows() == 1);
+    DIMENSIONMATCH(b.getCols() == 2);
     pkern->setBoundsByName(full_name, b);
     CMatrix bo = pkern->getBounds();
     setBounds(bo);
@@ -112,12 +114,15 @@ public:
   void setBounds(const CMatrix b)
   {
     // use transformed bounds for hyperparameter optimization space
+    pkern->setBounds(b);
     CMatrix bo(b);
     double val;
     for(unsigned int i=0; i<pkern->getNumTransforms(); i++)
     {
       val = pkern->getTransform(i)->xtoa(bo.getVal(pkern->getTransformIndex(i), 0));
       bo.setVal(val, pkern->getTransformIndex(i), 0);
+      val = pkern->getTransform(i)->xtoa(bo.getVal(pkern->getTransformIndex(i), 1));
+      bo.setVal(val, pkern->getTransformIndex(i), 1);
     }
     CProbabilisticOptimisable::setBounds(bo);
   };

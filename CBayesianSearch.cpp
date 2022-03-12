@@ -168,6 +168,9 @@ CMatrix* BayesianSearchModel::get_next_sample() {
             cout << "Warning: error in fitting process for getting next sample. Falling back on random parameter sampling." << endl;
             cout << "Error message: " << e.what() << endl;
 
+            cout << "Rethrowing exception rather than handling with random resampling for debugging." << endl;
+            throw e;
+
             boost::random::uniform_real_distribution<> dist(0.0, 1.0);
             boost::random::variate_generator<boost::mt19937&, boost::random::uniform_real_distribution<> > gen(rng, dist);
             for (unsigned int i = 0; i < x_dim; i++) {
@@ -231,7 +234,7 @@ CMatrix* BayesianSearchModel::get_best_solution() {
         throw std::runtime_error("Optimization of GP prediction (mean) function failed.");
     }
 
-    if (verbosity >= 1) {
+    if (verbosity >= 0) {
         CMatrix y(1, 1);
         gp->out(y, *x);
         cout << "Best solution with " << num_samples << " samples: (x_best, y_pred): (";

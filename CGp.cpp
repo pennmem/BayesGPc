@@ -35,14 +35,7 @@ CGp::CGp(unsigned int q, unsigned int d,
   scale.setVals(1.0);
   bias.zeros();
   initVals();
-  need to get transformed bounds
-  CMatrix b(pkern->getBounds());
-  for(unsigned int i=0; i<pkern->getNumParams(); i++)
-  {
-    b.setVal(pkern->getTransParam(i), counter);
-    counter++;
-  }
-  setBounds();
+  setBounds(pkern->getBounds());
 
   
   switch(approxType) 
@@ -951,7 +944,7 @@ void CGp::_updateInvK(unsigned int dim) const
   double jit = 0.0;
   switch(getApproximationType()) {
   case FTC:
-    if (getVerbosity() >= 2) { 
+    if (getVerbosity() >= 4) { 
       cout << "jitChol K" << endl;
       pnoise->display(cout);
       pkern->display(cout);
@@ -1003,12 +996,12 @@ double CGp::logLikelihood() const
       CMatrix invKm(invK.getRows(), 1);
       for(unsigned int j=0; j<getOutputDim(); j++) 
       {
-	// This computes trace(invK*M*M'), column by column of M
-	// invKm := invK * m(:,j)
-	invKm.symvColCol(0, invK, m, j, 1.0, 0.0, "u");
-	// L += invKm' * m(:,j)
-	L += invKm.dotColCol(0, m, j);
-	L += logDetK; 
+        // This computes trace(invK*M*M'), column by column of M
+        // invKm := invK * m(:,j)
+        invKm.symvColCol(0, invK, m, j, 1.0, 0.0, "u");
+        // L += invKm' * m(:,j)
+        L += invKm.dotColCol(0, m, j);
+        L += logDetK; 
       }
     }
     else 
@@ -1185,7 +1178,7 @@ void CGp::updateG() const
     for(unsigned int j=0; j<getOutputDim(); j++)
     {
       updateCovGradient(j, tmpV); //covGrad = -(invK Y(:,j) Y(:,j)^t invK - invK)/2
-      if(j==0) 
+      if(j==0)
       {
         pkern->getGradTransParams(tempG, *pX, covGrad, true);
       }

@@ -364,7 +364,7 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
       }
     }
     cout << "Unknown parameter name: " << name << endl;
-    throw ndlexceptions::Error(("Unknown parameter name.") + name);
+    throw ndlexceptions::Error(("Unknown parameter name: ") + name);
   }
   // set kernel parameter optimization bounds of particular parameter by name
   virtual void setBoundsByName(const string name, const CMatrix b)

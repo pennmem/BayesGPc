@@ -28,7 +28,9 @@ class CTransform
   virtual ~CTransform() {}
   CTransform(const CTransform& rhs) : type(rhs.type) {}
   virtual CTransform* clone() const=0;
+  // a (transformed space) -> x (untransformed space)
   virtual double atox(double x) const=0;
+  // x (untransformed space) -> a (transformed space)
   virtual double xtoa(double x) const=0;
   virtual double gradfact(double x) const=0;
   virtual void setType(const string name) 
@@ -249,6 +251,20 @@ class CTransformable
     {
       unsigned int ind = pos - transArray.transIndex.begin();
       return transArray.transforms[ind]->xtoa(param);
+    }
+  }
+  virtual double applyTrans(double val, unsigned int paramNo)
+  {
+    BOUNDCHECK(paramNo<getNumParams());
+    // this casting is required under solaris for some reason
+    vector<unsigned int>::iterator pos=find(transArray.transIndex.begin(), 
+					    transArray.transIndex.end(), 
+					    paramNo);
+    if (pos==transArray.transIndex.end())
+      return val;
+    else {
+      unsigned int ind = pos - transArray.transIndex.begin();
+      return transArray.transforms[ind]->xtoa(val);
     }
   }
   virtual void getTransParams(CMatrix& transParam) const 

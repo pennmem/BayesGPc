@@ -5,7 +5,7 @@
 #  Dec 23, 2008
 # dependencies created with gcc -MM XXX.cpp
 
-include make.osx
+include make.linux
 
 all: gplvm ivm gp libgp$(LIBSEXT) libgp$(LIBDEXT)
 
@@ -75,11 +75,11 @@ testGp: testGp.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CT
 testGp.o: testGp.cpp CGp.h CKern.h CMatrix.h CClctrl.h
 	$(CC) -c testGp.cpp -o testGp.o $(CCFLAGS)
 
-testGp_sklearn: testGp_sklearn.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o
-	$(LD) ${XLINKERFLAGS} -o testGp_sklearn  testGp_sklearn.o CGp.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o $(LDFLAGS)
+testGp_sklearn: testGp_sklearn.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o
+	$(LD) ${XLINKERFLAGS} -o testGp_sklearn  testGp_sklearn.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o $(LDFLAGS)
 
 testGp_sklearn.o: testGp_sklearn.cpp CKern.h ndlassert.h ndlexceptions.h CTransform.h \
-  CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h \
+  CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h ndlfortran_lbfgsb.h \
   lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
   CClctrl.h sklearn_util.h
 	$(CC) -c testGp_sklearn.cpp -o testGp_sklearn.o $(CCFLAGS)
