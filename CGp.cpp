@@ -459,7 +459,7 @@ void CGp::setOptParams(const CMatrix& param)
     {
       scale.setVal(param.getVal(counter), j);
       counter++;
-    }      
+    }
     updateM();
   }
   if(isSparseApproximation()) 
@@ -530,41 +530,41 @@ void CGp::updateAlpha() const
     case FTC:
       if(isSpherical())
       {
-	Alpha.deepCopy(m);
-	Alpha.trsm(LcholK, 1.0, "l", "l", "n", "n");
-	Alpha.trsm(LcholK, 1.0, "l", "l", "t", "n");
+        Alpha.deepCopy(m);
+        Alpha.trsm(LcholK, 1.0, "l", "l", "n", "n");
+        Alpha.trsm(LcholK, 1.0, "l", "l", "t", "n");
       }
       else
       {
-	throw ndlexceptions::Error("Non-spherical implementations not yet in place for FTC");
+      	throw ndlexceptions::Error("Non-spherical implementations not yet in place for FTC");
       }
       break;
     case DTC:
     case DTCVAR:
       if(isSpherical())
       {
-	Alpha.gemm(K_uf, m, 1.0, 0.0, "n", "n");
-	Alpha.trsm(LcholA, 1.0, "l", "l", "n", "n");
-	Alpha.trsm(LcholA, 1.0, "l", "l", "t", "n");
+        Alpha.gemm(K_uf, m, 1.0, 0.0, "n", "n");
+        Alpha.trsm(LcholA, 1.0, "l", "l", "n", "n");
+        Alpha.trsm(LcholA, 1.0, "l", "l", "t", "n");
       }
       else
       {
-	throw ndlexceptions::Error("Non-spherical implementations not yet in place for DTC");
+      	throw ndlexceptions::Error("Non-spherical implementations not yet in place for DTC");
 	
       }
       break;
     case FITC:
       if(isSpherical())
       {
-	//////////////
-	scaledM.deepCopy(m);
-	for(unsigned int i=0; i<getNumData(); i++)
-	  scaledM.scaleRow(i, 1/diagD.getVal(i));
-	/////////////
-	setADupToDate(false);
-	Alpha.gemm(K_uf, scaledM, 1.0, 0.0, "n", "n");
-	Alpha.trsm(LcholA, 1.0, "l", "l", "n", "n");
-	Alpha.trsm(LcholA, 1.0, "l", "l", "t", "n");
+        //////////////
+        scaledM.deepCopy(m);
+        for(unsigned int i=0; i<getNumData(); i++)
+          scaledM.scaleRow(i, 1/diagD.getVal(i));
+        /////////////
+        setADupToDate(false);
+        Alpha.gemm(K_uf, scaledM, 1.0, 0.0, "n", "n");
+        Alpha.trsm(LcholA, 1.0, "l", "l", "n", "n");
+        Alpha.trsm(LcholA, 1.0, "l", "l", "t", "n");
       }
       else
       {

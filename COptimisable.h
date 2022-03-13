@@ -253,7 +253,9 @@ class COptimisable {
       rng.seed(seed);
     }
   }
+ #ifndef DBG
  private:
+ #endif
 
   int seed = -1;
   boost::mt19937 rng;

@@ -77,7 +77,7 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
         return i;
       }
     }
-    throw ndlexceptions::Error(string("Unknown parameter name.") + name);
+    throw ndlexceptions::Error(string("Unknown parameter name: ") + name + string("\n"));
   }
   // Set the parameters of the kernel.
   virtual void setParam(double, unsigned int)=0;
@@ -475,9 +475,7 @@ class CComponentKern : public CKern
   CComponentKern() : CKern() {}
   CComponentKern(unsigned int inDim) : CKern(inDim) {}
   CComponentKern(const CMatrix& X) : CKern(X) {}
-  CComponentKern(const CComponentKern& kern) : CKern(kern) {
-    
-  }  // components(kern.components) {} // not sure why components was being copied in initializer list... leads to double destruction
+  CComponentKern(const CComponentKern& kern) : CKern(kern) {}
   virtual unsigned int addKern(const CKern* kern)
   {
     components.push_back(kern->clone());
@@ -552,6 +550,18 @@ class CComponentKern : public CKern
     }
     return -1;
   }
+  virtual void setBounds(const CMatrix b) {
+    DIMENSIONMATCH(b.getRows()==nParams);
+    DIMENSIONMATCH(b.getCols()==2);
+    string n;
+    CMatrix bn(1, 2);
+    for (unsigned int paramNo = 0; paramNo < nParams; paramNo++) {
+      n = getParamName(paramNo);
+      bn(0, 0) = b.getVal(paramNo, 0);
+      bn(0, 1) = b.getVal(paramNo, 1);
+      setBoundsByName(n, bn);
+    }
+  }
   // set kernel parameter optimization bounds of particular parameter by name
   virtual void setBoundsByName(const string full_name, const CMatrix b)
   {
@@ -577,7 +587,7 @@ class CComponentKern : public CKern
       if (n.compare(param_name) == 0) 
       {
         components[kern_idx]->setBoundsByName(param_name, b);
-        bounds.setMatrix(paramNo, 0, b);
+        bounds.setMatrix(getParamIndex(full_name), 0, b);
         return;
       }
     }      

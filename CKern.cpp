@@ -182,7 +182,8 @@ CCmpndKern::CCmpndKern(const CCmpndKern& kern) : CComponentKern(kern)
   _init();
   setInputDim(kern.getInputDim());
   for(size_t i=0; i<kern.components.size(); i++)
-    addKern(kern.components[i]->clone()); 
+    addKern(kern.components[i]->clone());
+  setBounds(kern.bounds);
 }
 // Class destructor
 CCmpndKern::~CCmpndKern()
@@ -197,9 +198,7 @@ void CCmpndKern::_init()
   setName("compound");
   setStationary(true);
 }
-void CCmpndKern::setInitParam()
-{
-}
+void CCmpndKern::setInitParam() {}
 double CCmpndKern::diagComputeElement(const CMatrix& X, unsigned int index) const
 {
   double y=0.0;
@@ -382,13 +381,13 @@ CTensorKern::CTensorKern(const CMatrix& X) : CComponentKern(X)
 }  
 CTensorKern::CTensorKern(const CTensorKern& kern) : CComponentKern(kern)
 {
-
   _init();
   setInputDim(kern.getInputDim());
   for(size_t i=0; i<kern.components.size(); i++)
   {
     addKern(kern.components[i]->clone()); 
   }
+  setBounds(kern.bounds);
 }
 CTensorKern::CTensorKern(const CTensorKern& kern, unsigned int comp) : CComponentKern(kern)
 {

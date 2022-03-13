@@ -17,12 +17,12 @@ int main()
     // fail += testType("white");
     // // fail += testType("bias");
 
-    fail += testType("matern32");
-    fail += testType("matern52");
+    // fail += testType("matern32");
+    // fail += testType("matern52");
 
-    fail += testType("rbf");
-    fail += testType("ratquad");
-    fail += testType("poly");  // TODO not currently matching sklearn
+    // fail += testType("rbf");
+    // fail += testType("ratquad");
+    // fail += testType("poly");  // TODO not currently matching sklearn
 
     // // fail += testType("lin");
 
@@ -44,7 +44,7 @@ int main()
    
     // fail += testType("cmpnd");
     // // fail += testType("tensor");
-    // fail += testKernNaming();
+    fail += testKernNaming();
     cout << "Number of failures: " << fail << "." << endl;
   }
   catch(ndlexceptions::FileFormatError err)
@@ -493,6 +493,12 @@ int testKernNaming() {
   assert(cmpd_kern.getParamByName(ls_name) == 4.0);
   assert(cmpd_kern.getParamByName(white_name) == 5.0);
 
+  cout << "test setBounds(orig_bounds)" << endl;
+  CMatrix orig_bounds = cmpd_kern.getBounds();
+  cmpd_kern.setBounds(orig_bounds);
+  assert(cmpd_kern.getBounds().equals(orig_bounds));
+  cout << "test setBounds(orig_bounds) passed" << endl;
+
   ls_bounds(0,0) = 1.1;
   ls_bounds(0,1) = 1.5;
   var_bounds(0,0) = 1.3;
@@ -540,10 +546,14 @@ int testKernNaming() {
   cmpd2.setBoundsByName(var_name, var_bounds);
   cmpd2.setBoundsByName(ls_name, ls_bounds);
   cmpd2.setBoundsByName(white_name, white_bounds);
+  cout << "past setBoundsByNames" << endl;
 
   assert(var_bounds.equals(cmpd2.getBoundsByName(var_name)));
+  cout << "past setBoundsByName asserts 1" << endl;
   assert(ls_bounds.equals(cmpd2.getBoundsByName(ls_name)));
+  cout << "past setBoundsByName asserts 2" << endl;
   assert(white_bounds.equals(cmpd2.getBoundsByName(white_name)));
+  cout << "past setBoundsByName asserts 3" << endl;
 
   // test output of kernel structure
   json sol = cmpd2.json_structure();

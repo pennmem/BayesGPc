@@ -34,7 +34,6 @@ CKern* getSklearnKernel(unsigned int x_dim, cnpy::npz_t npz_dict, string kernel_
 {
     CKern *kern;
     CMatrix b(1, 2);
-    // cout << "here get kernel start   " << kernel_key << endl;
     if(kernel_key.compare("lin") == 0) {
         kern = new CLinKern(x_dim);
         if(!structureOnly)
@@ -50,8 +49,9 @@ CKern* getSklearnKernel(unsigned int x_dim, cnpy::npz_t npz_dict, string kernel_
             // sklearn encodes length scale rather than inverse width used in CGp
             double length_scale = *npz_dict[param_key + "__length_scale"].data<double>();
             kern->setParam(1.0/(length_scale*length_scale), 0);
-            b(0, 0) = npz_dict[param_key + "__length_scale_bounds"].data<double>()[0];
-            b(0, 1) = npz_dict[param_key + "__length_scale_bounds"].data<double>()[1];
+            // need to permute bounds since CGp uses inverse width
+            b(0, 0) = npz_dict[param_key + "__length_scale_bounds"].data<double>()[1];
+            b(0, 1) = npz_dict[param_key + "__length_scale_bounds"].data<double>()[0];
             b(0, 0) = 1.0/(b.getVal(0, 0) * b.getVal(0, 0));
             b(0, 1) = 1.0/(b.getVal(0, 1) * b.getVal(0, 1));
             kern->setBoundsByName("inverseWidth", b);
@@ -67,10 +67,15 @@ CKern* getSklearnKernel(unsigned int x_dim, cnpy::npz_t npz_dict, string kernel_
         if(!structureOnly)
         {
             kern->setParam(*npz_dict[param_key + "__alpha"].data<double>(), 0);
+            b(0, 0) = npz_dict[param_key + "__alpha_bounds"].data<double>()[0];
+            b(0, 1) = npz_dict[param_key + "__alpha_bounds"].data<double>()[1];
+            kern->setBoundsByName("alpha", b);
+
             kern->setParam(*npz_dict[param_key + "__length_scale"].data<double>(), 1);
             b(0, 0) = npz_dict[param_key + "__length_scale_bounds"].data<double>()[0];
             b(0, 1) = npz_dict[param_key + "__length_scale_bounds"].data<double>()[1];
             kern->setBoundsByName("lengthScale", b);
+
             kern->setParam(*npz_dict[param_key + "__constant_value"].data<double>(), 2);
             b(0, 0) = npz_dict[param_key + "__constant_value_bounds"].data<double>()[0];
             b(0, 1) = npz_dict[param_key + "__constant_value_bounds"].data<double>()[1];

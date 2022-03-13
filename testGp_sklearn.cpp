@@ -8,6 +8,8 @@
 #include "CNdlInterfaces.h"
 #include <stdexcept>
 
+#define DBG
+
 
 int testGaussian(string type, string kernel, int verbosity);
 class CClgptest : public CClctrl 
@@ -102,8 +104,9 @@ int testGaussian(string type, string kernel, int verbosity)
   getSklearnKernels(&kern, npz_dict, &X, true);
   getSklearnKernels(&kern_ref, npz_dict, &X, false);
 
-  cout << "kern: " << kern.json_structure() << endl;
-  cout << "reference kern: " << kern_ref.json_structure() << endl;
+  if (verbosity >= 0) {
+    cout << "reference kern structure: " << endl << kern_ref.json_structure() << endl << endl;
+  }
 
   // initialize model and reference model with parameters from sklearn
   CGaussianNoise noiseInit(&y);
@@ -120,6 +123,16 @@ int testGaussian(string type, string kernel, int verbosity)
   bool outputScaleLearnt = false;
   string modelFileName = "testSklearn.model";
 
+  kern.setBounds(kern_ref.getBounds());
+  if (verbosity >= 0) {
+    cout << "Kernel structure without reference params before optimization: " << endl;
+    cout << kern.json_structure() << endl;
+    cout << "Kernel state without reference params before optimization: " << endl;
+    cout << kern.json_state() << endl << endl;
+    for (int i = 0; i < kern.getNumParams(); i++) {
+      cout << i << " " << kern.getParamName(i) << endl;
+    }
+  }
   CGp model(&kern, &noiseInit, &X, approxType, numActive, verbosity);
   CGp model_ref(&kern_ref, &noiseInit_ref, &X, approxType, numActive, verbosity);
 
@@ -129,13 +142,14 @@ int testGaussian(string type, string kernel, int verbosity)
   model_ref.setScale(scale);
   model.setBias(bias);
   model_ref.setBias(bias);
-  model.updateM();
-  model_ref.updateM();
   temp = npz_dict["obsNoiseVar"].data<double>();
   model.setObsNoiseVar(*temp);
+  model_ref.setObsNoiseVar(*temp);
+  model.updateM();
+  model_ref.updateM();
 
   model.setVerbosity(verbosity);
-  int default_optimiser = CGp::BFGS;  //LBFGS_B;
+  int default_optimiser = CGp::LBFGS_B;
   model.setDefaultOptimiser(default_optimiser);  // options: LBFGS_B, BFGS, SCG, CG, GD
   // (roughly) match sklearn tolerances for L-BFGS-B.
   model.setObjectiveTol(1e-5);
@@ -143,8 +157,8 @@ int testGaussian(string type, string kernel, int verbosity)
   model.setOutputScaleLearnt(outputScaleLearnt);
   model.optimise(iters);
 
-  string comment = "";
-  writeGpToFile(model, modelFileName, comment);
+  // string comment = "";
+  // writeGpToFile(model, modelFileName, comment);
   
   // // Initialise a model from gpInfo.
   // CGp model(&X, &y, &kern, &noiseInit, fileName.c_str(), "gpInfoInit", 0);
@@ -170,6 +184,8 @@ int testGaussian(string type, string kernel, int verbosity)
   // fileParams.readMatlabFile(fileName.c_str(), "params");
   CMatrix params(1, model.getOptNumParams());
 
+  double diff;
+  double abs_diff;
 
   // tests passed:
   // most direct comparisons passed in kernels and model training.
@@ -208,73 +224,56 @@ int testGaussian(string type, string kernel, int verbosity)
 
   // play around with different kernels, hyperparameters, datasets in general, just try setting the hyperparameters directly
 
+  // compare optimized parameters and reference parameters
   model.getOptParams(params);
   model_ref.getOptParams(params_ref);
-  for (int i = 0; i < params_ref.getCols(); i++) {
-    cout << params_ref.getVal(0, i) << "  " << params.getVal(0, i) << endl;
-  }
-  double diff = params.maxRelDiff(params_ref);
+  diff = params.maxRelDiff(params_ref);
   if(diff < tol)
   {
-    cout << "Parameter match passed. " << endl;
+    cout << "PASSED: Parameter match passed. " << endl;
     cout << "Max relative difference: " << diff << endl << endl;
   }
   else
   {
     cout << "FAILURE: GP parameter match." << endl;
-    cout << "Reference implementation loaded params: " << endl << params_ref;
-    cout << "C++ optimised params: " << endl << params;
-    cout << "Maximum relative difference: " << diff << endl << endl;
+    cout << "Maximum relative difference: " << diff << endl;
+    cout << "Parameters (reference parameters followed by C++ optimized parameters):" << endl;
+    for (int i = 0; i < params_ref.getCols(); i++) {
+      cout << model.pkern->getParamName(i) << ": " << params_ref.getVal(0, i) << ",   " << params.getVal(0, i) << endl;
+    }
+    cout << endl;
     fail++;
   }
   
-
-
-  // #DEFINE DBG
-  // CMatrix gKX(temp, npz_dict["gXX"].shape[0], npz_dict["gKX"].shape[1]);
-  // model_ref.covGrad;
-
-  // CMatrix K_ref(npz["K"].data<double>(), npz["K"].shape[0], npz["K"].shape[1]);
-
-  // diff = K.maxAbsDiff(K_ref);
-  // if(diff < tol)
-  //   cout << model_ref.pkern->getName() << " full compute matches within " << diff  << " max absolute difference." << endl;
-  // else
-  // { 
-  //   cout << "FAILURE: " << model_ref.pkern->getName() << " full compute." << endl;
-  //   cout << "Maximum absolute difference: " << diff << endl;    
-  //   fail++;
-  // }
-
   // Compare GCp gradients (from reference model to have same parameters) with reference implementation gradients.
   CMatrix grads_ref(npz_dict["gradTheta"].data<double>(), 1, model_ref.getOptNumParams());
   // grads_ref.readMatlabFile(fileName.c_str(), "grads");
   CMatrix grads(1, model_ref.getOptNumParams());
-  model_ref.logLikelihoodGradient(grads);
-  cout << grads << endl;
-  cout << model_ref.pkern->json_state() << endl;
-  cout << model_ref.pkern->json_structure() << endl;
-  double f = model_ref.computeObjectiveGradParams(grads);
-  cout << grads << endl;
+  double L = model_ref.logLikelihoodGradient(grads);
 
-  cout << grads;
-  cout << grads_ref << endl;
+  // cout << "Kernel with reference params: " << endl;
+  // cout << model_ref.pkern->json_structure() << endl;
+  // cout << model_ref.pkern->json_state() << endl;
+
+  // cout << grads << endl;
+  // cout << grads_ref << endl;
 
   // use absolute difference for optimized gradients which are approaching zero
   // and may be expected to have larger absolute differences
   diff = grads.maxRelDiff(grads_ref);
+  abs_diff = grads.maxAbsDiff(grads_ref);
   if(diff < abs_tol)
   {
-    cout << "GP optimized gradient match passed." << endl;
-    cout << "Max absolute difference: " << diff << endl;
-    cout << "Max relative difference: " << grads.maxRelDiff(grads_ref) << endl << endl;
+    cout << "PASSED: GP gradient match passed with reference parameters." << endl;
+    cout << "Max relative difference: " << diff << endl;
+    cout << "Max absolute difference: " << abs_diff << endl << endl;
   }
   else {
-    cout << "FAILURE: GP optimized gradient match." << endl;
+    cout << "FAILURE: GP optimized gradient match with reference parameters." << endl;
     cout << "Reference gradient:" << endl << grads_ref;
     cout << "C++ Gradient:" << endl << grads;
-    cout << "Max relative difference: " << grads.maxRelDiff(grads_ref) << endl;
-    cout << "Max absolute difference: " << diff << endl << endl;
+    cout << "Max relative difference: " << diff << endl;
+    cout << "Max absolute difference: " << abs_diff << endl << endl;
     fail++;
   }
 
@@ -283,41 +282,65 @@ int testGaussian(string type, string kernel, int verbosity)
 
   CMatrix K_ref(npz_dict["K"].data<double>(), npz_dict["K"].shape[0], npz_dict["K"].shape[1]);
 
-  clearly CGp grads are differing from sklearn and leading to abnormal line searches
-  hone in on how the LLs differ if the covariances and outcomes do not
-    shouldn't differ
-    am I using the same y values?
-  check over algorithm again
-  where are the bias and scale set?
-
-  compare invK/cholesky_K to sklearn
-  compare resulting K after any jitter added? 
-    shouldn't be added silently, still confirm internal K == K_sklearn
-  can also compare kernel gradients
-    sklearn computes kernel gradients as grad of covar wrt log-hps
-    CGp computes covGrad as grad of log likelihood wrt covariance 
-      kernel covariance is grad of LL wrt hps, can compute with all-ones gradCov (grads of transformed params),
-      compare with sum of sklearn kernel grads
-  check earlier commits in which only RBF differed
-
-  diff = K.maxAbsDiff(K_ref);
-  if(diff < tol)
-    cout << model_ref.pkern->getName() << " kernel covar compute matches within " << diff  << " max absolute difference." << endl;
+  diff = K.maxRelDiff(K_ref);
+  abs_diff = K.maxAbsDiff(K_ref);
+  if(diff < tol) {
+    cout << "PASSED: " << model_ref.pkern->getName() << " inference kernel covar compute matches with reference parameters" << endl;
+    cout << "Matches within " << diff  << " max relative difference." << endl << endl;
+  }
   else { 
-    cout << "FAILURE: " << model_ref.pkern->getName() << " full compute." << endl;
-    cout << "Maximum absolute difference: " << diff << endl;    
+    cout << "FAILURE: " << model_ref.pkern->getName() << " full inference kernel compute with reference parameters." << endl;
+    cout << "Maximum relative difference: " << diff << endl;    
+    cout << "Maximum absolute difference: " << abs_diff << endl << endl;
     fail++;
   }
 
-  // Compare C++ log likelihood with reference implementation log likelihood.
+  // CMatrix K(X.getRows(), X.getRows());
+  // model_ref.pkern->compute(K, X);
+
+  // model_ref.display(cout);
+  // cout << "CGp K updated: " << model_ref.isKupToDate() << endl;
+
+  CMatrix K_train(model_ref.K);
+
+  CMatrix K_train_ref(npz_dict["K_train"].data<double>(), npz_dict["K_train"].shape[0], npz_dict["K_train"].shape[1]);
+
+  diff = K_train.maxAbsDiff(K_train_ref);
+  if(diff < tol) {
+    cout << "PASSED: " << model_ref.pkern->getName() << " train covar compute matches within " << diff  << " max absolute difference." << endl << endl;
+  }
+  else {
+    cout << "FAILURE: " << model_ref.pkern->getName() << " full train kernel compute." << endl;
+    cout << "Maximum absolute difference: " << diff << endl << endl;
+    fail++;
+  }
+
+  // Compare C++ log likelihood (with reference implementation parameters) with reference implementation log likelihood.
   CMatrix logL_ref(npz_dict["logL"].data<double>(), 1, 1);
-  // logL_ref.readMatlabFile(fileName.c_str(), "ll");
   CMatrix logL(1, 1);
+  logL.setVal(model_ref.logLikelihood(), 0, 0);
+  diff = logL.maxRelDiff(logL_ref);
+  if(diff < tol)
+  {
+    cout << "PASSED: GP Log Likelihood match with reference parameters." << endl;
+    cout << "Max relative difference: " << diff << endl << endl;
+  }
+  else
+  {
+    cout << "FAILURE: GP Log Likelihood match with reference parameters." << endl;
+    cout << "Reference Log Likelihood: " << logL_ref;
+    cout << "C++ Log Likelihood: " << logL;
+    cout << "Max relative difference: " << diff << endl << endl;
+    fail++;
+  }
+
+  // Compare optimized C++ log likelihood with reference implementation log likelihood.
+  // somewhat unnecessary
   logL.setVal(model.logLikelihood(), 0, 0);
   diff = logL.maxRelDiff(logL_ref);
   if(diff < tol)
   {
-    cout << "GP Log Likelihood match passed. " << endl;
+    cout << "PASSED: GP Log Likelihood match." << endl;
     cout << "Max relative difference: " << diff << endl << endl;
   }
   else
@@ -333,18 +356,12 @@ int testGaussian(string type, string kernel, int verbosity)
   CMatrix X_pred(npz_dict["X_pred"].data<double>(), npz_dict["X_pred"].shape[0], npz_dict["X_pred"].shape[1]);
   CMatrix y_pred_ref(npz_dict["y_pred"].data<double>(), npz_dict["y_pred"].shape[0], 1);
   CMatrix std_pred_ref(npz_dict["std_pred"].data<double>(), npz_dict["std_pred"].shape[0], 1);
-
   CMatrix y_pred(X_pred.getRows(), 1);
   CMatrix std_pred(X_pred.getRows(), 1);
-
   model.out(y_pred, std_pred, X_pred);
-
   diff = y_pred.maxRelDiff(y_pred_ref);
-  double abs_diff = y_pred.maxAbsDiff(y_pred_ref);
-  if(diff < tol)
-  {
-    cout << "GP y-prediction match passed. " << endl;
-  }
+  abs_diff = y_pred.maxAbsDiff(y_pred_ref);
+  if(diff < tol) { cout << "PASSED: GP y-prediction match. " << endl; }
   else 
   {
     cout << "FAILURE: GP y prediction match." << endl;
@@ -354,10 +371,7 @@ int testGaussian(string type, string kernel, int verbosity)
   cout << "Max relative difference: " << diff << endl << endl;
 
   diff = std_pred.maxRelDiff(std_pred_ref);
-  if(diff < tol)
-  {
-    cout << "GP standard deviation match passed. " << endl;
-  }
+  if(diff < tol) { cout << "PASSED: GP standard deviation match." << endl; }
   else 
   {
     cout << "FAILURE: GP standard deviation match." << endl;
@@ -365,16 +379,12 @@ int testGaussian(string type, string kernel, int verbosity)
   }
   cout << "Max relative difference: " << diff << endl << endl;
   
-  // compare GCp inferences (sklearn-fit parameters) with reference implementation inferences
-  model.setOptParams(params_ref);
-  model.out(y_pred, std_pred, X_pred);
-
+  // compare GCp inferences (using reference parameters) with reference implementation inferences
+  model_ref.out(y_pred, std_pred, X_pred);
   diff = y_pred.maxRelDiff(y_pred_ref);
   abs_diff = y_pred.maxAbsDiff(y_pred_ref);
   if(diff < tol)
-  {
-    cout << "GP y-prediction (using reference parameters) match passed. " << endl;
-  }
+  { cout << "PASSED: GP y-prediction (using reference parameters) match. " << endl; }
   else 
   {
     cout << "FAILURE: GP y-prediction (using reference parameters) match." << endl;
@@ -384,10 +394,7 @@ int testGaussian(string type, string kernel, int verbosity)
   cout << "Max relative difference: " << diff << endl << endl;
 
   diff = std_pred.maxRelDiff(std_pred_ref);
-  if(diff < tol)
-  {
-    cout << "GP standard deviation (using reference parameters) match passed. " << endl;
-  }
+  if(diff < tol) { cout << "PASSED: GP standard deviation (using reference parameters) match. " << endl; }
   else 
   {
     cout << "FAILURE: GP standard deviation (using reference parameters) match." << endl;
@@ -403,7 +410,7 @@ int testGaussian(string type, string kernel, int verbosity)
   diff = grads.maxRelDiff(grads_rand_ref);
   if(diff < tol)
   {
-    cout << "GP random parameter gradient match passed." << endl;
+    cout << "PASSED: GP random parameter gradient match." << endl;
     cout << "Max relative difference: "  << diff << endl << endl;
   }
   else {
@@ -413,6 +420,25 @@ int testGaussian(string type, string kernel, int verbosity)
     cout << "Max relative difference: " << diff << endl << endl;
     fail++;
   }
+
+  // attempt at comparing covariance gradients between sklearn and CGp
+  // sklearn computes kernel gradients as grad of covar wrt log-hps
+  //   CGp computes covGrad as grad of log likelihood wrt covariance 
+  //     kernel covariance is grad of LL wrt hps, can compute with all-ones gradCov (grads of transformed params),
+  //     compare with sum of sklearn kernel grads  // CMatrix gKX(temp, npz_dict["gXX"].shape[0], npz_dict["gKX"].shape[1]);
+  // model_ref.covGrad;
+
+  // CMatrix K_ref(npz["K"].data<double>(), npz["K"].shape[0], npz["K"].shape[1]);
+
+  // diff = K.maxAbsDiff(K_ref);
+  // if(diff < tol)
+  //   cout << model_ref.pkern->getName() << " full compute matches within " << diff  << " max absolute difference." << endl;
+  // else
+  // { 
+  //   cout << "FAILURE: " << model_ref.pkern->getName() << " full compute." << endl;
+  //   cout << "Maximum absolute difference: " << diff << endl;    
+  //   fail++;
+  // }
 
   // // Read and write tests
   // // Matlab read/write
@@ -447,5 +473,4 @@ int testGaussian(string type, string kernel, int verbosity)
 
   return fail;
 }
-
 

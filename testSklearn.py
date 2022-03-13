@@ -41,10 +41,10 @@ train = True
 
 if train:
     # for generating tests of GPR, uncomment white kernel and one of the non-trivial kernels
-    kern = gp.kernels.WhiteKernel(noise_level=noise_level)
+    kern = gp.kernels.WhiteKernel(noise_level=noise_level, noise_level_bounds=(0.00001, 100000))
 
-    kern += gp.kernels.Matern() * gp.kernels.ConstantKernel(); kern_name = "matern32"
-    param_permutation = np.arange(3)
+    # kern += gp.kernels.Matern() * gp.kernels.ConstantKernel(); kern_name = "matern32"
+    # param_permutation = np.arange(3)
 
     # kern += gp.kernels.Matern(nu=2.5) * gp.kernels.ConstantKernel(); kern_name = "matern52"
     # param_permutation = np.arange(3)
@@ -52,8 +52,8 @@ if train:
     # kern += gp.kernels.RBF() * gp.kernels.ConstantKernel(); kern_name = "rbf"
     # param_permutation = np.arange(3)
 
-    # kern += gp.kernels.RationalQuadratic(alpha_bounds=(1e-05, 1e20)) * gp.kernels.ConstantKernel(); kern_name = "ratquad"
-    # param_permutation = np.arange(3)
+    kern += gp.kernels.RationalQuadratic(alpha_bounds=(1e-05, 1e2)) * gp.kernels.ConstantKernel(); kern_name = "ratquad"
+    param_permutation = np.arange(3)
 
     # p = 2
     # kern += gp.kernels.Exponentiation(gp.kernels.DotProduct(sigma_0=sigma_0), p) * gp.kernels.ConstantKernel(); kern_name = "poly"
@@ -89,10 +89,15 @@ else:
 # print(kern_clone.get_params())
 # print(kern.get_params())
 obsNoiseVar = np.array([1e-1,])
-gpr = gp.GaussianProcessRegressor(kernel=kern, normalize_y=True, random_state=RANDOM_STATE+2, alpha=obsNoiseVar)
+# obsNoiseVar scaled down separately here since scaled down internally with GPc
+# not scaled down internally in sklearn.gaussian_process.GPR
+gpr = gp.GaussianProcessRegressor(kernel=kern, normalize_y=True, random_state=RANDOM_STATE+2, alpha=obsNoiseVar / np.var(y, ddof=0))
+print("GPR.alpha or obsNoise: ", gpr.alpha)
 # must train GPR to access hyperparameter gradients and log-likelihoods
 # (even for testing with arbitrary hyperparameter values)
 gpr.fit(X, y)
+print("GPR.bias: ", gpr._y_train_mean)
+print("GPR.scale: ", gpr._y_train_std)
 
 # print(gpr.kernel_.theta)
 KX, gKX = gpr.kernel_(X, eval_gradient=True)
@@ -163,6 +168,7 @@ if train:
 
 output_dict = {"test:"+("fit" if train else "inference"): np.array([0]), "X": X,"X2": X2, "y": y, "X_pred": X_pred, 
                "y_pred": y_pred, "std_pred": std_pred, "bias": 0, "scale": 1, "numActive": -1, "approxInt": 0, 
+               "K_train": gpr.kernel_(gpr.X_train_) + np.eye(n) * gpr.alpha,
                "K": KX, "K1_2": KX1_2, "K_diag": K_diag, "gradX": gKX, "logL": logL, "gradTheta": gradTheta,
                "logL_rand": logL_rand, "gradTheta_rand": gradTheta_rand, "theta_rand": kern_rand.theta,
                "obsNoiseVar": obsNoiseVar}
@@ -213,7 +219,7 @@ print(gpr.kernel_)
 # print([(k, v) for k, v in output_dict.items() if k not in ["y", "X_pred", "y_pred", "std_pred", "bias", "scale", \
 #                                                   "numActive", "approxInt", "X", "X2", "kX", "gradX", "logL", "gradTheta"]])
 print([(k, v) for k, v in output_dict.items() if k not in ["y", "X_pred", "y_pred", "std_pred", \
-                                                  "X", "X2", "kX", "gradX", "K", "K1_2", "K_diag", "gradX", "logL", "gradTheta"]])
+                                                  "X", "X2", "kX", "gradX", "K_train", "K", "K1_2", "K_diag", "gradX", "logL", "gradTheta"]])
 # print({k: v for k, v in output_dict.items() if k not in ["y", "y_pred", "std_pred", "bias", "scale", "numActive", "approxInt", "X"]})
 
 # save data and results
