@@ -1,6 +1,7 @@
 numerical fitting issues:
     abnormal line search terminations
         kernel gradients might be off/numerical errors
+        doesn't appear to be the case, gradients generally aligned with sklearn (over limited test set)
     singular covariance structure
         not being fixed consistently by raised lower bound on white noise variance
         Issue seems to arise when samples are identical or nearly identical
@@ -40,17 +41,11 @@ make minimal CBayesianSearch updates to test
             TODO eliminate model deletion/construction before every samples
                 then add parameter saving before try catch blocks so previous GP params 
                 can be fallen back on instead of just random sampling
-            TODO add random parameter fit restarts to COptimisable.cpp
             TODO figure out why nans were occurring, probably sqrt of negative num
             TODO finish cleaning up dependencies
-            TODO finish adding location selection of top K candidates rather than top 1
 
-        check with white noise included in uncertainty predictions? 
-            don't think non-PSD error has anything to do with predictive variance computations
-    DONE standard way to control search space bounds
-    debug RNG seeding
-    start tests
-    make minimal analyses of results
+    TODO make minimal analyses of results
+
 CSearchComparison
     either fix out_sem if possible or implement degrees of freedom from Hastie et al.
     test

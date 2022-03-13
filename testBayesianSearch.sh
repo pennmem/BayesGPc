@@ -55,7 +55,7 @@ else
     kernels=("Matern32" "Matern52" "RBF" "RationalQuadratic")
     func="all"
     noise_levels=(0.0 0.1 0.3)
-    exp_biases=(0.0 0.25 0.5 1.0)
+    exp_biases=(0.0 0.1 0.25 0.5 1.0)
     init_samples=(25 100)  # 100 in Nia implementation
 fi
 
