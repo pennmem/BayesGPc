@@ -1,5 +1,6 @@
 #include "testBayesianSearch.h"
 #include "CSearchComparison.h"
+#include "cnpy.h"
 
 int testSearchComparison(CML::EventLog& log,
                         json& json_log,
@@ -257,7 +258,7 @@ int main(int argc, char* argv[])
                       seed);
     }
 
-    log.Log_Handler("Number of failures: " + to_string(fail) + ".");
+    log.Log_Handler("Number of failures: " + to_string(fail) + ".\n");
     log.CloseFile_Handler();
 
     ofstream json_out(log_dir + std::filesystem::path::preferred_separator + "log.json");
