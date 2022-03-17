@@ -1,7 +1,21 @@
-in branch ParameterSearch2, need to update optim in elemem/include/optim, has error I found from before with uniform random sampling
+TODOs for Elemem build
+-merge with full release of ClosedLoop branch
+-get min/max CPS amplitude interface, get Ryan/James to do this
+-finish testing of CBayesianSearch, need to compare with Python reference implementations
+-finish testing of CSearchComparison
+    -reduce total number of comparisons, too many jobs at the moment
+    -estimate power, sample size needed to tune monotonic functions of amplitude
+    -test with alternative versions of computing degrees of freedom
+-test ability to handle many samples at a given parameter set, increase white noise floor as needed
+-implement grid search in place of global optimization of search space
+-in branch ParameterSearch2, need to update optim in elemem/include/optim, has error I found from before with uniform random sampling
     updated to latest optim version, need to check, change optim on lab computer and personal laptop
     need to add line to update line in eigen finding library to CMakeLists.txt,
     will otherwise be reset every time cmake is run to the saved commit of optim, which will then not have the correct inclusion of eigen for our subdirectory structure
+-test CPS task
+    -need simple unit test/automated integration test in Python
+-clean up CPS, move everything over to config files (better for testing, better sooner than later)
+-ensure everything is logged in CPS
 
 will also similarly need to update CMakeLists.txt for optim to add header only library:
     ./configure --header-only-version
