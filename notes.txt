@@ -1,3 +1,5 @@
+in branch ParameterSearch2, need to update optim in elemem/include/optim, has error I found from before with uniform random sampling
+
 numerical fitting issues:
     abnormal line search terminations
         kernel gradients might be off/numerical errors
@@ -274,8 +276,28 @@ random testBayesianSearch processes running in background, don't seem like addit
 
 
 Installation notes:
+base build kit:
+    Mac build requires Xcode/clang version 12.0.5 (newer versions broke the build)
 
-Mac build requires Xcode/clang version 12.0.5 (newer versions broke the build)
+    Windows build (task laptop):
+        had to copy libfftw3-3.dll into dist before building, wasn't being copied by CMake
+        had to tweak CMakeLists.txt
+        using CMake v. 3.23.0-rc3, mingw w64 v. 7.3.0, Qt 5.12.12
+        mingw w64: 
+            add Qt bin to PATH: Qt5/Qt5.12.12/Tools/mingw730_64/bin (contains gcc, make)
+                in that directory, copy mingw32-make.exe to make.exe
+                need to set CMAKE_CXX_COMPILER as g++.exe (in the above Qt bin directory) in CMakeLists.txt
+        Qt:
+            need to set CMAKE_PREFIX_PATH to Qt5 directory containing Qt5Config.cmake
+            set(CMAKE_PREFIX_PATH "C:/Qt/Qt5.12.12/5.12.12/mingw73_64/lib/cmake/Qt5")
+            may also need (haven't tested without this yet TODO)
+            list(APPEND CMAKE_FIND_ROOT_PATH "C:/Qt/Qt5.12.12/5.12.12/mingw73_64")
+            may need to set the environment variable
+            Qt5_DIR=${PATH_TO_Qt5, I.E., CMAKE_PREFIX_PATH above}
+            though setting CMAKE_PREFIX_PATH should do it
+        CMake:
+            may need:
+            cmake -G "Unix Makefiles" .
 
 look into version packaging for reproducibility
 
@@ -328,6 +350,13 @@ gfortran:
 
     Linux Ubuntu (WSL2):
     gcc 9.3.0 worked
+
+    Windows:
+    mingw w64
+
+    for BLAS/LAPACK DLLs:
+    https://icl.cs.utk.edu/lapack-for-windows/lapack/#libraries_mingw
+    must add path to "the GNU runtime DLLs ( both libgfortran-3.dll and libgcc_s_dw2-1.dll are needed.) from MinGW to be available. Just put the GNU runtime directory (for example, for 32 bits C:\MinGW\bin) in your PATH, you should be good to go"
 
 eigen (matrix algebra library; dependency of optim)
     change line 107 in optim/include/misc/optim_options.hpp to
