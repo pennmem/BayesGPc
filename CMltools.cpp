@@ -35,7 +35,7 @@ void CMlpMapping::initStoreage()
 }
 void CMlpMapping::setWeights(const CMatrix& W, unsigned int layer)
 {
-  BOUNDCHECK(layer>=0 && layer<2);
+  BOUNDCHECK(layer<2);
   switch(layer)
   {
    case 0:
@@ -54,7 +54,7 @@ void CMlpMapping::setWeights(const CMatrix& W, unsigned int layer)
 }
 void CMlpMapping::setBias(const CMatrix& b, unsigned int layer)
 {
-  BOUNDCHECK(layer>=0 && layer<2);
+  BOUNDCHECK(layer<2);
   switch(layer)
   {
   case 0:
@@ -519,7 +519,7 @@ void CLinearMapping::setWeights(const CMatrix& Win, unsigned int layer)
 }
 void CLinearMapping::setBias(const CMatrix& bin, unsigned int layer)
 {
-  BOUNDCHECK(layer>=0 && layer<2);
+  BOUNDCHECK(layer<2);
   switch(layer)
   {
   case 0:

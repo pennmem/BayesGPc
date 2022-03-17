@@ -161,13 +161,11 @@ class CNoise : public CTransformable, public COptimisable, public CStreamInterfa
   }
   virtual string getParamName(unsigned int index) const
   {
-    BOUNDCHECK(index>=0);
     BOUNDCHECK(index<paramNames.size());
     return paramNames[index];
   }
   void setParamName(const string paramName, unsigned int index)
   {
-    BOUNDCHECK(index>=0);
     BOUNDCHECK(index<getNumParams());
     if(paramNames.size() == index)
       paramNames.push_back(paramName);
@@ -365,13 +363,11 @@ class CGaussianNoise : public CNoise {
   double getBiasVal(unsigned int index) const 
   {
     BOUNDCHECK(index<getOutputDim());
-    BOUNDCHECK(index>=0);
     return bias.getVal(0, index);
   }
   void setBiasVal(double val, unsigned int index) 
   {
     BOUNDCHECK(index<getOutputDim());
-    BOUNDCHECK(index>=0);
     bias.setVal(val, 0, index);
   }
   void setBias(const CMatrix& bia) 
@@ -414,22 +410,22 @@ class CScaleNoise : public CNoise {
   
   double getScale(unsigned int index) const
   {
-    BOUNDCHECK(index<getOutputDim()&&index>=0);
+    BOUNDCHECK(index<getOutputDim());
     return scale.getVal(index);
   }
   void setScale(double val, unsigned int index)
   {
-    BOUNDCHECK(index<getOutputDim()&&index>=0);
+    BOUNDCHECK(index<getOutputDim());
     scale.setVal(val, index);
   }
   double getBias(unsigned int index) const
   {
-    BOUNDCHECK(index<getOutputDim()&&index>=0);
+    BOUNDCHECK(index<getOutputDim());
     return bias.getVal(index);
   }
   void setBias(double val, unsigned int index)
   {
-    BOUNDCHECK(index<getOutputDim()&&index>=0);
+    BOUNDCHECK(index<getOutputDim());
     bias.setVal(val, index);
   }
   void initStoreage();

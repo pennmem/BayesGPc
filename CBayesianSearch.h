@@ -6,6 +6,10 @@
 // #define ARMA_DONT_USE_WRAPPER
 #include "optim.hpp"
 
+// enables access to private variables in CGp, not ideal but using for now...
+// pkern accessed in CBayesianSearch.cpp
+#define DBG
+
 #include "CGp.h"
 #include "CKern.h"
 #include "CMatrix.h"

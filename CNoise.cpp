@@ -7,7 +7,6 @@ void CNoise::getNuG(CMatrix& g, CMatrix& nu, unsigned int index) const
   DIMENSIONMATCH(g.dimensionsMatch(nu));
   DIMENSIONMATCH(g.getRows()==nData);
   DIMENSIONMATCH(g.getCols()==nProcesses);
-  BOUNDCHECK(index>=0);
   BOUNDCHECK(index<nData);
   double nuval=0.0;
   double gval=0.0;
@@ -41,10 +40,8 @@ void CNoise::updateSites(CMatrix& m, CMatrix& beta, unsigned int actIndex,
 			 const CMatrix& g, const CMatrix& nu, 
 			 unsigned int index) const
 {
-  BOUNDCHECK(index>=0);
   BOUNDCHECK(index<nData);
   DIMENSIONMATCH(m.dimensionsMatch(beta));
-  BOUNDCHECK(actIndex>=0);
   BOUNDCHECK(actIndex<m.getRows());
   DIMENSIONMATCH(g.dimensionsMatch(nu));
   DIMENSIONMATCH(m.getCols()==g.getCols());
@@ -359,7 +356,6 @@ ostream& CGaussianNoise::display(ostream& os)
 }
 void CGaussianNoise::setParam(double val, unsigned int index)
 {
-  BOUNDCHECK(index>=0);
   BOUNDCHECK(index<getNumParams());
   if(index<getOutputDim())
     bias.setVal(val, index);
@@ -380,7 +376,6 @@ void CGaussianNoise::setParams(const CMatrix& params)
 }
 double CGaussianNoise::getParam(unsigned int index) const
 {
-  BOUNDCHECK(index>=0);
   BOUNDCHECK(index<getNumParams());
   if(index<getOutputDim())
     return bias.getVal(index);
@@ -601,7 +596,6 @@ ostream& CScaleNoise::display(ostream& os)
 }
 void CScaleNoise::setParam(double val, unsigned int index)
 {
-  BOUNDCHECK(index>=0);
   BOUNDCHECK(index<2*getNumParams()-1);
   if(index<getOutputDim())
     bias.setVal(val, index);
@@ -625,7 +619,6 @@ void CScaleNoise::setParams(const CMatrix& params)
 }
 double CScaleNoise::getParam(unsigned int index) const
 {
-  BOUNDCHECK(index>=0);
   BOUNDCHECK(index<2*getNumParams());
   if(index<getOutputDim())
     return bias.getVal(index);
@@ -869,7 +862,6 @@ ostream& CProbitNoise::display(ostream& os)
 }
 void CProbitNoise::setParam(double val, unsigned int index)
 {
-  BOUNDCHECK(index>=0);
   BOUNDCHECK(index<getNumParams());
   bias.setVal(val, index);
 }  
@@ -886,7 +878,6 @@ void CProbitNoise::setParams(const CMatrix& params)
 }
 double CProbitNoise::getParam(unsigned int index) const
 {
-  BOUNDCHECK(index>=0);
   BOUNDCHECK(index<getNumParams());
   if(index<getOutputDim())
     return bias.getVal(index);
@@ -1097,7 +1088,6 @@ ostream& CNcnmNoise::display(ostream& os)
 }
 void CNcnmNoise::setParam(double val, unsigned int index)
 {
-  BOUNDCHECK(index>=0);
   BOUNDCHECK(index<getNumParams());
   if(index<getOutputDim())
   {
@@ -1132,7 +1122,6 @@ void CNcnmNoise::setParams(const CMatrix& params)
 }
 double CNcnmNoise::getParam(unsigned int index) const
 {
-  BOUNDCHECK(index>=0);
   BOUNDCHECK(index<getNumParams());
   if(index<getOutputDim())
     return bias.getVal(index);
@@ -1474,7 +1463,6 @@ ostream& COrderedNoise::display(ostream& os)
 }
 void COrderedNoise::setParam(double val, unsigned int index)
 {
-  BOUNDCHECK(index>=0);
   BOUNDCHECK(index<getNumParams());
   if(index<getOutputDim())
   {
@@ -1501,7 +1489,6 @@ void COrderedNoise::setParams(const CMatrix& params)
 }
 double COrderedNoise::getParam(unsigned int index) const
 {
-  BOUNDCHECK(index>=0);
   BOUNDCHECK(index<getNumParams());
   if(index<getOutputDim())
     return bias.getVal(index);

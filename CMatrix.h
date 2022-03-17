@@ -11,6 +11,7 @@
 #include <fstream>
 #include <cmath>
 #include <vector>
+#include <assert.h>
 #include "ndlassert.h"
 #include "CNdlInterfaces.h"
 #include "ndlexceptions.h"

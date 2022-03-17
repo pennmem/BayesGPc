@@ -1583,7 +1583,7 @@ void CExpKern::getGradParams(CMatrix& g, const CMatrix& X, const CMatrix& X2, co
 			double dist2 = X2.dist2Row(i, X, j);
 			double dist = sqrt(dist2) * inverseWidth;
 			// invdist = 1. / np.where(dist != 0., dist, np.inf)
-			double invdist = (dist != 0 ? invdist = 1 / dist :  invdist = 0 );
+            double invdist = (dist != 0 ? 1 / dist :  0 );
 			// dist2M = np.square(X[:, None, :] - X2[None, :, :]) / self.lengthscale ** 3
 			double dist2M = dist2 * inverseWidth*inverseWidth*inverseWidth;
 			// dvar = np.exp(-dist)
