@@ -51,6 +51,7 @@ if [[ $SMOKESCREEN -eq 1 ]]; then
     exp_biases=(0.1)
     n_ways=(2)
     mean_diffs=(0.3)
+    logdir="results/debug"
 else
     n_iters=(150 250)
     n_runs=100
@@ -62,6 +63,7 @@ else
     mean_diffs=(0.3)
     # 0.0 0.1 0.3 0.5 1.0 2.0)
     init_samples=(25 100)  # 100 in Nia implementation
+    logdir="results"
 fi
 
 for n in "${noise_levels[@]}"

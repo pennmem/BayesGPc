@@ -17,7 +17,7 @@ fi
 
 # shift 2
 
-SMOKESCREEN=0
+SMOKESCREEN=1
 # if [[ "$#" -lt 1 ]]; then
 #     SMOKESCREEN=1
 # else
@@ -49,6 +49,7 @@ if [[ $SMOKESCREEN -eq 1 ]]; then
     noise_levels=(0.0)
     init_samples=(25)
     exp_biases=(0.1)
+    logdir="results/debug"
 else
     n_iters=250
     n_runs=50
@@ -57,6 +58,7 @@ else
     noise_levels=(0.0 0.1 0.3)
     exp_biases=(0.0 0.1 0.25 0.5 1.0)
     init_samples=(25 100)  # 100 in Nia implementation
+    logdir="results"
 fi
 
 for n in "${noise_levels[@]}"
@@ -64,7 +66,7 @@ do
 for s in "${init_samples[@]}"
 do
     if [ $IMPL == "nia" ]; then
-        args="--tag ${TAG} --func ${func} --noise_level ${n} --n_init_samples ${s} --n_iters ${n_iters} --n_runs ${n_runs}"
+        args="--logdir ${logdir} --tag ${TAG} --func ${func} --noise_level ${n} --n_init_samples ${s} --n_iters ${n_iters} --n_runs ${n_runs}"
         args="--impl ${IMPL} ${args}"
         echo $args >> $ARGS_FILE
         continue
@@ -74,7 +76,7 @@ do
     do
     for e in "${exp_biases[@]}"
     do
-        args="--tag ${TAG} --func ${func} --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs ${n_runs} --kernel ${k} --n_iters ${n_iters}"
+        args="--logdir ${logdir} --tag ${TAG} --func ${func} --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs ${n_runs} --kernel ${k} --n_iters ${n_iters}"
         if [ $IMPL == "skopt" ]; then
             args="--impl ${IMPL} ${args}"
         fi

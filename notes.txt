@@ -1,7 +1,6 @@
 TODOs for Elemem build
 -finish testing of CBayesianSearch, need to compare with Python reference implementations
 -finish testing of CSearchComparison
-    -reduce total number of comparisons, too many jobs at the moment
     -estimate power, sample size needed to tune monotonic functions of amplitude
     -test with alternative versions of computing degrees of freedom
 -test ability to handle many samples at a given parameter set, increase white noise floor as needed
