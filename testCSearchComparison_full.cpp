@@ -499,7 +499,7 @@ int testSearchComparison(CML::EventLog& log,
   double num_reject = 0;
   for (int i = 0; i < correct_inferences.size(); i++) {
     temp += correct_inferences[i];
-    if (pvals[i] < alpha) { num_reject++; }
+    if (pvals[i] < alpha && (correct_inferences[i] == 1.0)) { num_reject++; }
   }
   json_log[fd]["correct_model"] = correct_model;
   json_log[fd]["pvals"] = pvals;
