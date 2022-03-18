@@ -29,7 +29,7 @@ if [ $IMPL != "CBay" -a $IMPL != "skopt" -a $IMPL != "nia"]; then
     return 1
 fi
 
-if [[ $SMOKESCREEN -eq 1]]; then
+if [[ $SMOKESCREEN -eq 1 ]]; then
     LOGDIR=$(pwd)/results/debug/${TAG}_${IMPL}
 else
     LOGDIR=$(pwd)/results/${TAG}_${IMPL}
