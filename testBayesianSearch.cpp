@@ -319,7 +319,8 @@ int testBayesianSearch(CML::EventLog& log,
   double exp_bias = exp_bias_ratio * test.range;
 
   // assume we know observation noise to some precision; white noise kernel able to adjust for additional noise
-  double obsNoise = 0.1 * test.noise_std;
+  // or set to zero for comparison with sklearn/skopt
+  double obsNoise = 0.0;  //0.1 * test.noise_std;
 
   x_dim = test.x_dim;
 
@@ -354,7 +355,7 @@ int testBayesianSearch(CML::EventLog& log,
     double x_range = test_run.x_interval(0, 1) - test_run.x_interval(0, 0);
 
     try {
-      CCmpndKern kern = getTestKernel(kernel, x_range, x_dim);
+      CCmpndKern kern = getTestKernel(kernel, test_run);
       BayesianSearchModel BO(kern, test_run.x_interval, obsNoise * obsNoise, exp_bias, n_init_samples, seed, verbosity);
       if (run == 0) { json_log[fd]["kernel_structure"] = BO.kern->json_structure(); }
 

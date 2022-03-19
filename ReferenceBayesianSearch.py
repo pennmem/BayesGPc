@@ -353,14 +353,14 @@ def test_BO(func_name, x_dim, args, full_metrics):
 
             # TODO make generalized kernel factory function
             kern = kernels.WhiteKernel(noise_level=1.0,
-                                       noise_level_bounds=(1e-6, 1000))
+                                       noise_level_bounds=(1e-4 + 0.1 * fcn.noise_level ** 2, 1000))
             mean_domain_length = np.diff(fcn.x_interval, axis=1).mean()
 
             length_scale_lower = 0.1
             length_scale_upper = 2.0
             diff = length_scale_upper - length_scale_lower
             interp_val = 0.25
-            init_length_scale = (length_scale_lower + interp_val * diff) * mean_domain_length
+            init_length_scale = 1.0  #(length_scale_lower + interp_val * diff) * mean_domain_length
             length_scale_bounds = (0.1*mean_domain_length, 2.0*mean_domain_length)
             var_kern = kernels.ConstantKernel(constant_value=1.0, constant_value_bounds=(0.25, 4.0))
             if args.kernel == "Matern32":
@@ -381,7 +381,7 @@ def test_BO(func_name, x_dim, args, full_metrics):
                                                 alpha_bounds=(1e-1, 1e1)) * var_kern
             elif args.kernel == "DotProduct":
                 kern += kernels.DotProduct(sigma_0=1.0, 
-                                        sigma_0_bounds=(1e-05, 100000)) * var_kern
+                                        sigma_0_bounds=(1e-02, 100)) * var_kern
             elif args.kernel == "lin":
                 raise NotImplementedError
                 # kern += kernels.L(nu=3/2, 
@@ -390,9 +390,10 @@ def test_BO(func_name, x_dim, args, full_metrics):
             else: raise NotImplementedError
 
             # observation noise not currently being internally scaled with standard deviation of samples... (standard sklearn implementation)
+            # set observation noise to 0.0, handle with lower bound on white kernel instead
             gp = gaussian_process.GaussianProcessRegressor(kern,
                                                         normalize_y=True,
-                                                        alpha=(0.5*fcn.noise_level) ** 2,
+                                                        alpha=0.0, #(0.5*fcn.noise_level) ** 2,
                                                         n_restarts_optimizer=0)
 
             exp_bias = args.exp_bias * fcn.range

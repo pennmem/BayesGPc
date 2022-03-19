@@ -37,8 +37,10 @@ int testBayesianSearch(CML::EventLog& log,
                        bool plotting=false,
                        int seed=1234);
 
-CCmpndKern getTestKernel(const string kernel, const double range, const int x_dim)
+CCmpndKern getTestKernel(const string kernel, const TestFunction fcn)
 {
+    double range = fcn.range;
+    int x_dim = fcn.x_dim;
     // TODO put in separate function here and in testBayesianSearch
     cnpy::npz_t npz_dict;
     CKern* k = getSklearnKernel((unsigned int)x_dim, npz_dict, kernel, std::string(""), true);
@@ -88,7 +90,7 @@ CCmpndKern getTestKernel(const string kernel, const double range, const int x_di
     b(0, 1) = 4.0;
     kern.setBoundsByName("ratquad_0:variance", b);
     }
-    b(0, 0) = 0.001;
+    b(0, 0) = 1e-4 + 0.1 * fcn.noise_level * fcn.noise_level;  //0.001;
     b(0, 1) = 4.0;
     kern.setBoundsByName("white_1:variance", b);
     return kern;

@@ -11,8 +11,8 @@ import seaborn as sns
 test_dirs = None
 
 if test_dirs is None:
-    cluster_run_dirs = ["results/",
-                        "results/"]
+    cluster_run_dirs = ["results/debug/",
+                        "results/debug/"]
 
 # tips = sns.load_dataset("tips")
 # ax = sns.boxplot(x=tips["total_bill"])
