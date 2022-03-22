@@ -1024,6 +1024,7 @@ CMatrix sumRow(const CMatrix& A)
   }
   return S;
 } 
+// mean across columns or mean of each row
 CMatrix meanRow(const CMatrix& A)
 {
   CMatrix M = sumRow(A);
@@ -1061,6 +1062,7 @@ CMatrix sumCol(const CMatrix& A)
   }
   return S;
 } 
+// mean across rows or mean of each column
 CMatrix meanCol(const CMatrix& A)
 {
   CMatrix M = sumCol(A);
@@ -1069,6 +1071,7 @@ CMatrix meanCol(const CMatrix& A)
     M.setVal(M.getVal(0, j)*numRowsInv, 0, j);
   return M;
 }
+// variance across rows or mean of each column
 CMatrix varCol(const CMatrix& A)
 {
   CMatrix M = meanCol(A);

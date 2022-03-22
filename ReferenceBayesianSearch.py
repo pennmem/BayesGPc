@@ -352,7 +352,7 @@ def test_BO(func_name, x_dim, args, full_metrics):
             transformed_x_bounds = [s.transformed_bounds for s in search_space]
 
             # TODO make generalized kernel factory function
-            kern = kernels.WhiteKernel(noise_level=1.0,
+            kern = kernels.WhiteKernel(noise_level=np.exp(-2),
                                        noise_level_bounds=(1e-4 + 0.1 * fcn.noise_level ** 2, 1000))
             mean_domain_length = np.diff(fcn.x_interval, axis=1).mean()
 
