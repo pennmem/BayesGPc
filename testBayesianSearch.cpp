@@ -1,5 +1,6 @@
 #include "testBayesianSearch.h"
-
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
 
 class CClgptest : public CClctrl 
 {
@@ -11,6 +12,13 @@ class CClgptest : public CClctrl
 
 int main(int argc, char* argv[])
 {
+  #ifdef _WIN
+  wchar_t wchar[2] = {fs::path::preferred_separator, '\0'};
+  std::wstring ws(wchar);
+  std::string separator(std::string(ws.begin(), ws.end()));
+  #else
+  std::string separator(fs::path::preferred_separator);
+  #endif
   CClgptest command(argc, argv);
   int fail = 0;
   CML::EventLog log;
@@ -102,7 +110,7 @@ int main(int argc, char* argv[])
       }
     }
 
-    string log_dir = results_dir + std::filesystem::path::preferred_separator + tag_arg;
+    string log_dir = results_dir + separator + tag_arg;
     log_dir += "-func_" + test_func_arg;
     log_dir += "-dim_" + to_string(x_dim);
     log_dir += "-kern_" + kern_arg;
@@ -114,17 +122,23 @@ int main(int argc, char* argv[])
     log_dir += "_" + getDateTime();
 
     if (PathExists(log_dir)) { throw std::runtime_error("Log directory " + log_dir + " already exists. Aborting test."); }
-    if (std::filesystem::create_directory(log_dir)) { cout << "Made log directory: " << log_dir << endl; }
+    #ifdef _WIN  // std::filesystem not working with mingw w64 7.3.0
+    QString qstr = QString::fromStdString(log_dir);
+    QDir qdir = QDir::current();
+    if (qdir.mkdir(qstr)) { cout << "Made log directory: " << log_dir << endl; }
+    #else
+    if (fs::create_directory(log_dir)) { cout << "Made log directory: " << log_dir << endl; }
+    #endif
     else { throw std::runtime_error("Failed to make log directory. Aborting test."); }
 
     CML::EventLog log;
-    log.StartFile_Handler(log_dir + std::filesystem::path::preferred_separator + "log.out");
+    log.StartFile_Handler(log_dir + separator + "log.out");
     log.Log_Handler("Made log file: " + log.get_StartFile() + "\n");
     // separately log full console output
     CML::EventLog full_log;
     if (!debug) {
       full_log.set_log_console_output(true);
-      full_log.StartFile_Handler(log_dir + std::filesystem::path::preferred_separator + "full_console_log.out");
+      full_log.StartFile_Handler(log_dir + separator + "full_console_log.out");
     }
     log.Log_Handler(string("git branch:\t") + string(GIT_BRANCH) + string("\n"));
     log.Log_Handler(string("git commit:\t") + string(GIT_COMMIT) + string("\n"));
@@ -155,7 +169,7 @@ int main(int argc, char* argv[])
     config["GIT_BRANCH"] = string(GIT_BRANCH);
     config["GIT_COMMIT"] = string(GIT_COMMIT);
     config["GIT_URL"] = string(GIT_URL);
-    ofstream config_file(log_dir + std::filesystem::path::preferred_separator + "config.json");
+    ofstream config_file(log_dir + separator + "config.json");
     config_file << config.dump(4);
     config_file.flush();
 
@@ -224,7 +238,7 @@ int main(int argc, char* argv[])
     log.Log_Handler("Number of failures: " + to_string(fail) + ".\n");
     log.CloseFile_Handler();
 
-    ofstream json_out(log_dir + std::filesystem::path::preferred_separator + "log.json");
+    ofstream json_out(log_dir + separator + "log.json");
     json_out << json_log.dump(4);
     json_out.flush();
 
@@ -263,6 +277,13 @@ int testBayesianSearch(CML::EventLog& log,
 {
   assert(n_init_samples < n_iters);
   int fail = 0;
+  #ifdef _WIN
+  wchar_t wchar[2] = {fs::path::preferred_separator, '\0'};
+  std::wstring ws(wchar);
+  std::string separator(std::string(ws.begin(), ws.end()));
+  #else
+  std::string separator(fs::path::preferred_separator);
+  #endif
 
   log.Log_Handler("Test function:\t" + test_func_str + "\n");
   log.Log_Handler("x_dim:\t" + to_string(x_dim) + "\n");
@@ -371,12 +392,14 @@ int testBayesianSearch(CML::EventLog& log,
         if (i >= n_init_samples) { sample_search_states[run].push_back(BO.gp->pkern->state()); }
         sample_times(run, i) = (double)(clock() - sample_update_start)/CLOCKS_PER_SEC;
 
+        #ifndef _WIN
         if (plotting && (verbosity >= 2) && x_dim <= 2 && (i > n_init_samples)) {
           BO.get_next_sample();
           // BO.gp->out(y_pred, std_pred, x);
           BO.gp->out_sem(y_pred, std_pred, x);
           plot_BO_state(BO, x, y, y_pred, std_pred, x_sample, y_sample);
         }
+        #endif
       }
       run_times(run) = (double)(clock() - start)/CLOCKS_PER_SEC;
 
@@ -402,11 +425,13 @@ int testBayesianSearch(CML::EventLog& log,
       y_samples_runs.push_back(to_vector(*(BO.y_samples)));
       
       // plotting
+      #ifndef _WIN
       if (plotting && x_dim <= 2 && !full_time_test) {
         // BO.gp->out(y_pred, std_pred, x);
         BO.gp->out_sem(y_pred, std_pred, x);
         plot_BO_state(BO, x, y, y_pred, std_pred, x_sample, y_sample);
       }
+      #endif
     }
     catch(const std::exception& e) { // catch errors for logging/debugging and continue tests
       log.Log_Handler(string("Error in run ") + to_string(run) + string("\n") + string("Check log.\n"));
@@ -454,7 +479,9 @@ int testBayesianSearch(CML::EventLog& log,
   log.Log_Handler("\n");
   log.Flush_Handler();
 
+  #ifndef _WIN
   if (full_time_test && plotting) { plot_BO_sample_times(sample_times, test_func_str); }
+  #endif
 
   if (pass_prob < min_pass_prob) {
     fail += 1;

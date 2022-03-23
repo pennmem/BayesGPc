@@ -6,12 +6,14 @@
 #include "CMatrix.h"
 #include "CGp.h"
 #include "CClctrl.h"
-#include "cnpy.h"
-#include "sklearn_util.h"
 #include "CNdlInterfaces.h"
 #include "Logger.h"
 #include "CBayesianSearch.h"
+#ifdef _WIN
+#include <QDir>
+#else
 #include "bayesPlotUtil.h"
+#endif
 #include "BayesTestFunction.h"
 
 #include <algorithm>
@@ -40,8 +42,7 @@ int testBayesianSearch(CML::EventLog& log,
 CCmpndKern getTestKernel(const string kernel, const double range, const int x_dim)
 {
     // TODO put in separate function here and in testBayesianSearch
-    cnpy::npz_t npz_dict;
-    CKern* k = getSklearnKernel((unsigned int)x_dim, npz_dict, kernel, std::string(""), true);
+    CKern* k = kernelFactory(kernel, x_dim);
     CCmpndKern kern(x_dim);
     kern.addKern(k);
     CWhiteKern* whitek = new CWhiteKern(x_dim);

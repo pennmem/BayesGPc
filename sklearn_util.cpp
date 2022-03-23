@@ -36,11 +36,12 @@ CKern* getSklearnKernel(unsigned int x_dim, cnpy::npz_t npz_dict, string kernel_
     CMatrix b(1, 2);
     if(kernel_key.compare("lin") == 0) {
         kern = new CLinKern(x_dim);
-        if(!structureOnly)
+        if(!structureOnly) {
             kern->setParam(*npz_dict[param_key + "__constant_value"].data<double>(), 0);
             b(0, 0) = npz_dict[param_key + "__constant_value_bounds"].data<double>()[0];
             b(0, 1) = npz_dict[param_key + "__constant_value_bounds"].data<double>()[1];
             kern->setBoundsByName("variance", b);
+        }
     }
     else if(kernel_key.compare("RBF") == 0) {
         kern = new CRbfKern(x_dim);

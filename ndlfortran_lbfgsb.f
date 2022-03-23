@@ -265,6 +265,30 @@ c-jlm-jn
       lxp  = isave(15)
       lwa  = isave(16)
 
+      print *, 'Entering lbfgs_b'
+c      print *, 'n'
+c      print *, n
+c      print *, 'm'
+c      print *, m
+c      print *, 'iwa'
+c      print *, iwa
+c      print *, 'nbd'
+c      print *, nbd
+c      print *, 'f'
+c      print *, f
+c      print *, 'g'
+c      print *, g
+c      print *, 'factr'
+c      print *, factr
+c      print *, 'pgtol'
+c      print *, pgtol
+c      print *, 'dsave'
+c      print *, dsave
+c      print *, 'csave'
+c      print *, csave
+      print *, 'lsave'
+      print *, lsave
+
       call mainlb(n,m,x,l,u,nbd,f,g,factr,pgtol,
      +  wa(lws),wa(lwy),wa(lsy),wa(lss), wa(lwt),
      +  wa(lwn),wa(lsnd),wa(lz),wa(lr),wa(ld),wa(lt),wa(lxp),
@@ -1405,7 +1429,9 @@ c     ************
 c     Check the status of the variables, reset iwhere(i) if necessary;
 c       compute the Cauchy direction d and the breakpoints t; initialize
 c       the derivative f1 and the vector p = W'd (for theta = 1).
- 
+
+      print *, 'in cauchy'
+
       if (sbgnrm .le. zero) then
          if (iprint .ge. 0) write (6,*) 'Subgnorm = 0.  GCP = X.'
          call dcopy(n,x,1,xcp,1)
@@ -1427,6 +1453,8 @@ c     We set p to zero and build it up as we determine d.
       do 20 i = 1, col2
          p(i) = zero
   20  continue 
+
+      print *, 'after init processing in cauchy'
 
 c     In the following loop we determine for each variable its bound
 c        status and its breakpoint, and update p accordingly.
@@ -1494,7 +1522,10 @@ c                x(i) + d(i) is not bounded.
             endif
          endif
   50  continue 
- 
+
+      print *, 'after 50 loop to determine bounds in cauchy'
+
+
 c     The indices of the nonzero components of d are now stored
 c       in iorder(1),...,iorder(nbreak) and iorder(nfree),...,iorder(n).
 c       The smallest of the nbreak breakpoints is in t(ibkmin)=bkmin.
@@ -1506,7 +1537,12 @@ c                   complete the initialization of p for theta not= one.
  
 c     Initialize GCP xcp = x.
 
+      print *, 'Entering lbfgs_b'
+      print *, 'before dcopy in cauchy'
+
       call dcopy(n,x,1,xcp,1)
+
+      print *, 'after dcopy in cauchy'
 
       if (nbreak .eq. 0 .and. nfree .eq. n + 1) then
 c                  is a zero vector, return with the initial xcp as GCP.

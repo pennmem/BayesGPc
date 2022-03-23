@@ -1496,7 +1496,7 @@ ostream& operator<<(ostream& os, const CKern& A);
 void writeKernToStream(const CKern& kern, ostream& out);
 CKern* readKernFromStream(istream& in);
 
-
+CKern* kernelFactory(std::string kernel, unsigned int x_dim);
 
 
 #endif

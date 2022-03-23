@@ -22,6 +22,11 @@ void CMatrix::copy(const CMatrix& x)
   // Level 1 Blas operation y <- x
   DIMENSIONMATCH(x.ncols == ncols);
   DIMENSIONMATCH(x.nrows == nrows);
+//  for (int i = 0; i < x.nrows; i++) {
+//    for (int j = 0; j < x.ncols; j++) {
+//      setVal(x.getVal(i, j), i, j);
+//    }
+//  }
   dcopy_(ncols*nrows, x.vals, 1, vals, 1);
   symmetric = x.symmetric;
   triangular = x.triangular;
@@ -113,12 +118,12 @@ int CMatrix::sysv(const CMatrix& A, const char* uplo, int lwork)
   DIMENSIONMATCH(nrows==A.nrows);
   if(lwork < 0)
     lwork = 3*nrows;
-  int info = 0;
-  std::vector<int> ipivv(nrows);
-  int *ipiv = &ipivv[0];
+  C2F_BASE_INT_TYPE info = 0;
+  std::vector<C2F_BASE_INT_TYPE> ipivv(nrows);
+  C2F_BASE_INT_TYPE *ipiv = &ipivv[0];
   CMatrix work(1, lwork);
 
-  dsysv_(uplo, nrows, ncols, A.vals, A.nrows, ipiv, vals, nrows, work.vals, lwork, info);
+  dsysv_(uplo, nrows, ncols, A.vals, A.nrows, ipiv, vals, nrows, work.vals, lwork, C2F_INT_PTR_CONVERSION info);
   if(info>0) throw ndlexceptions::MatrixSingular();
   if(info<0) throw ndlexceptions::Error("Incorrect argument in SYSV.");
   return (int)work.getVal(0); // optimal value for lwork
@@ -371,8 +376,12 @@ void CMatrix::copySymmetric(const char* type)
 void CMatrix::potrf(const char* type)
 {
   MATRIXPROPERTIES(isSymmetric());
-  int info;
-  dpotrf_(type, nrows, vals, ncols, info);
+  C2F_BASE_INT_TYPE info;
+  cout << "before dpotrf_" << endl;
+  cout << "rows: " << nrows << "  cols: " << ncols << endl;
+  cout << "(int)rows: " << (int)nrows << "  (int)cols: " << (int)ncols << endl;
+  dpotrf_(type, nrows, vals, ncols, & info);
+  cout << "after dpotrf_" << endl;
   setSymmetric(false);
   setTriangular(true);
   if(info!=0) {
@@ -417,8 +426,8 @@ double logDet(const CMatrix& U)
 void CMatrix::potri(const char* type)
 {
   MATRIXPROPERTIES(isSquare());
-  int info;
-  dpotri_(type, nrows, vals, ncols, info);
+  C2F_BASE_INT_TYPE info;
+  dpotri_(type, nrows, vals, ncols, C2F_INT_PTR_CONVERSION info);
   if(info!=0) {
     cout << "testing potri" << endl;
     throw ndlexceptions::MatrixNonPosDef();
@@ -455,9 +464,9 @@ int CMatrix::syev(CMatrix& eigVals, const char* jobz, const char* uplo, int lwor
   if(lwork<3*ncols-1)
     lwork = 3*ncols-1;
   CMatrix work(1, lwork);
-  int info=0;
+  C2F_BASE_INT_TYPE info=0;
 #ifndef _NOSYSEV
-  dsyev_(jobz, uplo, ncols,  vals,  nrows, eigVals.vals, work.vals, lwork, info);
+  dsyev_(jobz, uplo, ncols,  vals,  nrows, eigVals.vals, work.vals, lwork, C2F_INT_PTR_CONVERSION info);
   if(jobz[0]=='V' || jobz[0]=='v')
     setSymmetric(false);
   if(info>0)
@@ -479,10 +488,10 @@ void CMatrix::lu()
 {
   // TODO this isn't really properly implemented yet ... need to return ipiv somehow.
   MATRIXPROPERTIES(isSquare());
-  int info;
-  std::vector<int> ipiv(nrows);
+  C2F_BASE_INT_TYPE info = 0;
+  std::vector<C2F_BASE_INT_TYPE> ipiv(nrows);
   // TODO should really check for errors here.
-  dgetrf_(nrows, ncols, vals, ncols, &ipiv[0], info);
+  dgetrf_(nrows, ncols, vals, ncols, &ipiv[0], C2F_INT_PTR_CONVERSION info);
   if(info!=0) throw ndlexceptions::MatrixConditionError();
 }
 
@@ -492,18 +501,18 @@ void CMatrix::inv()
   // create output matrix by lu decomposition of input
     
   int length = nrows;
-  std::vector<int> ipiv(length);
-  int info = 0;
+  std::vector<C2F_BASE_INT_TYPE> ipiv(length);
+  C2F_BASE_INT_TYPE info = 0;
     
   dgetrf_(nrows, ncols, 
-	  vals, ncols, &ipiv[0], info);
+      vals, ncols, &ipiv[0], C2F_INT_PTR_CONVERSION info);
   if(info!=0) throw ndlexceptions::MatrixConditionError();
   int order = nrows;
   int lwork = order*16;
   std::vector<double> work(lwork);
   info = 0;
   dgetri_(order, vals, ncols, 
-	  &ipiv[0], &work[0], lwork, info);
+      &ipiv[0], &work[0], lwork, C2F_INT_PTR_CONVERSION info);
   // check for successful inverse
   if(info!=0) throw ndlexceptions::MatrixConditionError();
 }

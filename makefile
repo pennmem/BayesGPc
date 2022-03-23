@@ -5,7 +5,7 @@
 #  Dec 23, 2008
 # dependencies created with gcc -MM XXX.cpp
 
-include make.linux
+include make.win
 
 all: gplvm ivm gp libgp$(LIBSEXT) libgp$(LIBDEXT)
 
@@ -93,23 +93,45 @@ testCSearchComparison.o: testCSearchComparison.cpp CSearchComparison.h CBayesian
 testCSearchComparison: testCSearchComparison.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o ndlassert.o
 	$(LD) ${XLINKERFLAGS} -o testCSearchComparison testCSearchComparison.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o $(LDFLAGS)
 
-testCSearchComparison_full: testCSearchComparison_full.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o ndlassert.o Logger.o bayesPlotUtil.o BayesTestFunction.o
-	$(LD) ${XLINKERFLAGS} -o testCSearchComparison_full testCSearchComparison_full.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o Logger.o bayesPlotUtil.o BayesTestFunction.o $(LDFLAGS)
+ifeq ($(PLAT), _WIN)
+testCSearchComparison_full: testCSearchComparison_full.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o Logger.o BayesTestFunction.o
+	$(LD) ${XLINKERFLAGS} -o testCSearchComparison_full testCSearchComparison_full.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o Logger.o BayesTestFunction.o $(LDFLAGS)
 
 testCSearchComparison_full.o: testCSearchComparison_full.cpp CSearchComparison.h testBayesianSearch.h CBayesianSearch.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \
   CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h ndlfortran_lbfgsb.h \
   lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
-  CClctrl.h sklearn_util.h Logger.h bayesPlotUtil.h BayesTestFunction.h version.h
+  CClctrl.h Logger.h BayesTestFunction.h version.h
 	$(CC) -c testCSearchComparison_full.cpp -o testCSearchComparison_full.o $(CCFLAGS)
 
-testBayesianSearch: testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o ndlassert.o Logger.o bayesPlotUtil.o BayesTestFunction.o
-	$(LD) ${XLINKERFLAGS} -o testBayesianSearch testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o Logger.o bayesPlotUtil.o BayesTestFunction.o $(LDFLAGS)
+testBayesianSearch: testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o Logger.o BayesTestFunction.o
+	$(LD) ${XLINKERFLAGS} -o testBayesianSearch testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o Logger.o BayesTestFunction.o $(LDFLAGS)
 
 testBayesianSearch.o: testBayesianSearch.cpp testBayesianSearch.h CBayesianSearch.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \
   CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h ndlfortran_lbfgsb.h \
   lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
-  CClctrl.h sklearn_util.h Logger.h bayesPlotUtil.h BayesTestFunction.h version.h
+  CClctrl.h Logger.h BayesTestFunction.h version.h
 	$(CC) -c testBayesianSearch.cpp -o testBayesianSearch.o $(CCFLAGS)
+
+else
+
+testCSearchComparison_full: testCSearchComparison_full.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o Logger.o bayesPlotUtil.o BayesTestFunction.o
+	$(LD) ${XLINKERFLAGS} -o testCSearchComparison_full testCSearchComparison_full.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o Logger.o bayesPlotUtil.o BayesTestFunction.o $(LDFLAGS)
+
+testCSearchComparison_full.o: testCSearchComparison_full.cpp CSearchComparison.h testBayesianSearch.h CBayesianSearch.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \
+  CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h ndlfortran_lbfgsb.h \
+  lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
+  CClctrl.h Logger.h bayesPlotUtil.h BayesTestFunction.h version.h
+	$(CC) -c testCSearchComparison_full.cpp -o testCSearchComparison_full.o $(CCFLAGS)
+
+testBayesianSearch: testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o Logger.o bayesPlotUtil.o BayesTestFunction.o
+	$(LD) ${XLINKERFLAGS} -o testBayesianSearch testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o Logger.o bayesPlotUtil.o BayesTestFunction.o $(LDFLAGS)
+
+testBayesianSearch.o: testBayesianSearch.cpp testBayesianSearch.h CBayesianSearch.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \
+  CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h ndlfortran_lbfgsb.h \
+  lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
+  CClctrl.h Logger.h bayesPlotUtil.h BayesTestFunction.h version.h
+	$(CC) -c testBayesianSearch.cpp -o testBayesianSearch.o $(CCFLAGS)
+endif
 
 testIvm: testIvm.o CIvm.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o
 	$(LD) ${XLINKERFLAGS} -o testIvm  testIvm.o CIvm.o CMatrix.o ndlfortran.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o $(LDFLAGS)
@@ -138,7 +160,13 @@ testMatrix: testMatrix.o CMatrix.o ndlfortran.o ndlstrutil.o ndlutil.o CClctrl.o
 testMatrix.o: testMatrix.cpp CMatrix.h CClctrl.h
 	$(CC) -c testMatrix.cpp  -o testMatrix.o $(CCFLAGS)
 
-testMltools: testMltools.o CMltools.o CMatrix.o ndlfortran.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CClctrl.o 
+testMatrix_fortran: testMatrix_fortran.o CMatrix.o ndlfortran.o ndlstrutil.o ndlutil.o CClctrl.o ndlassert.o
+	$(LD) ${XLINKERFLAGS} -o testMatrix_fortran testMatrix_fortran.o CMatrix.o ndlfortran.o ndlstrutil.o ndlutil.o CClctrl.o ndlassert.o $(LDFLAGS)
+
+testMatrix_fortran.o: testMatrix_fortran.cpp CMatrix.h CClctrl.h
+	$(CC) -c testMatrix_fortran.cpp  -o testMatrix_fortran.o $(CCFLAGS)
+
+testMltools: testMltools.o CMltools.o CMatrix.o ndlfortran.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CClctrl.o
 	$(LD) ${XLINKERFLAGS} -o testMltools  testMltools.o CMltools.o CMatrix.o ndlfortran.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CClctrl.o $(LDFLAGS)
 
 testMltools.o: testMltools.cpp CMltools.h CKern.h CMatrix.h CClctrl.h 
@@ -238,7 +266,7 @@ CBayesianSearch.o: CBayesianSearch.cpp CBayesianSearch.h CGp.cpp CGp.h \
 CSearchComparison.o: CSearchComparison.cpp CSearchComparison.h CBayesianSearch.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \
   CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h ndlfortran_lbfgsb.h \
   lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
-  CClctrl.h sklearn_util.h
+  CClctrl.h
 	$(CC) -c CSearchComparison.cpp -o CSearchComparison.o $(CCFLAGS)
 
 ndlutil.o: ndlutil.cpp ndlutil.h ndlassert.h ndlexceptions.h ndlfortran.h
@@ -268,7 +296,11 @@ ndlfortran_lbfgsb.o: ndlfortran_lbfgsb.f
 GIT_BRANCH=$(shell git symbolic-ref HEAD)
 GIT_COMMIT=$(shell git describe --always --dirty)
 GIT_URL=$(shell git config --get remote.origin.url)
+ifeq ($(PLAT), _WIN) # module
+version.h: ../../.git/modules/include/BayesGPc/index
+else
 version.h: .git/index
+endif
 	echo "#define GIT_BRANCH \"$(GIT_BRANCH)\"" > $@
 	echo "#define GIT_COMMIT \"$(GIT_COMMIT)\"" >> $@
 	echo "#define GIT_URL \"$(GIT_URL)\"" >> $@

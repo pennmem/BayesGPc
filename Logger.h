@@ -7,7 +7,12 @@
 #include <sstream>
 #include <fstream>
 #include <stdexcept>
+#ifdef _WIN32
+#include <iomanip>
+#include <experimental/filesystem>
+#else
 #include <filesystem>
+#endif
 #include <sys/stat.h>
 #include <nlohmann/json.hpp>
 

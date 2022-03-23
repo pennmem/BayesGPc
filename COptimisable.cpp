@@ -240,8 +240,8 @@ void COptimisable::lbfgs_b_Optimise()
     char* task = new char[61];  // length 60, add one character since FORTRAN doesn't null-terminate
     char* csave = new char[61]; // message, add one character since FORTRAN doesn't null-terminate
     for (int i = 0; i < 60; i++) {
-      task[i] = ' ';
-      csave[i] = ' ';
+      task[i] = 'a';  // ' '
+      csave[i] = 'a'; // ' '
     }
     task[60] = '\0';
     csave[60] = '\0';
@@ -250,6 +250,14 @@ void COptimisable::lbfgs_b_Optimise()
     bool* lsave = new bool[4]; // flags for controlling constraints and other algorithm settings
     int* isave = new int[44]; // integer array of length 44, contains diagnostic info
     double* dsave = new double[29]; // working array, length 29
+
+    rip out bfgs, which is giving fortran compile error with 64-bit lapack?
+        decent amount of work, might not end up working,
+        would be undesirable for future compatability, would remove functionality that is working in Unix-based systems
+    or need to replace lapack subroutines (compiled for 64-bit integers) with subroutines
+            inside ndlfortran_lbfgs.f that could then be compiled with 32-bit...
+            or could try compiling just LBFGS_B with 64-bit, everything else with 32-bit
+
 
     // LBFGS-B search run
     try {
@@ -264,6 +272,33 @@ void COptimisable::lbfgs_b_Optimise()
           f_best = f;
           X_best = X;
         }
+        cout << "Before lbfgs_b" << endl;
+//        cout << "nParams" << nParams << endl;
+//        cout << "memSize" << memSize << endl;
+//        cout << "nbd " << endl; // const C2F_BASE_INT_TYPE*
+//        for (int i = 0; i < nParams; i++) { cout << nbd[i] << " "; }
+//        cout << endl;
+
+//        cout << "iwa" << endl; // C2F_BASE_INT_TYPE*
+//        for (int i = 0; i < 3*nParams; i++) { iwa[i] = i; cout << iwa[i] << " "; }
+//        cout << endl;
+//        cout << "f" << f << endl; // constt double&
+//        cout << "g" << g << endl; // double array, const double*
+//        cout <<"factr" << factr << endl; // const double&
+//        cout << "pgtol" << pgtol << endl; // const double&
+
+//        cout << "dsave" << endl; // double*
+//        for (int i = 0; i < 29; i++) { cout << dsave[i] << " "; }
+//        cout << endl;
+
+//        cout << "csave" << endl;
+//        for (int i = 0; i < 60; i++) { cout << csave[i] << " "; }
+//        cout << endl;
+
+        cout << "lsave" << endl;
+        for (int i = 0; i < 4; i++) { cout << lsave[i] << " "; }
+        cout << endl;
+
         setulb_( // pass arrays to fortran with pointers
           nParams,
           memSize,  // number of corrections
@@ -283,7 +318,7 @@ void COptimisable::lbfgs_b_Optimise()
           lsave, // flags for controlling constraints and other algorithm settings
           isave, // integer array of length 44, contains diagnostic info
           dsave, // working array, length 29
-          maxls  // max number of line search iterations
+          C2F_INT_PTR_CONVERSION maxls  // max number of line search iterations
         );
         X.fromArray(Xvals);
         setOptParams(X);

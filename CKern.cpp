@@ -4838,6 +4838,36 @@ void CKern::readParamsFromStream(istream& in)
   unsigned int numPriors = readIntFromStream(in, "numPriors");
   readPriorsFromStream(in, numPriors);
 }
+
+CKern* kernelFactory(std::string kernel, unsigned int x_dim) {
+    CKern *kern;
+    if(kernel.compare("lin") == 0) {
+        kern = new CLinKern(x_dim);
+    }
+    else if(kernel.compare("RBF") == 0) {
+        kern = new CRbfKern(x_dim);
+    }
+    else if(kernel.compare("RationalQuadratic") == 0) {
+        kern = new CRatQuadKern(x_dim);
+    }
+    else if(kernel.compare("DotProduct") == 0) {
+        kern = new CPolyKern(x_dim);
+    }
+    else if(kernel.compare("Matern32") == 0) {
+        kern = new CMatern32Kern(x_dim);
+    }
+    else if(kernel.compare("Matern52") == 0) {
+        kern = new CMatern52Kern(x_dim);
+    }
+    else if(kernel.compare("WhiteKernel") == 0) {
+        kern = new CWhiteKern(x_dim);
+    }
+    else {
+        throw std::invalid_argument("Unknown covariance function type: " + kernel);
+    }
+    return kern;
+}
+
 #ifdef _NDLMATLAB
 mxArray* CKern::toMxArray() const
 {

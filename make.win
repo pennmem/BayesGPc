@@ -4,38 +4,47 @@
 #
 SHELL = /bin/sh
 
-PLAT = _LINUX
-LAPACKLIBS = -llapack -lblas
+PLAT = _WIN
+LAPACKLIBS = -L../../lib64 -llapack64 -lblas64
 F2CLIB = -lgfortran
-# commands to make statically&dynamically linked libraries and their extensions
-LIBSCOMMAND = ar rcs
-LIBDCOMMAND = gcc -shared -o
-LIBSEXT = .a
-LIBDEXT = .so
+OPT_LEVEL=0
+#QTINCLUDEDIR=-I/usr/include/qt4 -I/usr/include/qt4/QtCore
+#QTINCLUDEDIR=-I/c/Qt/Qt5.12.12/5.12.12/mingw73_64/include/QtCore
+QTINCLUDE=-isystem C:/Qt/Qt5.12.12/5.12.12/mingw73_64/include -isystem C:/Qt/Qt5.12.12/5.12.12/mingw73_64/include/QtCore
+QTLIBS=-L. -lQt5Core
 
-DEP_DIR =/mnt/c/Users/dasha/Documents/research/stim_cml/source/dependencies
+# commands to make statically&dynamically linked libraries and their extensions
+#LIBSCOMMAND = ar rcs
+#LIBDCOMMAND = gcc -shared -o
+#LIBSEXT = .a
+#LIBDEXT = .so
+
+DEP_DIR =..
+# for dependency dir used for direct include
 
 # Python-numpy interface
-NPYLIBS = -lcnpy -lz
-NPYLINKFLAG =${NPYLIBS}
+#NPYLIBS = -lcnpy -lz
+#NPYLINKFLAG =${NPYLIBS}
 
 # optim library
-OPTIMDIR =./../dependencies/optim/header_only_version
-OPTIMFLAG =-O3 -march=native -ffp-contract=fast -I${OPTIMDIR}
-# for armadillo backend in place of eigen. Not currently being used.
-# ARMADILLODIR =/usr/local/include/armadillo
+OPTIMDIR=${DEP_DIR}/optim/header_only_version
+OPTIMFLAG =-O${OPT_LEVEL} -march=native -ffp-contract=fast -I${OPTIMDIR}
 # OPTIMFLAG =-O3 -march=native -ffp-contract=fast -I${ARMADILLODIR} -I${OPTIMDIR}
 # OPTIMLINKFLAG = -loptim
+# for armadillo backend in place of eigen. Not currently being used.
+# ARMADILLO_DIR =/usr/local/include/armadillo
+#EIGEN_DIR =-I${DEP_DIR}/
 
 # matplot
-MATPLOT_INCLUDE_DIRS =-I$(DEP_DIR)/matplotplusplus/source/
-MATPLOT_INCLUDE_DEP_NODESOUP_DIR =-I$(DEP_DIR)/matplotplusplus/source/3rd_party/nodesoup/include/
-MATPLOT_INCLUDE_DEP_CIMG_DIR =-I/usr/include/CImg.h -I/usr/include/plugins/
-MATPLOT_INCLUDE =$(MATPLOT_INCLUDE_DIRS) $(MATPLOT_INCLUDE_DEP_NODESOUP_DIR) $(MATPLOT_INCLUDE_DEP_CIMG_DIR)
-NODESOUP_LINK_FLAG =-L$(DEP_DIR)/matplotplusplus/build/source/3rd_party/ -lnodesoup
-MATPLOTLINKFLAG =-L$(DEP_DIR)/matplotplusplus/build/source/matplot/ -lmatplot $(NODESOUP_LINK_FLAG) -lm -lpthread -lX11 -ltiff -ljpeg -lpng -lz
+#MATPLOT_INCLUDE_DIRS =-I$(DEP_DIR)/matplotplusplus/source/
+#MATPLOT_INCLUDE_DEP_NODESOUP_DIR =-I$(DEP_DIR)/matplotplusplus/source/3rd_party/nodesoup/include/
+#MATPLOT_INCLUDE_DEP_CIMG_DIR =-I/usr/include/CImg.h -I/usr/include/plugins/
+#MATPLOT_INCLUDE =$(MATPLOT_INCLUDE_DIRS) $(MATPLOT_INCLUDE_DEP_NODESOUP_DIR) $(MATPLOT_INCLUDE_DEP_CIMG_DIR)
+#NODESOUP_LINK_FLAG =-L$(DEP_DIR)/matplotplusplus/build/source/3rd_party/ -lnodesoup
+#MATPLOTLINKFLAG =-L$(DEP_DIR)/matplotplusplus/build/source/matplot/ -lmatplot $(NODESOUP_LINK_FLAG) -lm -lpthread -lX11 -ltiff -ljpeg -lpng -lz
 
-BOOSTLIB_INCLUDE =-I/usr/local/include/boost_1_77_0
+JSON_INCLUDE=-I/${INCLUDE_DIR}/
+BOOSTLIB_INCLUDE=-I/${INCLUDE_DIR}/
 
 # Uncomment these lines to set up the MATLAB interface.
 #MATLABLIBS = -lmat -lmx
@@ -48,8 +57,8 @@ BOOSTLIB_INCLUDE =-I/usr/local/include/boost_1_77_0
 
 INCLUDE = $(MATLABINCLUDE)
 LD=g++
-LDFLAGS = ${LAPACKLIBS} ${F2CLIB} -lc ${MATPLOTLINKFLAG} ${NPYLINKFLAG}
+LDFLAGS = ${LAPACKLIBS} ${F2CLIB} ${QTLIBS} #${MATPLOTLINKFLAG} ${NPYLINKFLAG}
 CC=g++
-CCFLAGS = -std=c++17 -ggdb -DDBG -fPIC -I$(INCLUDE) -D$(PLAT) $(MATLABFLAG) $(OPTIMFLAG) $(BOOSTLIB_INCLUDE) ${MATPLOT_INCLUDE_DIRS}
+CCFLAGS = -std=c++17 -ggdb -DDBG -fPIC $(QTINCLUDE) -I$(DEP_DIR) -D$(PLAT) $(BOOSTLIB_INCLUDE) $(JSON_INCLUDE) $(OPTIMFLAG) #$(MATLABFLAG) $(OPTIMFLAG) ${MATPLOT_INCLUDE_DIRS}
 FC=gfortran
-FCFLAGS = -funroll-all-loops -O3 -fPIC
+FCFLAGS = -funroll-all-loops -O0 -fPIC #-fdefault-integer-8 # would like everything under 64-bit, but ndlfortran.f function requires 32-bit instead.
