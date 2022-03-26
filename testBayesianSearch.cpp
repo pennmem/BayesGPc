@@ -374,8 +374,8 @@ int testBayesianSearch(CML::EventLog& log,
 
         if (plotting && (verbosity >= 2) && x_dim <= 2 && (i > n_init_samples)) {
           BO.get_next_sample();
-          // BO.gp->out(y_pred, std_pred, x);
-          BO.gp->out_sem(y_pred, std_pred, x);
+          BO.gp->out(y_pred, std_pred, x);
+          // BO.gp->out_sem(y_pred, std_pred, x);
           plot_BO_state(BO, x, y, y_pred, std_pred, x_sample, y_sample);
         }
       }

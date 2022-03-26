@@ -81,7 +81,7 @@ do
     do
     for e in "${exp_biases[@]}"
     do
-        args="--tag ${TAG} --func ${func} --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs ${n_runs} --kernel ${k} --n_iters ${niter}"
+        args="--tag ${TAG} --func ${func} --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs ${n_runs} --kernel ${k} --n_iters ${niter} --x_dim 4"
         if [ $IMPL == "skopt" ]; then
             args="--impl ${IMPL} ${args}"
         fi
