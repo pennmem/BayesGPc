@@ -58,9 +58,9 @@ else
     n_iters=(150, 250)
     n_runs=50
     kernels=("Matern32")  # "Matern52" "RBF" "RationalQuadratic")
-    func="rosenbrock"
+    func="all"
     noise_levels=(0.0 0.1 0.3)
-    exp_biases=(0.0 0.25 0.5 1.0 2.0)
+    exp_biases=(0.0 0.01 0.05 0.25 0.5 1.0 2.0)
     init_samples=(25 100)  # 100 in Nia implementation
 fi
 
@@ -71,7 +71,7 @@ do
 for s in "${init_samples[@]}"
 do
     if [ $IMPL == "nia" ]; then
-        args="--tag ${TAG} --func ${func} --noise_level ${n} --n_init_samples ${s} --n_iters ${niter} --n_runs ${n_runs} --x_dim 1"
+        args="--tag ${TAG} --func ${func} --noise_level ${n} --n_init_samples ${s} --n_iters ${niter} --n_runs ${n_runs}"
         args="--impl ${IMPL} ${args}"
         echo $args >> $ARGS_FILE
         continue
@@ -81,7 +81,7 @@ do
     do
     for e in "${exp_biases[@]}"
     do
-        args="--tag ${TAG} --func ${func} --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs ${n_runs} --kernel ${k} --n_iters ${niter} --x_dim 4"
+        args="--tag ${TAG} --func ${func} --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs ${n_runs} --kernel ${k} --n_iters ${niter}"
         if [ $IMPL == "skopt" ]; then
             args="--impl ${IMPL} ${args}"
         fi

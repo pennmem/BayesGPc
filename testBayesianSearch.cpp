@@ -372,7 +372,7 @@ int testBayesianSearch(CML::EventLog& log,
         if (i >= n_init_samples) { sample_search_states[run].push_back(BO.gp->pkern->state()); }
         sample_times(run, i) = (double)(clock() - sample_update_start)/CLOCKS_PER_SEC;
 
-        if (plotting && (verbosity >= 2) && x_dim <= 2 && (i > n_init_samples)) {
+        if (plotting && (verbosity >= 3) && x_dim <= 2 && (i > n_init_samples)) {
           BO.get_next_sample();
           BO.gp->out(y_pred, std_pred, x);
           // BO.gp->out_sem(y_pred, std_pred, x);

@@ -1,5 +1,46 @@
-TODOs for Elemem build
+MUST TODOs for Elemem build
+    remove debug error in random sampling fall-back
+    eliminate 
+    set compiler optimization level up, should be taken care of but just check
+
+
 -finish testing of CBayesianSearch, need to compare with Python reference implementations
+    try smaller values of exploration bias, e.g., 0.01, 0.05
+    -could argue that 1D performance is sufficient, it's higher dimensional search that I'll
+        update search process for (will hopefully occur sooner rather than later)
+        more important even now is power of detecting improved settings for individual subjects
+    -performance appears to overall not be matching, do point by point comparison of algorithms
+        first, only compare max performances across HP choices for skopt and CBayes since HPs
+            may not be directly comparable
+            examine effects of specific HPs
+            performance is much closer at higher noise levels, still not equal?
+
+        kernels, gradients are matching, any differences must be in BO or optimization algos
+        DONE optimization algo settings/tolerances
+        RUNNING out_sem vs. out
+        confirm expected improvement computation matches skopt
+            appears to be identical in code
+            only check this later if needed
+        TODO fixed number of resets in optimizing kernel hps vs. only if there
+            are failures, which appears to no longer be happening now that bounds and white
+            kernel/obs noise have been sorted out
+            can add to CBayes or just lower number of restarts in skopt
+        DE vs. multi-start local optimization
+            assumed DE is better than multi-start local opt with only 5 resets
+            DE has solved benchmark optimization problems consistently while local opt with 5 restarts would not
+                not sure if I tested this using number of samples available to 
+                    DE for a single optimization of the acquisition function
+
+    compare to Nia default
+    get testing on the Windows/grid search version
+
+try to reduce edge bias in which samples are repeatedly selected near the edge of 
+    the search boundaries (due to lack of samples on the other side of the boundary, 
+    see notes from ESL class)
+optimize grid search to compute all points in search at once, could precompute entire matrix
+
+-test power of sham vs. stim t-test
+        
 -finish testing of CSearchComparison
     -estimate power, sample size needed to tune monotonic functions of amplitude
     -test with alternative versions of computing degrees of freedom
