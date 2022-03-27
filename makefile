@@ -60,6 +60,11 @@ BayesTestFunction.o: BayesTestFunction.cpp BayesTestFunction.h CBayesianSearch.h
   CClctrl.h
 	$(CC) -c BayesTestFunction.cpp -o BayesTestFunction.o $(CCFLAGS)
 
+GridSearch.o: GridSearch.cpp GridSearch.h ndlassert.h ndlexceptions.h CTransform.h \
+  CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h \
+  lapack.h CClctrl.h
+	$(CC) -c GridSearch.cpp -o GridSearch.o $(CCFLAGS)
+
 # To compile tests, the MATLAB interface must be enabled (i.e. define _NDLMATLAB)
 tests: testDist testGp testIvm testKern testMatrix testMltools testNdlutil testNoise testTransform  
 
@@ -94,22 +99,22 @@ testCSearchComparison: testCSearchComparison.o CSearchComparison.o CBayesianSear
 	$(LD) ${XLINKERFLAGS} -o testCSearchComparison testCSearchComparison.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o $(LDFLAGS)
 
 ifeq ($(PLAT), _WIN)
-testCSearchComparison_full: testCSearchComparison_full.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o Logger.o BayesTestFunction.o
-	$(LD) ${XLINKERFLAGS} -o testCSearchComparison_full testCSearchComparison_full.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o Logger.o BayesTestFunction.o $(LDFLAGS)
+testCSearchComparison_full: testCSearchComparison_full.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o Logger.o BayesTestFunction.o GridSearch.o
+	$(LD) ${XLINKERFLAGS} -o testCSearchComparison_full testCSearchComparison_full.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o Logger.o BayesTestFunction.o GridSearch.o $(LDFLAGS)
 
 testCSearchComparison_full.o: testCSearchComparison_full.cpp CSearchComparison.h testBayesianSearch.h CBayesianSearch.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \
   CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h ndlfortran_lbfgsb.h \
   lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
-  CClctrl.h Logger.h BayesTestFunction.h version.h
+  CClctrl.h Logger.h BayesTestFunction.h version.h GridSearch.h
 	$(CC) -c testCSearchComparison_full.cpp -o testCSearchComparison_full.o $(CCFLAGS)
 
-testBayesianSearch: testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o Logger.o BayesTestFunction.o
-	$(LD) ${XLINKERFLAGS} -o testBayesianSearch testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o Logger.o BayesTestFunction.o $(LDFLAGS)
+testBayesianSearch: testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o Logger.o BayesTestFunction.o GridSearch.o
+	$(LD) ${XLINKERFLAGS} -o testBayesianSearch testBayesianSearch.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o Logger.o BayesTestFunction.o GridSearch.o $(LDFLAGS)
 
 testBayesianSearch.o: testBayesianSearch.cpp testBayesianSearch.h CBayesianSearch.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \
   CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h ndlfortran_lbfgsb.h \
   lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
-  CClctrl.h Logger.h BayesTestFunction.h version.h
+  CClctrl.h Logger.h BayesTestFunction.h GridSearch.h version.h
 	$(CC) -c testBayesianSearch.cpp -o testBayesianSearch.o $(CCFLAGS)
 
 else
@@ -260,13 +265,13 @@ CBayesianSearch.o: CBayesianSearch.cpp CBayesianSearch.h CGp.cpp CGp.h \
   CMltools.h ndlassert.h ndlexceptions.h \
   ndlstrutil.h COptimisable.h CMatrix.h CNdlInterfaces.h ndlutil.h \
   ndlfortran.h lapack.h CKern.h CTransform.h CDataModel.h CDist.h \
-  CNoise.h
+  CNoise.h GridSearch.h
 	$(CC) -c CBayesianSearch.cpp -o CBayesianSearch.o $(CCFLAGS) ${BOOSTLIB}
 
 CSearchComparison.o: CSearchComparison.cpp CSearchComparison.h CBayesianSearch.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \
   CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h ndlfortran_lbfgsb.h \
   lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
-  CClctrl.h
+  CClctrl.h GridSearch.h
 	$(CC) -c CSearchComparison.cpp -o CSearchComparison.o $(CCFLAGS)
 
 ndlutil.o: ndlutil.cpp ndlutil.h ndlassert.h ndlexceptions.h ndlfortran.h
@@ -283,14 +288,14 @@ ndlfortran.o: ndlfortran.f
 	$(FC) -c ndlfortran.f -o ndlfortran.o $(FCFLAGS)
 
 ndlfortran_timer.o: ndlfortran_timer.f
-	$(FC) -c ndlfortran_timer.f -o ndlfortran_timer.o $(FCFLAGS)
+	$(FC) -c ndlfortran_timer.f -o ndlfortran_timer.o $(FCFLAGS) -fdefault-integer-8
 
 ndlfortran_linpack.o: ndlfortran_linpack.f
-	$(FC) -c ndlfortran_linpack.f -o ndlfortran_linpack.o $(FCFLAGS)
+	$(FC) -c ndlfortran_linpack.f -o ndlfortran_linpack.o $(FCFLAGS) -fdefault-integer-8
 
 # ndlfortran_linpack.f ndlfortran_timer.f
 ndlfortran_lbfgsb.o: ndlfortran_lbfgsb.f
-	$(FC) -c ndlfortran_lbfgsb.f -o ndlfortran_lbfgsb.o $(FCFLAGS)
+	$(FC) -c ndlfortran_lbfgsb.f -o ndlfortran_lbfgsb.o $(FCFLAGS) -fdefault-integer-8
 
 # version info
 GIT_BRANCH=$(shell git symbolic-ref HEAD)

@@ -1,4 +1,5 @@
 #include "CBayesianSearch.h"
+#include "GridSearch.h"
 
 
 double expected_improvement(const CMatrix& x, const CGp& model, double y_b, double exp_bias) {
@@ -32,22 +33,23 @@ struct EIOptimStruct {
     double exp_bias;
 };
 
+
+#ifndef _WIN
 // TODO write wrapper for converting between CMatrix and major armadillo/eigen types
 
 // wrapper for eigen vector input x
-double expected_improvement_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_out, void* opt_data) {
+//double expected_improvement_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_out, void* opt_data) {
+double expected_improvement_optim(const ColVec_t& x, ColVec_t* grad_out, void* opt_data) {
     EIOptimStruct* optfn_data = reinterpret_cast<EIOptimStruct*>(opt_data);
     CMatrix x_cmat(1, (int)(x.rows()), x.data());
     return -expected_improvement(x_cmat, optfn_data->model, optfn_data->y_b, optfn_data->exp_bias);
 }
 
-
 struct GPOptimStruct {
     CGp model;
 };
 
-
-double model_predict_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_out, void* opt_data) {
+double model_predict_optim(const ColVec_t& x, ColVec_t* grad_out, void* opt_data) {
     GPOptimStruct* optfn_data = reinterpret_cast<GPOptimStruct*>(opt_data);
     CMatrix x_cmat(1, (int)(x.rows()), x.data());
     CMatrix mu_mat(1, 1);
@@ -55,6 +57,7 @@ double model_predict_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_out, 
     optfn_data->model.out(mu_mat, std_mat, x_cmat);
     return -(mu_mat(0, 0));
 }
+#endif  // _WIN
 
 
 CMatrix* BayesianSearchModel::get_next_sample() {
@@ -108,9 +111,22 @@ CMatrix* BayesianSearchModel::get_next_sample() {
             gp->optimise(iters);
 
             // optimize acquisition function
-            Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
-            Eigen::VectorXd lower_bounds = Eigen::VectorXd(x_dim);
-            Eigen::VectorXd upper_bounds = Eigen::VectorXd(x_dim);
+            #ifdef _WIN
+
+//            CMatrix cm = gridSearch(acq_fcn, grid_vals);
+//            cout << "optimizing x get_next_sample" << endl;
+//            cout << "x: " << endl; << cm << endl;
+
+            x = new CMatrix(gridSearch(acq_fcn, grid_vals));
+//            cout << "x_true " << *x << endl;
+
+            #else
+//            Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
+//            Eigen::VectorXd lower_bounds = Eigen::VectorXd(x_dim);
+//            Eigen::VectorXd upper_bounds = Eigen::VectorXd(x_dim);
+            ColVec_t x_optim = ColVec_t(x_dim);
+            ColVec_t lower_bounds = ColVec_t(x_dim);
+            ColVec_t upper_bounds = ColVec_t(x_dim);
             // TODO choose better/random initial values? not strictly needed for global optimization
             for (int i = 0; i < x_dim; i++) {
                 x_optim[i] = (bounds.getVal(i, 0) + bounds.getVal(i, 1))/2.0;
@@ -163,6 +179,7 @@ CMatrix* BayesianSearchModel::get_next_sample() {
                 cout << "Optimization of acquisition function failed." << endl;
                 throw std::runtime_error("Optimization of acquisition function " + acq_func_name + " failed.");
             }
+            #endif
         }
         catch(const std::exception& e) {  // catch all errors in fitting and get random sample
             cout << "Warning: error in fitting process for getting next sample. Falling back on random parameter sampling." << endl;
@@ -184,10 +201,23 @@ CMatrix* BayesianSearchModel::get_next_sample() {
 
 CMatrix* BayesianSearchModel::get_best_solution() {
     // optimize GP
+    #ifdef _WIN
+
+    //            CMatrix cm = gridSearch(acq_fcn, grid_vals);
+//    cout << "optimizing x get_next_sample" << endl;
+    //            cout << "x: " << endl; << cm << endl;
+
+    CMatrix* x = new CMatrix(gridSearch(acq_fcn, grid_vals));
+//    cout << "x_true " << *x << endl;
+    #else
     CMatrix* x = new CMatrix(1, x_dim);
-    Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
-    Eigen::VectorXd lower_bounds = Eigen::VectorXd(x_dim);
-    Eigen::VectorXd upper_bounds = Eigen::VectorXd(x_dim);
+
+//    Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
+//    Eigen::VectorXd lower_bounds = Eigen::VectorXd(x_dim);
+//    Eigen::VectorXd upper_bounds = Eigen::VectorXd(x_dim);
+    ColVec_t x_optim = ColVec_t(x_dim);
+    ColVec_t lower_bounds = ColVec_t(x_dim);
+    ColVec_t upper_bounds = ColVec_t(x_dim);
     // TODO choose better/random initial values? not strictly needed for global optimization
     // TODO implement CMatrix.getCol/getRow
     for (int i = 0; i < x_dim; i++) {
@@ -233,7 +263,7 @@ CMatrix* BayesianSearchModel::get_best_solution() {
         cout << "Optimization of GP prediction (mean) function failed." << endl;
         throw std::runtime_error("Optimization of GP prediction (mean) function failed.");
     }
-
+    #endif // _WIN
     if (verbosity >= 0) {
         CMatrix y(1, 1);
         gp->out(y, *x);
@@ -248,7 +278,6 @@ CMatrix* BayesianSearchModel::get_best_solution() {
 
     return x;
 }
-
 
 void BayesianSearchModel::add_sample(const CMatrix& x, const CMatrix& y) {
     if (num_samples == 0) {
@@ -274,3 +303,4 @@ void BayesianSearchModel::add_sample(const CMatrix& x, const CMatrix& y) {
         cout << ", " << y.getVal(0) << ")" << endl;
     }
 }
+

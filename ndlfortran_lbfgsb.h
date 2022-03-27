@@ -15,25 +15,30 @@ extern "C" void dtrsl_(double* t, const int ldt, const int n, double* b, int job
 // Taken from Scipy version 1.7.1
 // https://github.com/scipy/scipy/tree/47bb6febaa10658c72962b9615d5d5aa2513fa3a/scipy/optimize/lbfgsb_src
 extern "C" void setulb_(
-            const int& n,
-            const int& m,  // number of corrections
+            C2F_CONST_INT n,
+            C2F_CONST_INT m,  // number of corrections
 			double* x, // length n
 			const double* l, // length n
 			const double* u, // length n
-            const int* nbd, // length n, integer flags coding bounds (0: none, 1: lower, 2: both, 3: upper) for each variable
+            const C2F_BASE_INT_TYPE* nbd, // length n, integer flags coding bounds (0: none, 1: lower, 2: both, 3: upper) for each variable
 			const double& f, // function value, not clear whether this is modified within lbgsb
 			const double* g, // gradient, not clear whether this is modified within lbgsb
 			const double& factr, // solution accuracy based on function values
 			const double& pgtol, // solution accuracy based on gradient values
 			double* wa, // length (2mmax + 5)nmax + 12mmax^2 + 12mmax
-            int* iwa, // length 3nmax
+            C2F_BASE_INT_TYPE* iwa, // length 3nmax
 			char* task,  // length 60
-            const int& iprint,  // verbosity
+            C2F_CONST_INT iprint,  // verbosity
 			char* csave, // message
-			bool* lsave, // flags for controlling constraints and other algorithm settings
-            int* isave, // integer array of length 44, contains diagnostic info
+            #ifdef _WIN
+            C2F_BASE_INT_TYPE* lsave, // boolean flags for controlling constraints and other algorithm settings
+            #else
+            bool* lsave, // boolean flags for controlling constraints and other algorithm settings
+            #endif
+
+            C2F_BASE_INT_TYPE* isave, // integer array of length 44, contains diagnostic info
 			double* dsave, // working array, length 29
-            int* maxls  // max number of line search iterations
+            C2F_BASE_INT_TYPE* maxls  // max number of line search iterations
 			);
             // integer intent(in),optional,check(len(x)>=n),depend(x) :: n=len(x)
             // integer intent(in) :: m

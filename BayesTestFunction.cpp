@@ -1,5 +1,5 @@
 #include "BayesTestFunction.h"
-
+#include "GridSearch.h"
 
 TestFunction::TestFunction(string func_name, 
                            int seed_temp, 
@@ -403,6 +403,14 @@ double TestFunction::func_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_
 }
 
 CMatrix* TestFunction::get_func_optimum(bool get_min) {
+    #ifdef _WIN
+
+    std::function<double(const CMatrix&)> fcn;
+    if (get_min) { fcn = [&](const CMatrix& x) { return -this->func(x, false).getVal(0, 0); }; }
+    else { fcn = [&](const CMatrix& x) { return this->func(x, false).getVal(0, 0); }; }
+    CMatrix* x = new CMatrix(gridSearch(fcn, grid_vals));
+
+    #else
     CMatrix* x = new CMatrix(1, x_dim);
     Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
     Eigen::VectorXd lower_bounds = Eigen::VectorXd(x_dim);
@@ -453,6 +461,7 @@ CMatrix* TestFunction::get_func_optimum(bool get_min) {
         cout << "Optimization of function " << name << " failed." << endl;
         throw std::runtime_error("Optimization of test function failed.");
     }
+    #endif
 
     if (verbosity >= 1) {
         CMatrix y = func(*x, false);
@@ -472,3 +481,4 @@ CMatrix* TestFunction::get_func_optimum(bool get_min) {
     }
     return x;
 }
+

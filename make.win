@@ -61,4 +61,6 @@ LDFLAGS = ${LAPACKLIBS} ${F2CLIB} ${QTLIBS} #${MATPLOTLINKFLAG} ${NPYLINKFLAG}
 CC=g++
 CCFLAGS = -std=c++17 -ggdb -DDBG -fPIC $(QTINCLUDE) -I$(DEP_DIR) -D$(PLAT) $(BOOSTLIB_INCLUDE) $(JSON_INCLUDE) $(OPTIMFLAG) #$(MATLABFLAG) $(OPTIMFLAG) ${MATPLOT_INCLUDE_DIRS}
 FC=gfortran
+# NOTE: under this build for Windows (this does not apply to other systems), all FORTRAN optimization functions included in this repo will fail except for LBFGS-B
+# LBFGS-B is the recommended optimizer since it provides for box bounds, which can give stability during fitting.
 FCFLAGS = -funroll-all-loops -O0 -fPIC #-fdefault-integer-8 # would like everything under 64-bit, but ndlfortran.f function requires 32-bit instead.

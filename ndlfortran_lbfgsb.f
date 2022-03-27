@@ -265,7 +265,9 @@ c-jlm-jn
       lxp  = isave(15)
       lwa  = isave(16)
 
-      print *, 'Entering lbfgs_b'
+c      print *, 'Entering lbfgs_b'
+c      print *, 'task'
+c      print *, task
 c      print *, 'n'
 c      print *, n
 c      print *, 'm'
@@ -286,8 +288,10 @@ c      print *, 'dsave'
 c      print *, dsave
 c      print *, 'csave'
 c      print *, csave
-      print *, 'lsave'
-      print *, lsave
+c      print *, 'lsave'
+c      print *, lsave
+c      print *, 'isave'
+c      print *, isave
 
       call mainlb(n,m,x,l,u,nbd,f,g,factr,pgtol,
      +  wa(lws),wa(lwy),wa(lsy),wa(lss), wa(lwt),
@@ -1240,7 +1244,6 @@ c======================== The end of bmv ===============================
      +                 x(n), l(n), u(n), g(n), t(n), d(n), xcp(n),
      +                 wy(n, col), ws(n, col), sy(m, m),
      +                 wt(m, m), p(2*m), c(2*m), wbp(2*m), v(2*m)
-
 c     ************
 c
 c     Subroutine cauchy
@@ -1425,12 +1428,51 @@ c     ************
      +                 f2_org
       double precision one,zero
       parameter        (one=1.0d0,zero=0.0d0)
- 
+
+
+c      print *, 'in cauchy'
+c      print *, 'n'
+c      print *, n
+c      print *, 'x'
+c      print *, x
+c      print *, 'l'
+c      print *, l
+c      print *, 'u'
+c      print *, u
+c      print *, 'm'
+c      print *, m
+c     print *, 'iwa'
+c     print *, iwa
+c      print *, 'nbd'
+c      print *, nbd
+c     print *, 'f'
+c     print *, f
+c      print *, 'g'
+c      print *, g
+c     print *, 'factr'
+c     print *, factr
+c     print *, 'pgtol'
+c     print *, pgtol
+c     print *, 'dsave'
+c     print *, dsave
+c     print *, 'csave'
+c     print *, csave
+c     print *, 'lsave'
+c     print *, lsave
+
+c      print *, 'sbgnrm'
+c      print *, sbgnrm
+
+c     original call for reference
+c     call cauchy(n,x,l,u,nbd,g,indx2,iwhere,t,d,z,
+c     +            m,wy,ws,sy,wt,theta,col,head,
+c     +            wa(1),wa(2*m+1),wa(4*m+1),wa(6*m+1),nseg,  length wa: (2mmax + 5)nmax + 12mmax^2 + 12mmax
+c     +            iprint, sbgnrm, info, epsmch)
+
+
 c     Check the status of the variables, reset iwhere(i) if necessary;
 c       compute the Cauchy direction d and the breakpoints t; initialize
 c       the derivative f1 and the vector p = W'd (for theta = 1).
-
-      print *, 'in cauchy'
 
       if (sbgnrm .le. zero) then
          if (iprint .ge. 0) write (6,*) 'Subgnorm = 0.  GCP = X.'
@@ -1453,8 +1495,6 @@ c     We set p to zero and build it up as we determine d.
       do 20 i = 1, col2
          p(i) = zero
   20  continue 
-
-      print *, 'after init processing in cauchy'
 
 c     In the following loop we determine for each variable its bound
 c        status and its breakpoint, and update p accordingly.
@@ -1523,8 +1563,6 @@ c                x(i) + d(i) is not bounded.
          endif
   50  continue 
 
-      print *, 'after 50 loop to determine bounds in cauchy'
-
 
 c     The indices of the nonzero components of d are now stored
 c       in iorder(1),...,iorder(nbreak) and iorder(nfree),...,iorder(n).
@@ -1537,12 +1575,7 @@ c                   complete the initialization of p for theta not= one.
  
 c     Initialize GCP xcp = x.
 
-      print *, 'Entering lbfgs_b'
-      print *, 'before dcopy in cauchy'
-
       call dcopy(n,x,1,xcp,1)
-
-      print *, 'after dcopy in cauchy'
 
       if (nbreak .eq. 0 .and. nfree .eq. n + 1) then
 c                  is a zero vector, return with the initial xcp as GCP.
@@ -1585,6 +1618,8 @@ c------------------- the beginning of the loop -------------------------
  
  777  continue
  
+c      print *, 'after beginning of the loop (777 continue) in cauchy'
+
 c     Find the next smallest breakpoint;
 c       compute dt = t(nleft) - t(nleft + 1).
  
@@ -1620,7 +1655,9 @@ c           (if iter=2, initialize heap).
       endif          
  
 c     If a minimizer is within this interval, locate the GCP and return. 
- 
+
+c      print *, 'halfway through loop in cauchy'
+
       if (dtm .lt. dt) goto 888
  
 c     Otherwise fix one variable and
@@ -1703,6 +1740,9 @@ c                 to repeat the loop for unsearched intervals.
 c------------------- the end of the loop -------------------------------
  
  888  continue
+
+c      print *, 'after end of the loop (888 continue) in cauchy'
+
       if (iprint .ge. 99) then
          write (6,*)
          write (6,*) 'GCP found in this segment'
@@ -1719,12 +1759,16 @@ c       the variables whose breakpoints haven't been reached.
  
  999  continue
  
-c     Update c = c + dtm*p = W'(x^c - x) 
+c      print *, '999 continue in cauchy'
+
+c     Update c = c + dtm*p = W'(x^c - x)
 c       which will be used in computing r = Z'(B(x^c - x) + g).
  
       if (col .gt. 0) call daxpy(col2,dtm,p,1,c,1)
       if (iprint .gt. 100) write (6,1010) (xcp(i),i = 1,n)
       if (iprint .ge. 99) write (6,2010)
+
+c      print *, 'after daxpy in cauchy'
 
  1010 format ('Cauchy X =  ',/,(4x,1p,6(1x,d11.4)))
  2010 format (/,'---------------- exit CAUCHY----------------------',/)
@@ -1734,7 +1778,8 @@ c       which will be used in computing r = Z'(B(x^c - x) + g).
      +        1p,2(1x,d11.4))
  5010 format ('Distance to the next break point =  ',1p,d11.4)
  6010 format ('Distance to the stationary point =  ',1p,d11.4) 
- 
+c      print *, 'after formats before return in cauchy'
+
       return
  
       end

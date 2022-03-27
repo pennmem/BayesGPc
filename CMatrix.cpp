@@ -377,11 +377,7 @@ void CMatrix::potrf(const char* type)
 {
   MATRIXPROPERTIES(isSymmetric());
   C2F_BASE_INT_TYPE info;
-  cout << "before dpotrf_" << endl;
-  cout << "rows: " << nrows << "  cols: " << ncols << endl;
-  cout << "(int)rows: " << (int)nrows << "  (int)cols: " << (int)ncols << endl;
   dpotrf_(type, nrows, vals, ncols, & info);
-  cout << "after dpotrf_" << endl;
   setSymmetric(false);
   setTriangular(true);
   if(info!=0) {
@@ -1142,7 +1138,7 @@ double randn() {
 
 CMatrix linspace(double x0, double x1, int n) {
   CMatrix v(n, 1);
-  double diff = (x1 - x0)/(double)n;
+  double diff = (x1 - x0)/(double)(n - 1);
   double curr = x0;
   for (int i = 0; i < n; i++) {
     v(i, 0) = curr;

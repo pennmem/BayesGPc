@@ -329,11 +329,28 @@ int testBayesianSearch(CML::EventLog& log,
   CMatrix y_pred(x.getRows(), 1);
   CMatrix std_pred(x.getRows(), 1);
 
-  // for getting estimates of unknown function optima
-  // test.verbosity = 1;
-  // test.get_func_optimum(true);
-  // test.get_func_optimum(false);
-  // test.verbosity = verbosity;
+//  // for getting estimates of unknown function optima
+//  test.verbosity = 1;
+//  #ifdef _WIN
+//  std::vector<CMatrix> grid_vals;
+//  int n_grid;
+//  if (x_dim == 1) { n_grid = 100000; }
+//  else if (x_dim == 2) { n_grid = 10000; }
+//  else if (x_dim == 3) { n_grid = 1000; }
+//  else if (x_dim == 4) { n_grid = 1000; }
+//  else { throw std::runtime_error("Need to hard code n_grid for x_dim >= 5"); }
+//  for (int i = 0; i < x_dim; i++) {
+//      CMatrix grid1D = linspace(test.x_interval.getVal(i,0),
+//                                test.x_interval.getVal(i,1),
+//                                n_grid);
+//      grid_vals.push_back(grid1D);
+//  }
+//  test.grid_vals = grid_vals;
+//  #endif  // _WIN
+//  test.get_func_optimum(true);
+//  test.get_func_optimum(false);
+//  test.verbosity = verbosity;
+//  throw std::runtime_error("stopping for tests");
 
   // normalize exploration bias by output range of test function
   // output range unknown for clinical use case but can be bounded and estimated
@@ -384,6 +401,7 @@ int testBayesianSearch(CML::EventLog& log,
       for (int i = 0; i < n_iters; i++) {
         sample_update_start = clock();
         CMatrix* x_sample = BO.get_next_sample();
+//        cout << "x_sample testBayesianSearch " << *x_sample << endl;
         CMatrix* y_sample = new CMatrix(test_run.func(*x_sample));
         BO.add_sample(*x_sample, *y_sample);
         if (verbosity >= 1) { cout << endl << endl; }

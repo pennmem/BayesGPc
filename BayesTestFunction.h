@@ -33,6 +33,7 @@ class TestFunction {
     double noise_level = 0.3;
     double noise_std;
     double y_sol;
+    std::vector<CMatrix> grid_vals;
     int verbosity;
 
     // noise distribution

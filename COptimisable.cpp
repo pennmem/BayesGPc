@@ -190,17 +190,17 @@ void COptimisable::lbfgs_b_Optimise()
     cout << "Limited Memory Bounded BFGS Optimisation." << endl;
   }
 
-  int maxiters = 50;
-  int funcEval = 0;
-  int maxFuncEval = 10000;
+  C2F_BASE_INT_TYPE maxiters = 50;
+  C2F_BASE_INT_TYPE funcEval = 0;
+  C2F_BASE_INT_TYPE maxFuncEval = 10000;
   
-  int nParams = getOptNumParams();
-  int memSize = 10;  // number of corrections
+  C2F_BASE_INT_TYPE nParams = getOptNumParams();
+  C2F_BASE_INT_TYPE memSize = 10;  // number of corrections
   double factr = 1e7; // solution accuracy based on function values
   double pgtol = 1e-7; // solution accuracy based on gradient values
-  int maxls = 20;  // max number of line search iterations
+  C2F_BASE_INT_TYPE maxls = 20;  // max number of line search iterations
   
-  int iprint;  // verbosity
+  C2F_BASE_INT_TYPE iprint;  // verbosity
   if (getVerbosity() < 2) {iprint = -1;}
   else if (getVerbosity() <= 3) {iprint = 0;}  // print output info only on the last iteration
   else if (getVerbosity() <= 5) {iprint = 5;}  // print output info every 5 iterations
@@ -231,33 +231,29 @@ void COptimisable::lbfgs_b_Optimise()
     // LBFGS-B settings that must be reset across random restarts
     double* Xvals = new double[nParams];
     double* gvals = new double[nParams]; // gradient, not clear whether this is modified within lbgsb
-    int* nbd = new int[nParams];
+    C2F_BASE_INT_TYPE* nbd = new C2F_BASE_INT_TYPE[nParams];
     for (int i = 0; i < nParams; i++) {
       nbd[i] = 2;
     }
     double* work = new double[nParams*(2*memSize + 5) + 12*(memSize + 1)*memSize];  // (2mmax + 5)nmax + 12mmax^2 + 12mmax
-    int* iwa = new int[3*nParams];  // length 3nmax
+    C2F_BASE_INT_TYPE* iwa = new C2F_BASE_INT_TYPE[3*nParams];  // length 3nmax
     char* task = new char[61];  // length 60, add one character since FORTRAN doesn't null-terminate
     char* csave = new char[61]; // message, add one character since FORTRAN doesn't null-terminate
     for (int i = 0; i < 60; i++) {
-      task[i] = 'a';  // ' '
-      csave[i] = 'a'; // ' '
+      task[i] = ' ';  // ' '
+      csave[i] = ' '; // ' '
     }
     task[60] = '\0';
     csave[60] = '\0';
     strcpy(task, "START");
     task[5] = ' ';
-    bool* lsave = new bool[4]; // flags for controlling constraints and other algorithm settings
-    int* isave = new int[44]; // integer array of length 44, contains diagnostic info
+    #ifdef _WIN  // was having alignment issues in Windows. It appears logical type and integer type in Fortran are aligned
+    C2F_BASE_INT_TYPE* lsave = new C2F_BASE_INT_TYPE[4]; // boolean flags for controlling constraints and other algorithm settings
+    #else
+    bool* lsave = new bool[4]; // boolean flags for controlling constraints and other algorithm settings
+    #endif
+    C2F_BASE_INT_TYPE* isave = new C2F_BASE_INT_TYPE[44]; // integer array of length 44, contains diagnostic info
     double* dsave = new double[29]; // working array, length 29
-
-    rip out bfgs, which is giving fortran compile error with 64-bit lapack?
-        decent amount of work, might not end up working,
-        would be undesirable for future compatability, would remove functionality that is working in Unix-based systems
-    or need to replace lapack subroutines (compiled for 64-bit integers) with subroutines
-            inside ndlfortran_lbfgs.f that could then be compiled with 32-bit...
-            or could try compiling just LBFGS_B with 64-bit, everything else with 32-bit
-
 
     // LBFGS-B search run
     try {
@@ -272,9 +268,11 @@ void COptimisable::lbfgs_b_Optimise()
           f_best = f;
           X_best = X;
         }
-        cout << "Before lbfgs_b" << endl;
+//        cout << "Before lbfgs_b" << endl;
 //        cout << "nParams" << nParams << endl;
 //        cout << "memSize" << memSize << endl;
+//        cout << "lb" << lower_bounds << endl;
+//        cout << "ub" << upper_bounds << endl;
 //        cout << "nbd " << endl; // const C2F_BASE_INT_TYPE*
 //        for (int i = 0; i < nParams; i++) { cout << nbd[i] << " "; }
 //        cout << endl;
@@ -287,6 +285,17 @@ void COptimisable::lbfgs_b_Optimise()
 //        cout <<"factr" << factr << endl; // const double&
 //        cout << "pgtol" << pgtol << endl; // const double&
 
+//        cout << "work" << endl; // double*
+//        for (int i = 0; i < memSize; i++) { cout << work[i] << " "; }
+//        // nParams*(2*memSize + 5) + 12*(memSize + 1)*memSize
+//        cout << endl;
+
+//        cout << "isave" << endl; // double*
+//        for (int i = 0; i < 8; i++) { cout << isave[i] << " "; }
+//        cout << endl;
+
+//        cout << "task " << task << endl;
+
 //        cout << "dsave" << endl; // double*
 //        for (int i = 0; i < 29; i++) { cout << dsave[i] << " "; }
 //        cout << endl;
@@ -295,9 +304,9 @@ void COptimisable::lbfgs_b_Optimise()
 //        for (int i = 0; i < 60; i++) { cout << csave[i] << " "; }
 //        cout << endl;
 
-        cout << "lsave" << endl;
-        for (int i = 0; i < 4; i++) { cout << lsave[i] << " "; }
-        cout << endl;
+//        cout << "lsave" << endl;
+//        for (int i = 0; i < 4; i++) { cout << lsave[i] << " "; }
+//        cout << endl;
 
         setulb_( // pass arrays to fortran with pointers
           nParams,
@@ -344,7 +353,7 @@ void COptimisable::lbfgs_b_Optimise()
             strcpy(task, "STOP: TOTAL NO. of f AND g EVALUATIONS EXCEEDS LIMIT");
           }
         }
-        else if (strncmp(task, "ABNORMAL_TERMINATION_IN_LNSRCH", 30) == 0) {
+        else if (true || strncmp(task, "ABNORMAL_TERMINATION_IN_LNSRCH", 30) == 0) {
           // does not appear to be an error state, though it is not clear what exactly this message indicates from the FORTRAN code
           // indicates failure to descend after 20 line search iterations, potentially caused by
           // 1. gradient computations not matching function 
@@ -397,9 +406,11 @@ void COptimisable::lbfgs_b_Optimise()
       setOptParams(X_best);
       conv = true;
     }
-    else if (strncmp(task, "ABNORMAL_TERMINATION_IN_LNSRCH", 30) == 0) {
+    else if (true || strncmp(task, "ABNORMAL_TERMINATION_IN_LNSRCH", 30) == 0) {
       if (getVerbosity() >= 0) { cout << "COptimisable: lbfgs_b message: " << task << endl; }
+      cout << "before setOptParams" << endl;
       setOptParams(X_best);
+      cout << "after setOptParams" << endl;
       conv = true;
     }
     // pass through if errors occurred in function evaluation before LBFGS-B search run once
@@ -422,16 +433,37 @@ void COptimisable::lbfgs_b_Optimise()
         }
       }
     }
+//    cout << "before deletes" << endl;
     delete[] Xvals;
+//    cout << "before deletes xvals" << endl;
     delete[] nbd;
+//    cout << "before deletes nbd" << endl;
     delete[] gvals;
+//    seems like cauchy might be corrupting this work array
+//    seg fault occurring late? in gdb it occurs within cauchy and no seg fault occurs if lfbgs is skipped
+
+//    eigen is having alignment issues
+//        could try changing VectorXd to Matrix types that were redefined as ColVec_t types in optim
+//        could remove optim altogether in Windows for now and implement grid search class for Windows,
+//            which I want to do anyways.
+//    cout << "before deletes work" << endl;
+//    cout << "work " << work << endl;
+//    cout << "work" << endl; // double*
+//    for (int i = 0; i < nParams*(2*memSize + 5) + 12*(memSize + 1)*memSize; i++) { cout << work[i] << " "; }
+//    cout << endl;
     delete[] work;
+//    cout << "before deletes iwa" << endl;
     delete[] iwa;
+//    cout << "before deletes task" << endl;
     delete[] task;
+//    cout << "before deletes csave" << endl;
     delete[] csave;
+//    cout << "before deletes lsave" << endl;
+//    cout << "sizeof bool" << sizeof(bool) << endl;
     delete[] lsave;
     delete[] isave;
     delete[] dsave;
+//    cout << "leaving lbfgs-b" << endl;
   }
 
   if (max(X) > log(1e10)) {
