@@ -14,12 +14,7 @@
 #include "ndlutil.h"
 #endif
 
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/variate_generator.hpp>
-#include <boost/random/uniform_real_distribution.hpp>
-#include <boost/math/distributions.hpp>
-#include <boost/random.hpp>
-
+#include <random>
 
 class TestFunction {
   public:
@@ -35,6 +30,11 @@ class TestFunction {
     double y_sol;
     std::vector<CMatrix> grid_vals;
     int verbosity;
+    #ifdef _WIN
+    string optimization_fcn = "grid";
+    #else
+    string optimization_fcn = "de";
+    #endif // _WIN
 
     // noise distribution
     normal_distribution<double> dist;
@@ -71,7 +71,8 @@ class TestFunction {
     double solution_error(const CMatrix& x_best);
     double func_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_out, void* opt_data);
     CMatrix* get_func_optimum(bool get_min = true);
-    void reseed(int i);
+    void set_seed(int i);
+    int get_seed();
 };
 
 #endif

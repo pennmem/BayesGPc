@@ -1,5 +1,6 @@
 #include "testBayesianSearch.h"
 #include "CSearchComparison.h"
+#include "cnpy.h"
 
 int testSearchComparison(CML::EventLog& log,
                         json& json_log,
@@ -257,7 +258,7 @@ int main(int argc, char* argv[])
                       seed);
     }
 
-    log.Log_Handler("Number of failures: " + to_string(fail) + ".");
+    log.Log_Handler("Number of failures: " + to_string(fail) + ".\n");
     log.CloseFile_Handler();
 
     ofstream json_out(log_dir + std::filesystem::path::preferred_separator + "log.json");
@@ -498,7 +499,7 @@ int testSearchComparison(CML::EventLog& log,
   double num_reject = 0;
   for (int i = 0; i < correct_inferences.size(); i++) {
     temp += correct_inferences[i];
-    if (pvals[i] < alpha) { num_reject++; }
+    if (pvals[i] < alpha && (correct_inferences[i] == 1.0)) { num_reject++; }
   }
   json_log[fd]["correct_model"] = correct_model;
   json_log[fd]["pvals"] = pvals;

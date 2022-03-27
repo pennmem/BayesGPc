@@ -1,13 +1,11 @@
 #ifndef BAYESIANSEARCH_H
 #define BAYESIANSEARCH_H
 
-#ifndef _WIn
-
+#ifndef _WIN
 #define OPTIM_ENABLE_EIGEN_WRAPPERS
 // #define OPTIM_ENABLE_ARMA_WRAPPERS
 // #define ARMA_DONT_USE_WRAPPER
 #include "optim.hpp"
-
 #endif
 
 // enables access to private variables in CGp, not ideal but using for now...
@@ -21,10 +19,6 @@
 #include <cmath>
 #include <cassert>
 
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/variate_generator.hpp>
-#include <boost/random/uniform_real_distribution.hpp>
-#include <boost/math/distributions.hpp>
 #include <stdexcept>
 
 #define _NDLCASSERT
@@ -99,8 +93,12 @@ class BayesianSearchModel {
 
         void _init() {
             if (seed != -1) {
-                rng.seed(seed);
+                set_seed(seed);
             }
+        }
+        void set_seed(int val) {
+            seed = val;
+            rng.seed(seed);
         }
 
         int num_samples;
@@ -108,7 +106,7 @@ class BayesianSearchModel {
         int initial_samples;
         int seed;
         int verbosity;
-        boost::mt19937 rng;
+        std::mt19937 rng;
         CMatrix* x_samples;
         CMatrix* y_samples;
         double y_best;
@@ -123,6 +121,11 @@ class BayesianSearchModel {
 
         CMatrix bounds;
         // for grid search-based global optimization
+        #ifdef _WIN
+        string optimization_fcn = "grid";
+        #else
+        string optimization_fcn = "de";
+        #endif // _WIN
         std::vector<CMatrix> grid_vals;
         CMatrix* get_next_sample();
         void add_sample(const CMatrix& x, const CMatrix& y);

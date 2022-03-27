@@ -14,7 +14,7 @@ TestFunction::TestFunction(string func_name,
   default_random_engine e(seed);
   _init();
   noise_std = noise_level * range;
-  dist = normal_distribution(0.0, noise_std);
+  dist = std::normal_distribution<double>(0.0, noise_std);
 }
 
 void TestFunction::_init() {
@@ -385,7 +385,11 @@ CMatrix TestFunction::func(const CMatrix& x, bool add_noise) {
   return y;
 }
 
-void TestFunction::reseed(int i) { e.seed(i); }
+void TestFunction::set_seed(int i) {
+  seed = i; 
+  e.seed(i);
+}
+int TestFunction::get_seed() { return seed; }
 
 double TestFunction::solution_error(const CMatrix& x_best) {
   // solution error is relative error of the objective value at the search solution
@@ -403,65 +407,68 @@ double TestFunction::func_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_
 }
 
 CMatrix* TestFunction::get_func_optimum(bool get_min) {
-    #ifdef _WIN
-
-    std::function<double(const CMatrix&)> fcn;
-    if (get_min) { fcn = [&](const CMatrix& x) { return -this->func(x, false).getVal(0, 0); }; }
-    else { fcn = [&](const CMatrix& x) { return this->func(x, false).getVal(0, 0); }; }
-    CMatrix* x = new CMatrix(gridSearch(fcn, grid_vals));
-
-    #else
     CMatrix* x = new CMatrix(1, x_dim);
-    Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
-    Eigen::VectorXd lower_bounds = Eigen::VectorXd(x_dim);
-    Eigen::VectorXd upper_bounds = Eigen::VectorXd(x_dim);
-    // TODO choose better/random initial values? not strictly needed for global optimization
-    for (int i = 0; i < x_dim; i++) {
-        x_optim[i] = (x_interval(i, 0) + x_interval(i, 1))/2.0;
-        lower_bounds[i] = x_interval(i, 0);
-        upper_bounds[i] = x_interval(i, 1);
+
+    if (optimization_fcn.compare("grid") == 0) { 
+      std::function<double(const CMatrix&)> fcn;
+      if (get_min) { fcn = [&](const CMatrix& x) { return -this->func(x, false).getVal(0, 0); }; }
+      else { fcn = [&](const CMatrix& x) { return this->func(x, false).getVal(0, 0); }; }
+      x = new CMatrix(gridSearch(fcn, grid_vals));
     }
+    #ifndef _WIN
+    else if (optimization_fcn.compare("de") == 0) {
+      Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
+      Eigen::VectorXd lower_bounds = Eigen::VectorXd(x_dim);
+      Eigen::VectorXd upper_bounds = Eigen::VectorXd(x_dim);
+      // TODO choose better/random initial values? not strictly needed for global optimization
+      for (int i = 0; i < x_dim; i++) {
+          x_optim[i] = (x_interval(i, 0) + x_interval(i, 1))/2.0;
+          lower_bounds[i] = x_interval(i, 0);
+          upper_bounds[i] = x_interval(i, 1);
+      }
 
-    CMatrix x_test(1, x_dim, x_optim.data());
+      CMatrix x_test(1, x_dim, x_optim.data());
 
-    optim::algo_settings_t optim_settings;
-    optim_settings.print_level = verbosity;
-    if (verbosity >= 1) optim_settings.print_level -= 1;
-    optim_settings.vals_bound = true;
-    // optim_settings.iter_max = 15;  // doesn't seem to control anything with DE
-    optim_settings.rel_objfn_change_tol = 1e-06;
-    optim_settings.rel_sol_change_tol = 1e-06;
+      optim::algo_settings_t optim_settings;
+      optim_settings.print_level = verbosity;
+      if (verbosity >= 1) optim_settings.print_level -= 1;
+      optim_settings.vals_bound = true;
+      // optim_settings.iter_max = 15;  // doesn't seem to control anything with DE
+      optim_settings.rel_objfn_change_tol = 1e-06;
+      optim_settings.rel_sol_change_tol = 1e-06;
 
-    optim_settings.de_settings.n_pop = 1000 * x_dim;
-    optim_settings.de_settings.n_gen = 1000 * x_dim;
+      optim_settings.de_settings.n_pop = 1000 * x_dim;
+      optim_settings.de_settings.n_gen = 1000 * x_dim;
 
-    optim_settings.lower_bounds = lower_bounds;
-    optim_settings.upper_bounds = upper_bounds;
+      optim_settings.lower_bounds = lower_bounds;
+      optim_settings.upper_bounds = upper_bounds;
 
-    optim_settings.de_settings.initial_lb = lower_bounds;
-    optim_settings.de_settings.initial_ub = upper_bounds;
+      optim_settings.de_settings.initial_lb = lower_bounds;
+      optim_settings.de_settings.initial_ub = upper_bounds;
 
-    bool success;
+      bool success;
 
-    funcOptimStruct opt_data = {this, false, !get_min};
-    success = optim::de(x_optim, 
-                        [this](const Eigen::VectorXd& x, 
-                                Eigen::VectorXd* grad_out,
-                                void* opt_data)
-                            { return func_optim(x, grad_out, opt_data); },
-                        &opt_data,
-                        optim_settings);
-    if (success) {
-        for (int i = 0; i < x_dim; i++) {
-            x->setVal(x_optim[i], i);
-        }
-    }
-    else {
-        // TODO exceptions aren't printing error messages in Visual Studio
-        cout << "Optimization of function " << name << " failed." << endl;
-        throw std::runtime_error("Optimization of test function failed.");
+      funcOptimStruct opt_data = {this, false, !get_min};
+      success = optim::de(x_optim, 
+                          [this](const Eigen::VectorXd& x, 
+                                  Eigen::VectorXd* grad_out,
+                                  void* opt_data)
+                              { return func_optim(x, grad_out, opt_data); },
+                          &opt_data,
+                          optim_settings);
+      if (success) {
+          for (int i = 0; i < x_dim; i++) {
+              x->setVal(x_optim[i], i);
+          }
+      }
+      else {
+          // TODO exceptions aren't printing error messages in Visual Studio
+          cout << "Optimization of function " << name << " failed." << endl;
+          throw std::runtime_error("Optimization of test function failed.");
+      }
     }
     #endif
+    else { throw std::runtime_error(string("Unknown optimization function (optimization_fcn): ") + optimization_fcn); }
 
     if (verbosity >= 1) {
         CMatrix y = func(*x, false);

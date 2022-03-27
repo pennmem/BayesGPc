@@ -39,8 +39,15 @@ int testBayesianSearch(CML::EventLog& log,
                        bool plotting=false,
                        int seed=1234);
 
-CCmpndKern getTestKernel(const string kernel, const double range, const int x_dim)
+CCmpndKern getTestKernel(const string kernel, const TestFunction fcn)
 {
+    // take mean across all dimension ranges to obtain univariate length scalew range
+    // For now, all dimension ranges are the same, and as long as they are, this choice 
+    // is fine.
+    CMatrix mean_x_interval(meanCol(fcn.x_interval));
+    double x_range = mean_x_interval.getVal(1) - mean_x_interval(0);
+    assert(x_range >= 0);
+    int x_dim = fcn.x_dim;
     // TODO put in separate function here and in testBayesianSearch
     CKern* k = kernelFactory(kernel, x_dim);
     CCmpndKern kern(x_dim);
@@ -52,44 +59,48 @@ CCmpndKern getTestKernel(const string kernel, const double range, const int x_di
     
     // set kernel hyperparameter bounds
     // no meaningful bounds on interpolation variance for now, might want min var
+    double var_lb = 0.25;
+    double var_ub = 4.0;
+    double lengthScale_lb = 0.1 * x_range;
+    double lengthScale_ub = 2.0 * x_range;
     CMatrix b(1, 2);
     if (kernel.compare("Matern32") == 0) {
-    b(0, 0) = 0.1 * range;
-    b(0, 1) = 2.0 * range;
+    b(0, 0) = lengthScale_lb;
+    b(0, 1) = lengthScale_ub;
     kern.setBoundsByName("matern32_0:lengthScale", b);
-    b(0, 0) = 0.25;
-    b(0, 1) = 4.0;
+    b(0, 0) = var_lb;
+    b(0, 1) = var_ub;
     kern.setBoundsByName("matern32_0:variance", b);
     }
     else if (kernel.compare("Matern52") == 0) {
-    b(0, 0) = 0.1 * range;
-    b(0, 1) = 2.0 * range;
+    b(0, 0) = lengthScale_lb;
+    b(0, 1) = lengthScale_ub;
     kern.setBoundsByName("matern52_0:lengthScale", b);
-    b(0, 0) = 0.25;
-    b(0, 1) = 4.0;
+    b(0, 0) = var_lb;
+    b(0, 1) = var_ub;
     kern.setBoundsByName("matern52_0:variance", b);
     }
     else if (kernel.compare("RBF") == 0) {
     // squared reciprocal "length scale"
-    b(0, 0) = 1/(4.0 * range*range);
-    b(0, 1) = 1/(0.01 * range*range);
+    b(0, 0) = 1/(lengthScale_ub * lengthScale_ub);
+    b(0, 1) = 1/(lengthScale_lb * lengthScale_lb);
     kern.setBoundsByName("rbf_0:inverseWidth", b);
-    b(0, 0) = 0.25;
-    b(0, 1) = 4.0;
+    b(0, 0) = var_lb;
+    b(0, 1) = var_ub;
     kern.setBoundsByName("rbf_0:variance", b);
     }
     else if (kernel.compare("RationalQuadratic") == 0) {
-    b(0, 0) = 0.1 * range;
-    b(0, 1) = 2.0 * range;
+    b(0, 0) = lengthScale_lb;
+    b(0, 1) = lengthScale_ub;
     kern.setBoundsByName("ratquad_0:lengthScale", b);
     b(0, 0) = 0.1;
     b(0, 1) = 10.0;
     kern.setBoundsByName("ratquad_0:alpha", b);
-    b(0, 0) = 0.25;
-    b(0, 1) = 4.0;
+    b(0, 0) = var_lb;
+    b(0, 1) = var_ub;
     kern.setBoundsByName("ratquad_0:variance", b);
     }
-    b(0, 0) = 0.001;
+    b(0, 0) = 1e-4 + 0.1 * fcn.noise_level * fcn.noise_level;  //0.001;
     b(0, 1) = 4.0;
     kern.setBoundsByName("white_1:variance", b);
     return kern;

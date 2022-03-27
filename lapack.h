@@ -1,13 +1,6 @@
 #ifndef LAPACK_H
 #define LAPACK_H
 
-#ifdef _MSC_VER
-/* For MSVC I'm using clapack/cblas */
-#include "blaswrap.h"
-#endif
-
-#define _WIN
-
 #ifdef _WIN
 #define C2F_BASE_INT_TYPE long long int
 #define C2F_CONST_INT const C2F_BASE_INT_TYPE&
@@ -20,7 +13,7 @@
 #else
 #define C2F_BASE_INT_TYPE int
 #define C2F_CONST_INT const C2F_BASE_INT_TYPE&
-#define C2F_INT C2F_BASE_INT_TYP&
+#define C2F_INT C2F_BASE_INT_TYPE&
 #define C2F_INT_PTR_CONVERSION
 #endif
 
@@ -56,30 +49,29 @@ extern "C" void dsysv_(const char* uplo,
 		      const int& info);
 // Compute an LU factorization of a general M by N matrix A.
 extern "C" void dgetrf_(
-            const long long int &m,	 // (input)
-            const long long int &n,	 // (input)
+            const int &m,	 // (input)
+            const int &n,	 // (input)
 			double *a,	 // a[n][lda] (input/output)
-            const long long int &lda,	 // (input)
-            long long int *ipiv,	 // ipiv[min(m,n)] (output)
-            long long int *info	 // (output)
+            const int &lda,	 // (input)
+            int *ipiv,	 // ipiv[min(m,n)] (output)
+            int &info	 // (output)
 			);
 // Compute the inverse using the LU factorization computed by dgetrf.
 extern "C" void dgetri_(
-            const long long int &n,	 // (input)
+            const int &n,	 // (input)
 			double *a,	 // a[n][lda] (input/output)
-            const long long int &lda,	 // (input)
-            long long int *ipiv, // ipiv[n] (input)
+            const int &lda,	 // (input)
+            const int *ipiv, // ipiv[n] (input)
 			double *work,	 // work[lwork] (workspace/output)
-            const long long int &lwork, // (input)
-            long long int *info	 // (output)
+            const int &lwork, // (input)
+            int &info	 // (output)
 			);
 // Compute the Cholesky factorization of a real symmetric positive definite matrix A.
 extern "C" void dpotrf_(
             const char* t,  // whether upper or lower triangluar 'U' or 'L'
-            const long long int &n,	// (input)
+            const int &n,	// (input)
             double *a,	// a[n][lda] (input/output)
-            const long long int &lda,	// (input)
-            // CHANGED TO CONST TO GET AROUND COMPILATION ERROR WITH MINGW W64
+            const int &lda,	// (input)
             int &info	// (output)
             );
 // Compute the inverse of a real symmetric positive definite matrix A using the Cholesky factorization computed by dpotrf.
@@ -100,11 +92,11 @@ extern "C" void dswap_(const int& n,
 		      double *y, 
 		      const int& incy);
 // Perform y:= x
-extern "C" void dcopy_(const long long int& n,
+extern "C" void dcopy_(const int& n,
 		      const double *x, 
-              const long long int& incx,
+              const int& incx,
 		      double *y, 
-              const long long int& incy);
+              const int& incy);
 // Perform y:= ay
 extern "C" void dscal_(const int& n, 
 		      const double& alpha, 
@@ -125,14 +117,14 @@ extern "C" double ddot_(const int& n,
 			const double *y,
 			const int& incy);
 // Return xTx
-extern "C" double dnrm2_(const long long int& n,
-             double *x,
-             const long long int& incx);
+extern "C" double dnrm2_(const int& n,
+             const double *x,
+             const int& incx);
 // ***** BLAS Level 2 operations *****
 
 // Perform one of the matrix-vector operations y:= alpha*op(A)*x + beta*y
 extern "C" void dgemv_(
-                       const char* trans, // N, T or C transformation to A.
+               const char* trans, // N, T or C transformation to A.
 		       const int& m, // rows of A
 		       const int& n, // columns of A
 		       const double& alpha, // prefactor on multiplication

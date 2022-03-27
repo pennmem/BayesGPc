@@ -7,7 +7,6 @@
 
 #include "ndlexceptions.h"
 #include "ndlstrutil.h"
-//#include "cnpy.h"
 #include "CMatrix.h"
 
 #ifdef _NDLMATLAB

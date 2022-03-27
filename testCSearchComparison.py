@@ -72,14 +72,14 @@ if __name__ == "__main__":
     y = np.arange(sample_sizes[1]) - sample_sizes[1]/2 - 0.5 + mean_diff
 
     ttest_res = pg.ttest(x, y, 
-                         paired=False, alternative="greater", correction=True)
+                         paired=False, alternative="two-sided", correction=True)
     # print(ttest_res)
     # print("T: ", ttest_res["T"][0])
     # print("p-val: ", ttest_res["p-val"][0])
 
     output_dict["x0_0"] = x
     output_dict["x1_0"] = y
-    output_dict["stat0"] = np.array([ttest_res["T"][0]])
+    output_dict["stat0"] = np.array([-ttest_res["T"][0]])
     output_dict["p0"] = np.array([ttest_res["p-val"][0]])
     output_dict["dof0"] = np.array([ttest_res["dof"][0]])
 
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     y1 = np.arange(sample_sizes[1]) - sample_sizes[1]/2 - 0.5 + mean_diff
 
     ttest_res = pg.ttest(x1, y1, 
-                         paired=False, alternative="greater", correction=True)
+                         paired=False, alternative="two-sided", correction=True)
     # print(ttest_res)
     # print("T: ", ttest_res["T"][0])
     # print("p-val: ", ttest_res["p-val"][0])

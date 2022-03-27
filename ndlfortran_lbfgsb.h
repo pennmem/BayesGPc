@@ -38,40 +38,8 @@ extern "C" void setulb_(
 
             C2F_BASE_INT_TYPE* isave, // integer array of length 44, contains diagnostic info
 			double* dsave, // working array, length 29
-            C2F_BASE_INT_TYPE* maxls  // max number of line search iterations
+            C2F_INT maxls  // max number of line search iterations
 			);
-            // integer intent(in),optional,check(len(x)>=n),depend(x) :: n=len(x)
-            // integer intent(in) :: m
-            // double precision dimension(n),intent(inout) :: x
-            // double precision dimension(n),depend(n),intent(in) :: l
-            // double precision dimension(n),depend(n),intent(in) :: u
-            // integer dimension(n),depend(n),intent(in) :: nbd
-            // double precision intent(inout) :: f
-            // double precision dimension(n),depend(n),intent(inout) :: g
-            // double precision intent(in) :: factr
-            // double precision intent(in) :: pgtol
-            // double precision dimension(2*m*n+5*n+11*m*m+8*m),depend(n,m),intent(inout) :: wa
-            // integer dimension(3 * n),depend(n),intent(inout) :: iwa
-            // character*60 intent(inout) :: task
-            // integer intent(in) :: iprint
-            // character*60 intent(inout) :: csave
-            // logical dimension(4),intent(inout) :: lsave
-            // integer dimension(44),intent(inout) :: isave
-            // double precision dimension(29),intent(inout) :: dsave
-            // integer intent(in) :: maxls	
-
-
-// extern "C" void lbfgs_(const int& numVariables, 
-// 		       const int& numCorrections,
-// 		       double* X,
-// 		       const double& funcVal,   // set by user to be func val.
-// 		       const double* gradVals,  // set by user to be grad vals.
-// 		       const int& diagCo,
-// 		       const double* diag,
-// 		       const int iPrint[2],
-// 		       const double& prec,
-// 		       const double& xtol,
-// 		       double* W, // work vector size N(2M+1) + 2M
-// 		       int& iFlag);
 
 #endif
+

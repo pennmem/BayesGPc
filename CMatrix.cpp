@@ -377,7 +377,7 @@ void CMatrix::potrf(const char* type)
 {
   MATRIXPROPERTIES(isSymmetric());
   C2F_BASE_INT_TYPE info;
-  dpotrf_(type, nrows, vals, ncols, & info);
+  dpotrf_(type, nrows, vals, ncols, C2F_INT_PTR_CONVERSION info);
   setSymmetric(false);
   setTriangular(true);
   if(info!=0) {
@@ -1029,6 +1029,7 @@ CMatrix sumRow(const CMatrix& A)
   }
   return S;
 } 
+// mean across columns or mean of each row
 CMatrix meanRow(const CMatrix& A)
 {
   CMatrix M = sumRow(A);
@@ -1066,6 +1067,7 @@ CMatrix sumCol(const CMatrix& A)
   }
   return S;
 } 
+// mean across rows or mean of each column
 CMatrix meanCol(const CMatrix& A)
 {
   CMatrix M = sumCol(A);
@@ -1074,6 +1076,7 @@ CMatrix meanCol(const CMatrix& A)
     M.setVal(M.getVal(0, j)*numRowsInv, 0, j);
   return M;
 }
+// variance across rows or mean of each column
 CMatrix varCol(const CMatrix& A)
 {
   CMatrix M = meanCol(A);

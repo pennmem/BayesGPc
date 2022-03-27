@@ -12,9 +12,7 @@
 #include "ndlfortran.h"
 #include "ndlfortran_lbfgsb.h"
 #include <cstring>
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/variate_generator.hpp>
-#include <boost/random/uniform_real_distribution.hpp>
+#include <random>
 #include <boost/math/distributions.hpp>
 
 // abstract base class for making a class optimisable.
@@ -250,7 +248,7 @@ class COptimisable {
   }
   void _init() {
     if (seed != -1) {
-      rng.seed(seed);
+      set_seed(seed);
     }
   }
  #ifndef DBG
@@ -258,7 +256,7 @@ class COptimisable {
  #endif
 
   int seed = -1;
-  boost::mt19937 rng;
+  std::mt19937 rng;
 
   double objectiveTol;
   double parameterTol;

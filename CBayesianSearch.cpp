@@ -9,10 +9,10 @@ double expected_improvement(const CMatrix& x, const CGp& model, double y_b, doub
     CMatrix std_mat(1, 1);
     double y_best = y_b + exp_bias;
 
-    // model.out(mu_mat, std_mat, x);
+    model.out(mu_mat, std_mat, x);
     // use predictive mean uncertainty rather than sample uncertainty 
     // (which includes observation noise/white noise)
-    model.out_sem(mu_mat, std_mat, x);
+    // model.out_sem(mu_mat, std_mat, x);
     double mu = mu_mat.getVal(0, 0);
     double std = std_mat.getVal(0, 0);
 
@@ -38,8 +38,8 @@ struct EIOptimStruct {
 // TODO write wrapper for converting between CMatrix and major armadillo/eigen types
 
 // wrapper for eigen vector input x
-//double expected_improvement_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_out, void* opt_data) {
-double expected_improvement_optim(const ColVec_t& x, ColVec_t* grad_out, void* opt_data) {
+double expected_improvement_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_out, void* opt_data) {
+// double expected_improvement_optim(const ColVec_t& x, ColVec_t* grad_out, void* opt_data) {
     EIOptimStruct* optfn_data = reinterpret_cast<EIOptimStruct*>(opt_data);
     CMatrix x_cmat(1, (int)(x.rows()), x.data());
     return -expected_improvement(x_cmat, optfn_data->model, optfn_data->y_b, optfn_data->exp_bias);
@@ -49,7 +49,8 @@ struct GPOptimStruct {
     CGp model;
 };
 
-double model_predict_optim(const ColVec_t& x, ColVec_t* grad_out, void* opt_data) {
+// double model_predict_optim(const ColVec_t& x, ColVec_t* grad_out, void* opt_data) {
+double model_predict_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_out, void* opt_data) {
     GPOptimStruct* optfn_data = reinterpret_cast<GPOptimStruct*>(opt_data);
     CMatrix x_cmat(1, (int)(x.rows()), x.data());
     CMatrix mu_mat(1, 1);
@@ -66,10 +67,9 @@ CMatrix* BayesianSearchModel::get_next_sample() {
     // initial random samples
     // TODO upgrade to Latin hypercube sampling
     if (num_samples < initial_samples) {
-        boost::random::uniform_real_distribution<> dist(0.0, 1.0);
-        boost::random::variate_generator<boost::mt19937&, boost::random::uniform_real_distribution<> > gen(rng, dist);
+        std::uniform_real_distribution<> dist(0.0, 1.0);
         for (unsigned int i = 0; i < x_dim; i++) {
-            x->setVal(bounds.getVal(i, 0) + gen() * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
+            x->setVal(bounds.getVal(i, 0) + dist(rng) * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
         }
     }
     else {
@@ -105,81 +105,77 @@ CMatrix* BayesianSearchModel::get_next_sample() {
             gp->setParamTol(1e-6);
             gp->setOutputBiasLearnt(outputBiasScaleLearnt);
             gp->setOutputScaleLearnt(outputBiasScaleLearnt);
-            gp->set_seed(seed + 10000);
+            gp->set_seed(seed + 10000 + num_samples);
             gp->set_n_restarts(2);
             gp->pkern->setInitParam();
             gp->optimise(iters);
 
             // optimize acquisition function
-            #ifdef _WIN
 
-//            CMatrix cm = gridSearch(acq_fcn, grid_vals);
-//            cout << "optimizing x get_next_sample" << endl;
-//            cout << "x: " << endl; << cm << endl;
-
-            x = new CMatrix(gridSearch(acq_fcn, grid_vals));
-//            cout << "x_true " << *x << endl;
-
-            #else
-//            Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
-//            Eigen::VectorXd lower_bounds = Eigen::VectorXd(x_dim);
-//            Eigen::VectorXd upper_bounds = Eigen::VectorXd(x_dim);
-            ColVec_t x_optim = ColVec_t(x_dim);
-            ColVec_t lower_bounds = ColVec_t(x_dim);
-            ColVec_t upper_bounds = ColVec_t(x_dim);
-            // TODO choose better/random initial values? not strictly needed for global optimization
-            for (int i = 0; i < x_dim; i++) {
-                x_optim[i] = (bounds.getVal(i, 0) + bounds.getVal(i, 1))/2.0;
-                lower_bounds[i] = bounds.getVal(i, 0);
-                upper_bounds[i] = bounds.getVal(i, 1);
-            }
-
-            CMatrix x_test(1, x_dim, x_optim.data());
-            if (verbosity>=2) {
-                double temp_EI = expected_improvement(x_test, *gp, y_best, exploration_bias);
-                cout << "Current acquisition function value: " << temp_EI << endl;
-            }
-
-            optim::algo_settings_t optim_settings;
-            optim_settings.print_level = max(verbosity - 2, 0);
-            optim_settings.vals_bound = true;
-            // optim_settings.iter_max = 15;  // doesn't seem to control anything with DE
-            optim_settings.rel_objfn_change_tol = 1e-05;
-            optim_settings.rel_sol_change_tol = 1e-05;
-
-            optim_settings.de_settings.n_pop = 25 * x_dim;
-            optim_settings.de_settings.n_gen = 25 * x_dim;
-
-            optim_settings.lower_bounds = lower_bounds;
-            optim_settings.upper_bounds = upper_bounds;
-
-            optim_settings.de_settings.initial_lb = lower_bounds;
-            optim_settings.de_settings.initial_ub = upper_bounds;
-            // latest version of optim has RNG seeding, but not current version used
-            // optim_settings.rng_seed_value = seed;
-            // seed eigen library instead with std library seeding
-            srand((unsigned int) seed + num_samples);
-
-            bool success;
-
-            if (acq_func_name.compare("expected_improvement") == 0) {
-                EIOptimStruct opt_data = {*gp, y_best, exploration_bias};
-                success = optim::de(x_optim, expected_improvement_optim, &opt_data, optim_settings);
-            }
-            else {
-                throw std::invalid_argument("Acquisition function " + acq_func_name + " not implemented. Current options: 'expected_improvement'");
-            }
-
-            if (success) {
+            if (optimization_fcn.compare("grid") == 0) { x = new CMatrix(gridSearch(acq_fcn, grid_vals)); }
+            #ifndef _WIN
+            else if (optimization_fcn.compare("de") == 0) {
+                Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
+                Eigen::VectorXd lower_bounds = Eigen::VectorXd(x_dim);
+                Eigen::VectorXd upper_bounds = Eigen::VectorXd(x_dim);
+                // ColVec_t x_optim = ColVec_t(x_dim);
+                // ColVec_t lower_bounds = ColVec_t(x_dim);
+                // ColVec_t upper_bounds = ColVec_t(x_dim);
+                // TODO choose better/random initial values? not strictly needed for global optimization
                 for (int i = 0; i < x_dim; i++) {
-                    x->setVal(x_optim[i], i);
+                    x_optim[i] = (bounds.getVal(i, 0) + bounds.getVal(i, 1))/2.0;
+                    lower_bounds[i] = bounds.getVal(i, 0);
+                    upper_bounds[i] = bounds.getVal(i, 1);
+                }
+
+                CMatrix x_test(1, x_dim, x_optim.data());
+                if (verbosity>=2) {
+                    double temp_EI = expected_improvement(x_test, *gp, y_best, exploration_bias);
+                    cout << "Current acquisition function value: " << temp_EI << endl;
+                }
+
+                optim::algo_settings_t optim_settings;
+                optim_settings.print_level = max(verbosity - 2, 0);
+                optim_settings.vals_bound = true;
+                // optim_settings.iter_max = 15;  // doesn't seem to control anything with DE
+                optim_settings.rel_objfn_change_tol = 1e-05;
+                optim_settings.rel_sol_change_tol = 1e-05;
+
+                optim_settings.de_settings.n_pop = 25 * x_dim;
+                optim_settings.de_settings.n_gen = 25 * x_dim;
+
+                optim_settings.lower_bounds = lower_bounds;
+                optim_settings.upper_bounds = upper_bounds;
+
+                optim_settings.de_settings.initial_lb = lower_bounds;
+                optim_settings.de_settings.initial_ub = upper_bounds;
+                // latest version of optim has RNG seeding, but not current version used
+                // optim_settings.rng_seed_value = seed;
+                // seed eigen library instead with std library seeding
+                srand((unsigned int) seed + num_samples);
+
+                bool success;
+
+                if (acq_func_name.compare("expected_improvement") == 0) {
+                    EIOptimStruct opt_data = {*gp, y_best, exploration_bias};
+                    success = optim::de(x_optim, expected_improvement_optim, &opt_data, optim_settings);
+                }
+                else {
+                    throw std::invalid_argument("Acquisition function " + acq_func_name + " not implemented. Current options: 'expected_improvement'");
+                }
+
+                if (success) {
+                    for (int i = 0; i < x_dim; i++) {
+                        x->setVal(x_optim[i], i);
+                    }
+                }
+                else {
+                    cout << "Optimization of acquisition function failed." << endl;
+                    throw std::runtime_error("Optimization of acquisition function " + acq_func_name + " failed.");
                 }
             }
-            else {
-                cout << "Optimization of acquisition function failed." << endl;
-                throw std::runtime_error("Optimization of acquisition function " + acq_func_name + " failed.");
-            }
             #endif
+            else { throw std::runtime_error(string("Unknown optimization function (optimization_fcn): ") + optimization_fcn); }
         }
         catch(const std::exception& e) {  // catch all errors in fitting and get random sample
             cout << "Warning: error in fitting process for getting next sample. Falling back on random parameter sampling." << endl;
@@ -188,10 +184,9 @@ CMatrix* BayesianSearchModel::get_next_sample() {
             cout << "Rethrowing exception rather than handling with random resampling for debugging." << endl;
             throw e;
 
-            boost::random::uniform_real_distribution<> dist(0.0, 1.0);
-            boost::random::variate_generator<boost::mt19937&, boost::random::uniform_real_distribution<> > gen(rng, dist);
+            std::uniform_real_distribution<> dist(0.0, 1.0);
             for (unsigned int i = 0; i < x_dim; i++) {
-                x->setVal(bounds.getVal(i, 0) + gen() * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
+                x->setVal(bounds.getVal(i, 0) + dist(rng) * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
             }
         }
     }
@@ -201,69 +196,68 @@ CMatrix* BayesianSearchModel::get_next_sample() {
 
 CMatrix* BayesianSearchModel::get_best_solution() {
     // optimize GP
-    #ifdef _WIN
 
-    //            CMatrix cm = gridSearch(acq_fcn, grid_vals);
-//    cout << "optimizing x get_next_sample" << endl;
-    //            cout << "x: " << endl; << cm << endl;
-
-    CMatrix* x = new CMatrix(gridSearch(acq_fcn, grid_vals));
-//    cout << "x_true " << *x << endl;
-    #else
     CMatrix* x = new CMatrix(1, x_dim);
 
-//    Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
-//    Eigen::VectorXd lower_bounds = Eigen::VectorXd(x_dim);
-//    Eigen::VectorXd upper_bounds = Eigen::VectorXd(x_dim);
-    ColVec_t x_optim = ColVec_t(x_dim);
-    ColVec_t lower_bounds = ColVec_t(x_dim);
-    ColVec_t upper_bounds = ColVec_t(x_dim);
-    // TODO choose better/random initial values? not strictly needed for global optimization
-    // TODO implement CMatrix.getCol/getRow
-    for (int i = 0; i < x_dim; i++) {
-        x_optim[i] = (bounds.getVal(i, 0) + bounds.getVal(i, 1))/2.0;
-        lower_bounds[i] = bounds.getVal(i, 0);
-        upper_bounds[i] = bounds.getVal(i, 1);
-    }
+    if (optimization_fcn.compare("grid") == 0) { x = new CMatrix(gridSearch(acq_fcn, grid_vals)); }
+    #ifndef _WIN
+    else if (optimization_fcn.compare("de") == 0) {
+        x = new CMatrix(1, x_dim);
 
-    CMatrix x_test(1, x_dim, x_optim.data());
-
-    optim::algo_settings_t optim_settings;
-    // latest version of optim has RNG seeding, but not current version used
-    // optim_settings.rng_seed_value = seed;
-    // seed eigen library instead with std library seeding
-    srand((unsigned int) seed - num_samples);
-    optim_settings.print_level = verbosity;
-    if (verbosity >= 1) optim_settings.print_level -= 1;
-    optim_settings.vals_bound = true;
-    // optim_settings.iter_max = 15;  // doesn't seem to control anything with DE
-    optim_settings.rel_objfn_change_tol = 1e-05;
-    optim_settings.rel_sol_change_tol = 1e-05;
-
-    optim_settings.de_settings.n_pop = 100;
-    optim_settings.de_settings.n_gen = 100;
-
-    optim_settings.lower_bounds = lower_bounds;
-    optim_settings.upper_bounds = upper_bounds;
-
-    optim_settings.de_settings.initial_lb = lower_bounds;
-    optim_settings.de_settings.initial_ub = upper_bounds;
-
-    bool success;
-
-    GPOptimStruct opt_data = {*gp};
-    success = optim::de(x_optim, model_predict_optim, &opt_data, optim_settings);
-    if (success) {
+        Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
+        Eigen::VectorXd lower_bounds = Eigen::VectorXd(x_dim);
+        Eigen::VectorXd upper_bounds = Eigen::VectorXd(x_dim);
+        // ColVec_t x_optim = ColVec_t(x_dim);
+        // ColVec_t lower_bounds = ColVec_t(x_dim);
+        // ColVec_t upper_bounds = ColVec_t(x_dim);
+        // TODO choose better/random initial values? not strictly needed for global optimization
+        // TODO implement CMatrix.getCol/getRow
         for (int i = 0; i < x_dim; i++) {
-            x->setVal(x_optim[i], i);
+            x_optim[i] = (bounds.getVal(i, 0) + bounds.getVal(i, 1))/2.0;
+            lower_bounds[i] = bounds.getVal(i, 0);
+            upper_bounds[i] = bounds.getVal(i, 1);
+        }
+
+        CMatrix x_test(1, x_dim, x_optim.data());
+
+        optim::algo_settings_t optim_settings;
+        // latest version of optim has RNG seeding, but not current version used
+        // optim_settings.rng_seed_value = seed;
+        // seed eigen library instead with std library seeding
+        srand((unsigned int) seed - num_samples);
+        optim_settings.print_level = verbosity;
+        if (verbosity >= 1) optim_settings.print_level -= 1;
+        optim_settings.vals_bound = true;
+        // optim_settings.iter_max = 15;  // doesn't seem to control anything with DE
+        optim_settings.rel_objfn_change_tol = 1e-05;
+        optim_settings.rel_sol_change_tol = 1e-05;
+
+        optim_settings.de_settings.n_pop = 100;
+        optim_settings.de_settings.n_gen = 100;
+
+        optim_settings.lower_bounds = lower_bounds;
+        optim_settings.upper_bounds = upper_bounds;
+
+        optim_settings.de_settings.initial_lb = lower_bounds;
+        optim_settings.de_settings.initial_ub = upper_bounds;
+
+        bool success;
+
+        GPOptimStruct opt_data = {*gp};
+        success = optim::de(x_optim, model_predict_optim, &opt_data, optim_settings);
+        if (success) {
+            for (int i = 0; i < x_dim; i++) {
+                x->setVal(x_optim[i], i);
+            }
+        }
+        else {
+            // TODO exceptions aren't printing error messages in Visual Studio
+            cout << "Optimization of GP prediction (mean) function failed." << endl;
+            throw std::runtime_error("Optimization of GP prediction (mean) function failed.");
         }
     }
-    else {
-        // TODO exceptions aren't printing error messages in Visual Studio
-        cout << "Optimization of GP prediction (mean) function failed." << endl;
-        throw std::runtime_error("Optimization of GP prediction (mean) function failed.");
-    }
-    #endif // _WIN
+    #endif
+    else { throw std::runtime_error(string("Unknown optimization function (optimization_fcn): ") + optimization_fcn); }
     if (verbosity >= 0) {
         CMatrix y(1, 1);
         gp->out(y, *x);

@@ -1,4 +1,5 @@
 #include "CSearchComparison.h"
+#include "cnpy.h"
 using namespace std;
 
 int testType(const string Type);

@@ -1,6 +1,10 @@
 #include "testBayesianSearch.h"
 #include <experimental/filesystem>
+#ifdef _WIN
 namespace fs = std::experimental::filesystem;
+#else
+namespace fs = std::filesystem;
+#endif
 
 class CClgptest : public CClctrl 
 {
@@ -17,7 +21,7 @@ int main(int argc, char* argv[])
   std::wstring ws(wchar);
   std::string separator(std::string(ws.begin(), ws.end()));
   #else
-  std::string separator(fs::path::preferred_separator);
+  std::string separator(1, fs::path::preferred_separator);
   #endif
   CClgptest command(argc, argv);
   int fail = 0;
@@ -282,7 +286,7 @@ int testBayesianSearch(CML::EventLog& log,
   std::wstring ws(wchar);
   std::string separator(std::string(ws.begin(), ws.end()));
   #else
-  std::string separator(fs::path::preferred_separator);
+  std::string separator(1, fs::path::preferred_separator);
   #endif
 
   log.Log_Handler("Test function:\t" + test_func_str + "\n");
@@ -357,7 +361,8 @@ int testBayesianSearch(CML::EventLog& log,
   double exp_bias = exp_bias_ratio * test.range;
 
   // assume we know observation noise to some precision; white noise kernel able to adjust for additional noise
-  double obsNoise = 0.1 * test.noise_std;
+  // or set to zero for comparison with sklearn/skopt
+  double obsNoise = 0.0;  //0.1 * test.noise_std;
 
   x_dim = test.x_dim;
 
@@ -392,7 +397,7 @@ int testBayesianSearch(CML::EventLog& log,
     double x_range = test_run.x_interval(0, 1) - test_run.x_interval(0, 0);
 
     try {
-      CCmpndKern kern = getTestKernel(kernel, x_range, x_dim);
+      CCmpndKern kern = getTestKernel(kernel, test_run);
       BayesianSearchModel BO(kern, test_run.x_interval, obsNoise * obsNoise, exp_bias, n_init_samples, seed, verbosity);
       if (run == 0) { json_log[fd]["kernel_structure"] = BO.kern->json_structure(); }
 
@@ -411,10 +416,10 @@ int testBayesianSearch(CML::EventLog& log,
         sample_times(run, i) = (double)(clock() - sample_update_start)/CLOCKS_PER_SEC;
 
         #ifndef _WIN
-        if (plotting && (verbosity >= 2) && x_dim <= 2 && (i > n_init_samples)) {
+        if (plotting && (verbosity >= 3) && x_dim <= 2 && (i > n_init_samples)) {
           BO.get_next_sample();
-          // BO.gp->out(y_pred, std_pred, x);
-          BO.gp->out_sem(y_pred, std_pred, x);
+          BO.gp->out(y_pred, std_pred, x);
+          // BO.gp->out_sem(y_pred, std_pred, x);
           plot_BO_state(BO, x, y, y_pred, std_pred, x_sample, y_sample);
         }
         #endif

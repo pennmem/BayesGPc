@@ -45,7 +45,7 @@ MATPLOT_INCLUDE =$(MATPLOT_INCLUDE_DIRS) $(MATPLOT_INCLUDE_DEP_NODESOUP_DIR) $(M
 NODESOUP_LINK_FLAG =-L$(DEP_DIR)/matplotplusplus/build/source/3rd_party/ -lnodesoup
 MATPLOTLINKFLAG =-L$(DEP_DIR)/matplotplusplus/build/source/matplot/ -lmatplot $(NODESOUP_LINK_FLAG) -lm -lpthread -lX11 -ltiff -ljpeg -lpng -lz
 
-BOOSTLIB_INCLUDE =-I/usr/local/include/boost_1_77_0
+BOOSTLIB_INCLUDE =-I${DEP_DIR}/boost_1_77_0
 
 # nlohmann/json
 JSON_INCLUDE_DIRS =-I$(DEP_DIR)/json/single_include

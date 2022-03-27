@@ -197,7 +197,7 @@ void COptimisable::lbfgs_b_Optimise()
   C2F_BASE_INT_TYPE nParams = getOptNumParams();
   C2F_BASE_INT_TYPE memSize = 10;  // number of corrections
   double factr = 1e7; // solution accuracy based on function values
-  double pgtol = 1e-7; // solution accuracy based on gradient values
+  double pgtol = 1e-5; // solution accuracy based on gradient values  // previously 1e-7, changed to 1e-5 on 3/26/2022 for comparison with skopt
   C2F_BASE_INT_TYPE maxls = 20;  // max number of line search iterations
   
   C2F_BASE_INT_TYPE iprint;  // verbosity
@@ -224,9 +224,15 @@ void COptimisable::lbfgs_b_Optimise()
   CMatrix X_orig(X);
   CMatrix g(1, nParams);
 
-  while (restart < n_restarts && !conv) {
+  // only use fail restarts if error occurs during fitting (e.g. for numerical 
+  // instability) and convergence has not been obtained on a previous restart
+  int n_fail_restarts = 3;
+  
+  while ((restart < n_restarts) || ((restart < n_fail_restarts) && !conv)) {
     iter = 0;
     restart++;
+    if ((verbosity >= 1) && (restart >= 1)) { cout << "Starting L-BFGS-B restart " << restart << endl; }
+    if (verbosity >= 2) { cout << "X before L-BFGS-B: " << X << endl; }
 
     // LBFGS-B settings that must be reset across random restarts
     double* Xvals = new double[nParams];
@@ -269,13 +275,13 @@ void COptimisable::lbfgs_b_Optimise()
           X_best = X;
         }
 //        cout << "Before lbfgs_b" << endl;
-//        cout << "nParams" << nParams << endl;
-//        cout << "memSize" << memSize << endl;
-//        cout << "lb" << lower_bounds << endl;
-//        cout << "ub" << upper_bounds << endl;
-//        cout << "nbd " << endl; // const C2F_BASE_INT_TYPE*
-//        for (int i = 0; i < nParams; i++) { cout << nbd[i] << " "; }
-//        cout << endl;
+// //        cout << "nParams" << nParams << endl;
+// //        cout << "memSize" << memSize << endl;
+// //        cout << "lb" << lower_bounds << endl;
+// //        cout << "ub" << upper_bounds << endl;
+// //        cout << "nbd " << endl; // const C2F_BASE_INT_TYPE*
+// //        for (int i = 0; i < nParams; i++) { cout << nbd[i] << " "; }
+// //        cout << endl;
 
 //        cout << "iwa" << endl; // C2F_BASE_INT_TYPE*
 //        for (int i = 0; i < 3*nParams; i++) { iwa[i] = i; cout << iwa[i] << " "; }
@@ -332,8 +338,10 @@ void COptimisable::lbfgs_b_Optimise()
         X.fromArray(Xvals);
         setOptParams(X);
         if (getVerbosity() >= 2) { cout << "task " << task << endl; }
-        
-        if (strncmp(task, "CONV", 4) == 0) {
+
+        if (strncmp(task, "CONV", 4) == 0) { 
+          if (getVerbosity() >= 2) { cout << "COptimisable: LBFGS-B successfully converged. Restart " << restart << endl; }
+          conv = true;
           break;
         }
         else if (strncmp(task, "FG", 2) == 0) {
@@ -347,10 +355,12 @@ void COptimisable::lbfgs_b_Optimise()
           if (iter >= maxIters) {
             memset(task, ' ', 60);
             strcpy(task, "STOP: TOTAL NO. of ITERATIONS REACHED LIMIT");
+            conv = true;
           }
           else if (funcEval >= maxFuncEval) {
             memset(task, ' ', 60);
             strcpy(task, "STOP: TOTAL NO. of f AND g EVALUATIONS EXCEEDS LIMIT");
+            conv = true;
           }
         }
         else if (true || strncmp(task, "ABNORMAL_TERMINATION_IN_LNSRCH", 30) == 0) {
@@ -358,113 +368,67 @@ void COptimisable::lbfgs_b_Optimise()
           // indicates failure to descend after 20 line search iterations, potentially caused by
           // 1. gradient computations not matching function 
           // 2. numerical error dominating the computation
-          cout << endl << task << endl << "Numbers of iterations: " << iter << endl;
-          cout << "log params" << endl << X << endl;
-          cout << "grads" << endl << g << endl << endl;
+          if (verbosity > 1) {
+            cout << endl << task << endl << "Numbers of iterations: " << iter << endl;
+            cout << "log params" << endl << X << endl;
+            cout << "grads" << endl << g << endl << endl;
+          }
           iter++;
+          if (getVerbosity() >= 0) { cout << "COptimisable: lbfgs_b message on restart " << restart << ": " << task << endl; }
+          conv = true;
           break;
         }
-        else {  // other error/warning state
-          cout << "Unknown LBFGS-B warning/error: " << endl << task << endl;
+        else {
+          cout << "COptimisable: lbfgs_b error on restart " << restart << ": " << task << endl;
+          if ((restart >= n_restarts - 1) && (restart >= n_fail_restarts - 1)) {
+            if (X_best.equals(X_orig) && !conv) {
+              cout << "LBFGS-B: Failure to find better solution X after " << n_restarts << " random restarts. Throwing exception." << endl;
+              throw ndlexceptions::Error(string("Unhandled error in lbfgsb:   ") + string(task));
+            }
+          }
+          else { cout << "Restarting optimization with random X (restart " << restart << ")" << endl; }
           break;
         }
       }
     }
-    catch (const ndlexceptions::MatrixError& e) {  // assume error of numerical stability or non-PSD
+    catch (const ndlexceptions::MatrixError& e) {  // assume error of numerical stability, likely a non-PSD Cholesky decomposition
       cout << "Matrix error in LBFGS-B: " << endl;
       cout << e.what() << endl;
-      if (restart == n_restarts - 1) {
-        if (X_best.equals(X_orig)) {
-          cout << "LBFGS-B: Failure to successfully fit new X_best after " << n_restarts << " random restarts. Throwing exception." << endl;
+      if ((restart >= n_restarts - 1) && (restart >= n_fail_restarts - 1)) {
+        // allow for some intermediate improvement to succeed even if final optimizations fail
+        // and for convergence in the case of a flat region to succeed (in which case X_best could equal X_orig at successful convergence)
+        if ((X_best.equals(X_orig)) && (!conv)) {
+          cout << "Error: LBFGS-B: Failure to successfully fit solution after " << n_restarts << " random restarts. Throwing exception." << endl;
           throw e;
         }
-        else { setOptParams(X_best); }
       }
-      else {
-        cout << "Restarting optimization with random X (restart " << restart << ")" << endl;
-        boost::random::uniform_real_distribution<> dist(0.0, 1.0);
-        boost::random::variate_generator<boost::mt19937&, boost::random::uniform_real_distribution<> > gen(rng, dist);
-        for (unsigned int i = 0; i < nParams; i++) {
-            X.setVal(bounds.getVal(i, 0) + gen() * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
-        }
-      }
+      else { cout << "Restarting optimization with random X (restarts attempted: " << restart << ")" << endl; }
     }
     catch (const std::exception& e) {
-      cout << "Unhandled exception in LBFGS-B: " << endl;
+      cout << "Unhandled exception in LBFGS-B or failure_restarts == n_failure_restarts: " << endl;
       cout << e.what() << endl;
       cout << "Exiting search process." << endl;
       throw e;
     }
 
-    if (strncmp(task, "CONV", 4) == 0) {
-      setOptParams(X_best);
-      conv = true;
-      if (getVerbosity() >= 2) { cout << "LBFGS-B successfully converged." << endl; }
+    // restart search with random parameters if any restarts remain
+    std::uniform_real_distribution<> dist(0.0, 1.0);
+    for (unsigned int i = 0; i < nParams; i++) {
+        X.setVal(bounds.getVal(i, 0) + dist(rng) * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
     }
-    else if (iter >= maxIters || funcEval >= maxFuncEval) {
-      if (getVerbosity() >= 0) { cout << "COptimisable: lbfgs_b message: " << task << endl; }
-      setOptParams(X_best);
-      conv = true;
-    }
-    else if (true || strncmp(task, "ABNORMAL_TERMINATION_IN_LNSRCH", 30) == 0) {
-      if (getVerbosity() >= 0) { cout << "COptimisable: lbfgs_b message: " << task << endl; }
-      cout << "before setOptParams" << endl;
-      setOptParams(X_best);
-      cout << "after setOptParams" << endl;
-      conv = true;
-    }
-    // pass through if errors occurred in function evaluation before LBFGS-B search run once
-    else if (strncmp(task, "START", 5) == 0) {}
-    else {
-      cout << "COptimisable lbfgs_b error: " << endl << task << endl;
-      if (restart == n_restarts - 1) {
-        if (X_best.equals(X_orig)) {
-          cout << "LBFGS-B: Failure to successfully fit new X_best after " << n_restarts << " random restarts. Throwing exception." << endl;
-          throw ndlexceptions::Error(string("Unhandled error in lbfgsb:   ") + string(task));
-        }
-        else { setOptParams(X_best); }
-      }
-      else {
-        cout << "Restarting optimization with random X (restart " << restart << ")" << endl;
-        boost::random::uniform_real_distribution<> dist(0.0, 1.0);
-        boost::random::variate_generator<boost::mt19937&, boost::random::uniform_real_distribution<> > gen(rng, dist);
-        for (unsigned int i = 0; i < nParams; i++) {
-            X.setVal(bounds.getVal(i, 0) + gen() * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
-        }
-      }
-    }
-//    cout << "before deletes" << endl;
-    delete[] Xvals;
-//    cout << "before deletes xvals" << endl;
-    delete[] nbd;
-//    cout << "before deletes nbd" << endl;
-    delete[] gvals;
-//    seems like cauchy might be corrupting this work array
-//    seg fault occurring late? in gdb it occurs within cauchy and no seg fault occurs if lfbgs is skipped
 
-//    eigen is having alignment issues
-//        could try changing VectorXd to Matrix types that were redefined as ColVec_t types in optim
-//        could remove optim altogether in Windows for now and implement grid search class for Windows,
-//            which I want to do anyways.
-//    cout << "before deletes work" << endl;
-//    cout << "work " << work << endl;
-//    cout << "work" << endl; // double*
-//    for (int i = 0; i < nParams*(2*memSize + 5) + 12*(memSize + 1)*memSize; i++) { cout << work[i] << " "; }
-//    cout << endl;
+    delete[] Xvals;
+    delete[] nbd;
+    delete[] gvals;
     delete[] work;
-//    cout << "before deletes iwa" << endl;
     delete[] iwa;
-//    cout << "before deletes task" << endl;
     delete[] task;
-//    cout << "before deletes csave" << endl;
     delete[] csave;
-//    cout << "before deletes lsave" << endl;
-//    cout << "sizeof bool" << sizeof(bool) << endl;
     delete[] lsave;
     delete[] isave;
     delete[] dsave;
-//    cout << "leaving lbfgs-b" << endl;
   }
+  setOptParams(X_best);
 
   if (max(X) > log(1e10)) {
     cout << "Warning: large log parameters: " << endl << X << endl;
