@@ -164,6 +164,7 @@ int main(int argc, char* argv[])
     log_dir += "-mean_diff_" + to_string(mean_diff);
     log_dir += "-noise_" + to_string(noise_level);
     log_dir += "-exp_bias_" + to_string(exp_bias_ratio);
+    log_dir += "-n_grid_" + to_string(n_grid);
     log_dir += "_" + getDateTime();
 
     if (PathExists(log_dir)) { throw std::runtime_error("Log directory " + log_dir + " already exists. Aborting test."); }
