@@ -66,12 +66,7 @@ CMatrix* BayesianSearchModel::get_next_sample() {
     
     // initial random samples
     // TODO upgrade to Latin hypercube sampling
-    if (num_samples < initial_samples) {
-        std::uniform_real_distribution<> dist(0.0, 1.0);
-        for (unsigned int i = 0; i < x_dim; i++) {
-            x->setVal(bounds.getVal(i, 0) + dist(rng) * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
-        }
-    }
+    if (num_samples < initial_samples) { uniform_random_sample(x); }
     else {
         try {
             // update Gaussian process model
@@ -183,11 +178,8 @@ CMatrix* BayesianSearchModel::get_next_sample() {
 
             cout << "Rethrowing exception rather than handling with random resampling for debugging." << endl;
             throw e;
-
-            std::uniform_real_distribution<> dist(0.0, 1.0);
-            for (unsigned int i = 0; i < x_dim; i++) {
-                x->setVal(bounds.getVal(i, 0) + dist(rng) * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
-            }
+            
+            uniform_random_sample(x);
         }
     }
     return x;
@@ -298,3 +290,19 @@ void BayesianSearchModel::add_sample(const CMatrix& x, const CMatrix& y) {
     }
 }
 
+void BayesianSearchModel::uniform_random_sample(CMatrix* x) {
+    if (init_points_on_grid) {
+        for (unsigned int i = 0; i < x_dim; i++) {
+            std::uniform_int_distribution<> dist(0, grid_vals[i].getRows() - 1);
+            // fix uniform random samples to grid points
+            x->setVal(grid_vals[i].getVal(dist(rng)), i);
+        }
+    }
+    else {
+        std::uniform_real_distribution<> dist(0.0, 1.0);
+        for (unsigned int i = 0; i < x_dim; i++) {
+            // fix uniform random samples to grid points
+            x->setVal(bounds.getVal(i, 0) + dist(rng) * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
+        }
+    }
+}

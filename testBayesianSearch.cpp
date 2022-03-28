@@ -1,8 +1,9 @@
 #include "testBayesianSearch.h"
-#include <experimental/filesystem>
 #ifdef _WIN
+#include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 #else
+#include <filesystem>
 namespace fs = std::filesystem;
 #endif
 
@@ -39,6 +40,7 @@ int main(int argc, char* argv[])
     int n_iters           = 250;
     int n_init_samples    = 25;
     int x_dim             = 1;
+    int n_grid            = 0;  // use grid search if greater than zero with grid having roughly n_grid total points with equal density across dimensions
     double noise_level    = 0.1;
     double exp_bias_ratio = 0.25;
     int seed              = 1234;
@@ -83,6 +85,10 @@ int main(int argc, char* argv[])
         if (command.isCurrentArg("-d", "--x_dim")) {
           command.incrementArgument();
           x_dim = std::stoi(command.getCurrentArgument());
+        }
+        if (command.isCurrentArg("-g", "--n_grid")) {
+          command.incrementArgument();
+          n_grid = std::stoi(command.getCurrentArgument());
         }
         if (command.isCurrentArg("-n", "--noise_level")) {
           command.incrementArgument();
@@ -163,6 +169,7 @@ int main(int argc, char* argv[])
 
     config["func"] = test_func_arg;
     config["dim"] = x_dim;
+    config["n_grid"] = n_grid;
     config["kern"] = kern_arg;
     config["n_runs"] = n_runs;
     config["n_iters"] = n_iters;
@@ -214,6 +221,7 @@ int main(int argc, char* argv[])
                         n_iters,
                         n_init_samples,
                         p.second,
+                        n_grid,
                         noise_level,
                         exp_bias_ratio,
                         verbosity,
@@ -231,6 +239,7 @@ int main(int argc, char* argv[])
                       n_iters,
                       n_init_samples,
                       x_dim,
+                      n_grid,
                       noise_level,
                       exp_bias_ratio,
                       verbosity,
@@ -271,6 +280,7 @@ int testBayesianSearch(CML::EventLog& log,
                        int n_iters,
                        int n_init_samples,
                        int x_dim,
+                       int n_grid,
                        double noise_level,
                        double exp_bias_ratio,
                        int verbosity,
@@ -396,9 +406,22 @@ int testBayesianSearch(CML::EventLog& log,
     TestFunction test_run(test_func_str, seed, noise_level, x_dim, verbosity);
     double x_range = test_run.x_interval(0, 1) - test_run.x_interval(0, 0);
 
+    vector<CMatrix> grid_vals;
+    if (n_grid > 0) {
+      int n_grid_dim = (int)std::pow((double)n_grid, 1.0/((double)x_dim));
+      for (int i = 0; i < x_dim; i++) {
+          CMatrix grid1D = linspace(test_run.x_interval.getVal(i,0),
+                                    test_run.x_interval.getVal(i,1),
+                                    n_grid_dim);
+          grid_vals.push_back(grid1D);
+      }
+    }
+
     try {
       CCmpndKern kern = getTestKernel(kernel, test_run);
-      BayesianSearchModel BO(kern, test_run.x_interval, obsNoise * obsNoise, exp_bias, n_init_samples, seed, verbosity);
+
+      BayesianSearchModel BO(kern, test_run.x_interval, obsNoise * obsNoise, exp_bias, n_init_samples, seed, verbosity, grid_vals);
+      if (n_grid > 0) { BO.init_points_on_grid = true; }
       if (run == 0) { json_log[fd]["kernel_structure"] = BO.kern->json_structure(); }
 
       clock_t start = clock();

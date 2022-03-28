@@ -6,6 +6,7 @@ MUST TODOs for Elemem build
 
 -finish testing of CBayesianSearch, need to compare with Python reference implementations
     try smaller values of exploration bias, e.g., 0.01, 0.05
+        
     -could argue that 1D performance is sufficient, it's higher dimensional search that I'll
         update search process for (will hopefully occur sooner rather than later)
         more important even now is power of detecting improved settings for individual subjects
@@ -14,17 +15,28 @@ MUST TODOs for Elemem build
             may not be directly comparable
             examine effects of specific HPs
             performance is much closer at higher noise levels, still not equal?
+            performance is much closer for 
 
         kernels, gradients are matching, any differences must be in BO or optimization algos
         DONE optimization algo settings/tolerances
-        RUNNING out_sem vs. out
+        DONE out_sem vs. out
+            performance is much closer between CBayes without out_sem and skopt than CBayes with out_sem
+            out_sem does appear to have small advantage in 1D cases across hyperparameters
+            CBayes with out_sem still seems to have overall advantage across 1D cases, still haven't directly compared
+                across optimized parameters (but that would be confounded by multiple comparisons)
+            skopt still seems to have advantage in 4D cases
+                might be driven by choice of global optimizer of acquisition function
+                    DE with settings I've chosen may not be optimizing acquisition function as well as expected,
+                        acquisition function is highly multimodal and peaked, possible that DE isn't converging on local
+                        optima as well as L-BFGS-B would
+
         confirm expected improvement computation matches skopt
             appears to be identical in code
             only check this later if needed
-        TODO fixed number of resets in optimizing kernel hps vs. only if there
+        DONE fixed number of resets in optimizing kernel hps vs. only if there
             are failures, which appears to no longer be happening now that bounds and white
             kernel/obs noise have been sorted out
-            can add to CBayes or just lower number of restarts in skopt
+            additional restarts did not change performance, can likely be eliminated
         DE vs. multi-start local optimization
             assumed DE is better than multi-start local opt with only 5 resets
             DE has solved benchmark optimization problems consistently while local opt with 5 restarts would not
@@ -359,6 +371,8 @@ cnpy (for loading ndarrays from Python), could replace with h5
     make install
 
 boost (could be removed if we wanted, just using distribution libraries for now)
+    version 1.77 or higher for standalone boost/math library with #define BOOST_MATH_STANDALONE
+
     Mac:
     brew
 

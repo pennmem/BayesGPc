@@ -266,7 +266,7 @@ void CGp::updateScale() const
 
 void CGp::updateM() const 
 {
-  if (verbosity >= 3) { cout << "entering updateM()" << endl; }
+  if (getVerbosity() >= 3) { cout << "entering updateM()" << endl; }
   if(!isMupToDate())
   {
     updateBias();
@@ -747,7 +747,7 @@ void CGp::updateCovGradient(unsigned int j, CMatrix& invKm) const
 
 void CGp::updateK() const
 {
-  if (verbosity >= 3) { cout << "entering updateK()" << endl; }
+  if (getVerbosity() >= 3) { cout << "entering updateK()" << endl; }
   if(!isKupToDate())
   {
     _updateK();
@@ -759,7 +759,7 @@ void CGp::updateK() const
 
 void CGp::_updateK() const
 {
-  if (verbosity >= 3) { cout << "entering _updateK()" << endl; }
+  if (getVerbosity() >= 3) { cout << "entering _updateK()" << endl; }
   double kVal=0.0;
   switch(getApproximationType()) 
   {
@@ -823,7 +823,7 @@ void CGp::_updateK() const
 }
 
 void CGp::updateAD() const {
-  if (verbosity >= 3) { cout << "entering updateAD()" << endl; }
+  if (getVerbosity() >= 3) { cout << "entering updateAD()" << endl; }
   if(!isADupToDate())
   {
     double betaVal = beta.getVal(0);
@@ -945,7 +945,7 @@ void CGp::updateAD() const {
 // update invK with the inverse of the kernel plus beta terms computed from the active points.
 void CGp::_updateInvK(unsigned int dim) const
 {
-  if (verbosity >= 3) { cout << "entering _updateInvK()" << endl; }
+  if (getVerbosity() >= 3) { cout << "entering _updateInvK()" << endl; }
   double jit = 0.0;
   switch(getApproximationType()) {
   case FTC:

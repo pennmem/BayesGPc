@@ -2,6 +2,15 @@
 #include "CSearchComparison.h"
 #include "cnpy.h"
 
+#ifdef _WIN
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#else
+#include <filesystem>
+namespace fs = std::filesystem;
+#endif
+
+
 int testSearchComparison(CML::EventLog& log,
                         json& json_log,
                         string kernel, 
@@ -10,6 +19,7 @@ int testSearchComparison(CML::EventLog& log,
                         int n_iters=250,
                         int n_init_samples=10,
                         int x_dim=1,
+                        int n_grid=0,
                         int n_way=1,
                         double mean_diff=0.1,
                         double noise_level=0.3,
@@ -29,6 +39,13 @@ class CClgptest : public CClctrl
 
 int main(int argc, char* argv[])
 {
+  #ifdef _WIN
+  wchar_t wchar[2] = {fs::path::preferred_separator, '\0'};
+  std::wstring ws(wchar);
+  std::string separator(std::string(ws.begin(), ws.end()));
+  #else
+  std::string separator(1, fs::path::preferred_separator);
+  #endif
   CClgptest command(argc, argv);
   int fail = 0;
   CML::EventLog log;
@@ -45,6 +62,7 @@ int main(int argc, char* argv[])
     int n_iters           = 250;
     int n_init_samples    = 25;
     int x_dim             = 1;
+    int n_grid            = 0;  // use grid search if greater than zero with grid having roughly n_grid total points with equal density across dimensions
     int n_way             = 2;
     double mean_diff      = 0.1;  // constant difference between test function(s)
     double noise_level    = 0.1;
@@ -92,6 +110,10 @@ int main(int argc, char* argv[])
           command.incrementArgument();
           x_dim = std::stoi(command.getCurrentArgument());
         }
+        if (command.isCurrentArg("-g", "--n_grid")) {
+          command.incrementArgument();
+          n_grid = std::stoi(command.getCurrentArgument());
+        }
         if (command.isCurrentArg("-n_way", "--n_way")) {
           command.incrementArgument();
           n_way = std::stoi(command.getCurrentArgument());
@@ -131,7 +153,7 @@ int main(int argc, char* argv[])
       }
     }
 
-    string log_dir = results_dir + std::filesystem::path::preferred_separator + tag_arg;
+    string log_dir = results_dir + separator + tag_arg;
     log_dir += "-func_" + test_func_arg;
     log_dir += "-dim_" + to_string(x_dim);
     log_dir += "-kern_" + kern_arg;
@@ -149,13 +171,13 @@ int main(int argc, char* argv[])
     else { throw std::runtime_error("Failed to make log directory. Aborting test."); }
 
     CML::EventLog log;
-    log.StartFile_Handler(log_dir + std::filesystem::path::preferred_separator + "log.out");
+    log.StartFile_Handler(log_dir + separator + "log.out");
     log.Log_Handler("Made log file: " + log.get_StartFile() + "\n");
     // separately log full console output
     CML::EventLog full_log;
     if (!debug) {
       full_log.set_log_console_output(true);
-      full_log.StartFile_Handler(log_dir + std::filesystem::path::preferred_separator + "full_console_log.out");
+      full_log.StartFile_Handler(log_dir + separator + "full_console_log.out");
     }
     log.Log_Handler(string("git branch:\t") + string(GIT_BRANCH) + string("\n"));
     log.Log_Handler(string("git commit:\t") + string(GIT_COMMIT) + string("\n"));
@@ -176,6 +198,7 @@ int main(int argc, char* argv[])
 
     config["func"] = test_func_arg;
     config["dim"] = x_dim;
+    config["n_grid"] = n_grid;
     config["kern"] = kern_arg;
     config["n_runs"] = n_runs;
     config["n_iters"] = n_iters;
@@ -188,7 +211,7 @@ int main(int argc, char* argv[])
     config["GIT_BRANCH"] = string(GIT_BRANCH);
     config["GIT_COMMIT"] = string(GIT_COMMIT);
     config["GIT_URL"] = string(GIT_URL);
-    ofstream config_file(log_dir + std::filesystem::path::preferred_separator + "config.json");
+    ofstream config_file(log_dir + separator + "config.json");
     config_file << config.dump(4);
     config_file.flush();
 
@@ -229,6 +252,7 @@ int main(int argc, char* argv[])
                         n_iters,
                         n_init_samples,
                         p.second,
+                        n_grid,
                         n_way,
                         mean_diff,
                         noise_level,
@@ -248,6 +272,7 @@ int main(int argc, char* argv[])
                       n_iters,
                       n_init_samples,
                       x_dim,
+                      n_grid,
                       n_way,
                       mean_diff,
                       noise_level,
@@ -261,7 +286,7 @@ int main(int argc, char* argv[])
     log.Log_Handler("Number of failures: " + to_string(fail) + ".\n");
     log.CloseFile_Handler();
 
-    ofstream json_out(log_dir + std::filesystem::path::preferred_separator + "log.json");
+    ofstream json_out(log_dir + separator + "log.json");
     json_out << json_log.dump(4);
     json_out.flush();
 
@@ -290,6 +315,7 @@ int testSearchComparison(CML::EventLog& log,
                        int n_iters,
                        int n_init_samples,
                        int x_dim,
+                       int n_grid,
                        int n_way,
                        double mean_diff,
                        double noise_level,
@@ -300,6 +326,14 @@ int testSearchComparison(CML::EventLog& log,
                        int seed
 )
 {
+  #ifdef _WIN
+  wchar_t wchar[2] = {fs::path::preferred_separator, '\0'};
+  std::wstring ws(wchar);
+  std::string separator(std::string(ws.begin(), ws.end()));
+  #else
+  std::string separator(1, fs::path::preferred_separator);
+  #endif
+
   assert(n_init_samples < n_iters);
   int fail = 0;
   int correct_model = 0;
@@ -394,9 +428,22 @@ int testSearchComparison(CML::EventLog& log,
     // after reseeding, identical behavior results only after an even number of samples are drawn
     // may also be driven by the default RNG generator used...
     TestFunction test_run(test_func_str, seed, noise_level, x_dim, verbosity);
+    vector<vector<CMatrix>> all_grid_vals;
+    if (n_grid > 0) {
+      vector<CMatrix> grid_vals;
+      int n_grid_dim = (int)std::pow((double)n_grid, 1.0/((double)x_dim));
+      for (int i = 0; i < x_dim; i++) {
+          CMatrix grid1D = linspace(test_run.x_interval.getVal(i,0),
+                                    test_run.x_interval.getVal(i,1),
+                                    n_grid_dim);
+          grid_vals.push_back(grid1D);
+      }
+      // use same grid across searches for testing
+      for (int i = 0; i < n_way; i++) { all_grid_vals.push_back(grid_vals); }
+    }
 
     try {
-      CCmpndKern kern = getTestKernel(kernel, test_run.x_interval(0, 1) - test_run.x_interval(0, 0), x_dim);
+      CCmpndKern kern = getTestKernel(kernel, test_run);
       // TODO change over all function arguments to CKern
       vector<CCmpndKern> kernels;
       vector<CMatrix> param_bounds;
@@ -414,7 +461,12 @@ int testSearchComparison(CML::EventLog& log,
       }
 
       CSearchComparison search(n_way, alpha, kernels, param_bounds, observation_noises,
-              exploration_biases, init_samples, rng_seeds, verbosity);
+              exploration_biases, init_samples, rng_seeds, verbosity, all_grid_vals);
+      if (n_grid > 0) {
+        for (int im = 0; im < search.num_models; im++) {
+          search.models[im].init_points_on_grid = true;
+        }
+      }
       // use identical kernels across functions for now
       if (run == 0) { json_log[fd]["kernel_structure"] = kern.json_structure(); }
 

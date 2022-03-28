@@ -8,16 +8,14 @@
 #include "optim.hpp"
 #endif
 
-// enables access to private variables in CGp, not ideal but using for now...
-// pkern accessed in CBayesianSearch.cpp
-#define DBG
-
 #include "CGp.h"
 #include "CKern.h"
 #include "CMatrix.h"
 #include "CNoise.h"
 #include <cmath>
 #include <cassert>
+
+#include <boost/math/distributions/normal.hpp>
 
 #include <stdexcept>
 
@@ -30,7 +28,7 @@ class BayesianSearchModel {
         BayesianSearchModel() {}
         BayesianSearchModel(CCmpndKern& kernel, const CMatrix& param_bounds,
                             double observation_noise, double exp_bias,
-                            int init_samples, int rng_seed, int verbose) {
+                            int init_samples, int rng_seed, int verbose, vector<CMatrix> grid=vector<CMatrix>()) {
             kern = kernel.clone();
             DIMENSIONMATCH(param_bounds.getCols() == 2);
             bounds = param_bounds;
@@ -49,18 +47,13 @@ class BayesianSearchModel {
             y_best = -INFINITY;
             x_samples = new CMatrix(1, x_dim);
             y_samples = new CMatrix(1, 1);
-            int n_grid;
-            if (x_dim == 1) { n_grid = 50000; }
-            else if (x_dim == 2) { n_grid = 10000; }
-            else if (x_dim == 3) { n_grid = 1000; }
-            else if (x_dim == 4) { n_grid = 1000; }
-            else { throw std::runtime_error("Need to hard code n_grid for x_dim >= 5"); }
-
-            for (int i = 0; i < x_dim; i++) {
-                CMatrix grid1D = linspace(bounds.getVal(i,0),
-                                          bounds.getVal(i,1),
-                                          n_grid);
-                grid_vals.push_back(grid1D);
+            grid_vals = grid;
+            if (grid.size() == 0) {
+                #ifdef _WIN 
+                throw std::exception("Windows build only supports grid search. Please provide parameter [grid].");
+                #else
+                optimization_fcn = "de";
+                #endif
             }
         }
 
@@ -121,15 +114,13 @@ class BayesianSearchModel {
 
         CMatrix bounds;
         // for grid search-based global optimization
-        #ifdef _WIN
         string optimization_fcn = "grid";
-        #else
-        string optimization_fcn = "de";
-        #endif // _WIN
+        bool init_points_on_grid = false;
         std::vector<CMatrix> grid_vals;
         CMatrix* get_next_sample();
         void add_sample(const CMatrix& x, const CMatrix& y);
         CMatrix* get_best_solution();
+        void uniform_random_sample(CMatrix* x);
         // TODO switch to enumeration
         string acq_func_name;
         std::function<double(const CMatrix&)> acq_fcn;

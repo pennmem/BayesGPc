@@ -25,7 +25,7 @@ class CSearchComparison {
     CSearchComparison() {}
     CSearchComparison(int n_models, double alpha, vector<CCmpndKern> kernels, vector<CMatrix> bounds,
             vector<double> observation_noises, vector<double> exploration_biases, vector<int> init_samples,
-            vector<int> rng_seeds, int verbose) {
+            vector<int> rng_seeds, int verbose, vector<vector<CMatrix>> grids_vals = vector<vector<CMatrix>>()) {
         num_models = n_models;
         pthreshold = alpha;
         kerns = kernels;
@@ -35,11 +35,14 @@ class CSearchComparison {
         initial_samples = init_samples;
         seeds = rng_seeds;
         verbosity = verbose;
+        grids = grids_vals;
+        if (grids_vals.size() > 0) { assert(grids.size() == num_models); }
 
         for (int i = 0; i < num_models; i++) {
             BayesianSearchModel bay(kerns[i], param_bounds[i],
                                     obsNoises[i], exp_biases[i],
-                                    initial_samples[i], seeds[i], verbosity);
+                                    initial_samples[i], seeds[i], verbosity,
+                                    (grids.size() > 0 ? grids[i] : vector<CMatrix>()));
             models.push_back(bay);
         }
     }
@@ -64,6 +67,7 @@ class CSearchComparison {
     vector<double> obsNoises;
     vector<double> exp_biases;
     vector<int> initial_samples;
+    vector<vector<CMatrix>> grids;
     vector<int> seeds;
     int verbosity;
 };
