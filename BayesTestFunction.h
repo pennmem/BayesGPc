@@ -30,11 +30,8 @@ class TestFunction {
     double y_sol;
     std::vector<CMatrix> grid_vals;
     int verbosity;
-    #ifdef _WIN
+    // "grid" for grid search, "de" for differential evolution (optim implementation)
     string optimization_fcn = "grid";
-    #else
-    string optimization_fcn = "de";
-    #endif // _WIN
 
     // noise distribution
     normal_distribution<double> dist;

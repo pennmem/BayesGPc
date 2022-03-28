@@ -5,7 +5,7 @@
 #  Dec 23, 2008
 # dependencies created with gcc -MM XXX.cpp
 
-include make.osx
+include make.linux
 
 all: gplvm ivm gp libgp$(LIBSEXT) libgp$(LIBDEXT)
 
@@ -89,11 +89,11 @@ testGp_sklearn.o: testGp_sklearn.cpp CKern.h ndlassert.h ndlexceptions.h CTransf
 testCSearchComparison.o: testCSearchComparison.cpp CSearchComparison.h CBayesianSearch.h CKern.h ndlassert.h ndlexceptions.h CTransform.h \
   CMatrix.h CNdlInterfaces.h ndlstrutil.h ndlutil.h ndlfortran.h ndlfortran_lbfgsb.h \
   lapack.h CDataModel.h CDist.h CGp.h CMltools.h COptimisable.h CNoise.h \
-  CClctrl.h sklearn_util.h
+  CClctrl.h sklearn_util.h GridSearch.h
 	$(CC) -c testCSearchComparison.cpp -o testCSearchComparison.o $(CCFLAGS)
 
-testCSearchComparison: testCSearchComparison.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o ndlassert.o
-	$(LD) ${XLINKERFLAGS} -o testCSearchComparison testCSearchComparison.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o $(LDFLAGS)
+testCSearchComparison: testCSearchComparison.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o sklearn_util.o ndlassert.o GridSearch.o
+	$(LD) ${XLINKERFLAGS} -o testCSearchComparison testCSearchComparison.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_timer.o ndlfortran_linpack.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o sklearn_util.o GridSearch.o $(LDFLAGS)
 
 ifeq ($(PLAT), _WIN)
 testCSearchComparison_full: testCSearchComparison_full.o CSearchComparison.o CBayesianSearch.o CGp.o CMatrix.o ndlfortran.o ndlfortran_lbfgsb.o CNoise.o ndlutil.o ndlstrutil.o CTransform.o COptimisable.o CKern.o CDist.o CClctrl.o CMltools.o ndlassert.o Logger.o BayesTestFunction.o GridSearch.o

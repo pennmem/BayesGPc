@@ -418,6 +418,28 @@ int testSearchComparison(CML::EventLog& log,
   vector<double> pvals;
   double alpha = 0.05;
 
+  TestFunction dummy_test_fcn(test_func_str, seed, noise_level, x_dim, verbosity);
+  vector<vector<CMatrix>> all_grid_vals;
+  if (n_grid > 0) {
+    vector<CMatrix> grid_vals;
+    int n_grid_dim = (int)std::pow((double)n_grid, 1.0/((double)x_dim));
+    for (int i = 0; i < x_dim; i++) {
+        CMatrix grid1D = linspace(dummy_test_fcn.x_interval.getVal(i,0),
+                                  dummy_test_fcn.x_interval.getVal(i,1),
+                                  n_grid_dim);
+        grid_vals.push_back(grid1D);
+    }
+    dummy_test_fcn.grid_vals = grid_vals;
+    dummy_test_fcn.y_interval(0) = dummy_test_fcn.func(*dummy_test_fcn.get_func_optimum(true), true).getVal(0);
+    dummy_test_fcn.y_interval(1) = dummy_test_fcn.func(*dummy_test_fcn.get_func_optimum(false), false).getVal(0);
+    dummy_test_fcn.y_sol = dummy_test_fcn.y_interval.getVal(1);
+    dummy_test_fcn.range = dummy_test_fcn.y_interval(1) - dummy_test_fcn.y_interval(0);
+    assert(dummy_test_fcn.range >= 0);
+
+    // use same grid across searches for testing
+    for (int i = 0; i < n_way; i++) { all_grid_vals.push_back(grid_vals); }
+  }
+
   for (int run = 0; run < n_runs; run++) {
     cout << "Run " << run << endl;
     seed++;
@@ -428,18 +450,10 @@ int testSearchComparison(CML::EventLog& log,
     // after reseeding, identical behavior results only after an even number of samples are drawn
     // may also be driven by the default RNG generator used...
     TestFunction test_run(test_func_str, seed, noise_level, x_dim, verbosity);
-    vector<vector<CMatrix>> all_grid_vals;
     if (n_grid > 0) {
-      vector<CMatrix> grid_vals;
-      int n_grid_dim = (int)std::pow((double)n_grid, 1.0/((double)x_dim));
-      for (int i = 0; i < x_dim; i++) {
-          CMatrix grid1D = linspace(test_run.x_interval.getVal(i,0),
-                                    test_run.x_interval.getVal(i,1),
-                                    n_grid_dim);
-          grid_vals.push_back(grid1D);
-      }
-      // use same grid across searches for testing
-      for (int i = 0; i < n_way; i++) { all_grid_vals.push_back(grid_vals); }
+      test_run.y_interval = dummy_test_fcn.y_interval;
+      test_run.y_sol = dummy_test_fcn.y_sol;
+      test_run.range = dummy_test_fcn.range;
     }
 
     try {
