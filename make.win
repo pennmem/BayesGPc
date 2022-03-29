@@ -8,8 +8,7 @@ PLAT = _WIN
 LAPACKLIBS = -L../../lib64 -llapack64 -lblas64
 F2CLIB = -lgfortran
 OPT_LEVEL=0
-#QTINCLUDEDIR=-I/usr/include/qt4 -I/usr/include/qt4/QtCore
-#QTINCLUDEDIR=-I/c/Qt/Qt5.12.12/5.12.12/mingw73_64/include/QtCore
+# Qt used in this build; set paths to QtCore directories and add Qt5Core.dll to project directory
 QTINCLUDE=-isystem C:/Qt/Qt5.12.12/5.12.12/mingw73_64/include -isystem C:/Qt/Qt5.12.12/5.12.12/mingw73_64/include/QtCore
 QTLIBS=-L. -lQt5Core
 
