@@ -64,7 +64,7 @@ ComparisonStruct CSearchComparison::get_best_solution() {
 // compare distribution of samples to predicted distribution from GP using Welch's t-test
 TestStruct CSearchComparison::compare_GP_to_sample(const ComparisonStruct& res, const vector<double>& dist_results) {
     double mu2 = 0;
-    double sem2 = -1;
+    double sem2 = 0;
     double n2 = dist_results.size();
     for (int i = 0; i < n2; i++) { mu2 += dist_results[i]; }
     mu2 /= n2;
