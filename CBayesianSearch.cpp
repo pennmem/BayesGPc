@@ -27,12 +27,12 @@ double expected_improvement(const CMatrix& x, const CGp& model, double y_b, doub
     return EI;
 }
 
+#ifdef INCLUDE_OPTIM
 struct EIOptimStruct {
     CGp model;
     double y_b;
     double exp_bias;
 };
-
 
 #ifndef _WIN
 // TODO write wrapper for converting between CMatrix and major armadillo/eigen types
@@ -58,8 +58,8 @@ double model_predict_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_out, 
     optfn_data->model.out(mu_mat, std_mat, x_cmat);
     return -(mu_mat(0, 0));
 }
-#endif  // _WIN
-
+#endif  // ifndef _WIN
+#endif  // INCLUDE_OPTIM
 
 CMatrix* BayesianSearchModel::get_next_sample() {
     CMatrix* x = new CMatrix(1, x_dim);
@@ -108,6 +108,7 @@ CMatrix* BayesianSearchModel::get_next_sample() {
             // optimize acquisition function
 
             if (optimization_fcn.compare("grid") == 0) { x = new CMatrix(gridSearch(acq_fcn, grid_vals)); }
+            #ifdef INCLUDE_OPTIM
             #ifndef _WIN
             else if (optimization_fcn.compare("de") == 0) {
                 Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
@@ -169,7 +170,8 @@ CMatrix* BayesianSearchModel::get_next_sample() {
                     throw std::runtime_error("Optimization of acquisition function " + acq_func_name + " failed.");
                 }
             }
-            #endif
+            #endif  // ifndef _WIN
+            #endif  // INCLUDE_OPTIM
             else { throw std::runtime_error(string("Unknown optimization function (optimization_fcn): ") + optimization_fcn); }
         }
         catch(const std::exception& e) {  // catch all errors in fitting and get random sample
@@ -192,6 +194,7 @@ CMatrix* BayesianSearchModel::get_best_solution() {
     CMatrix* x = new CMatrix(1, x_dim);
 
     if (optimization_fcn.compare("grid") == 0) { x = new CMatrix(gridSearch(acq_fcn, grid_vals)); }
+    #ifdef INCLUDE_OPTIM
     #ifndef _WIN
     else if (optimization_fcn.compare("de") == 0) {
         x = new CMatrix(1, x_dim);
@@ -248,7 +251,8 @@ CMatrix* BayesianSearchModel::get_best_solution() {
             throw std::runtime_error("Optimization of GP prediction (mean) function failed.");
         }
     }
-    #endif
+    #endif  // ifndef _WIN
+    #endif  // INCLUDE_OPTIM
     else { throw std::runtime_error(string("Unknown optimization function (optimization_fcn): ") + optimization_fcn); }
     if (verbosity >= 0) {
         CMatrix y(1, 1);
