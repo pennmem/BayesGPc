@@ -253,7 +253,7 @@ CMatrix* BayesianSearchModel::get_best_solution() {
     if (verbosity >= 0) {
         CMatrix y(1, 1);
         gp->out(y, *x);
-        cout << "Best solution with " << num_samples << " samples: (x_best, y_pred): (";
+        cout << "CBayesianSearch: Best solution with " << num_samples << " samples: (x_best, y_pred): (";
         if (x_dim > 1) cout << "[";
         for (int i = 0; i < x_dim; i++) {
             cout  << x->getVal(i) << ", ";
