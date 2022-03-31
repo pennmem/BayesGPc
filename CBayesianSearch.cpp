@@ -1,5 +1,6 @@
 #include "CBayesianSearch.h"
 #include "GridSearch.h"
+#include <limits>
 
 
 double expected_improvement(const CMatrix& x, const CGp& model, double y_b, double exp_bias) {
@@ -69,44 +70,9 @@ CMatrix* BayesianSearchModel::get_next_sample() {
     if (num_samples < initial_samples) { uniform_random_sample(x); }
     else {
         try {
-            // update Gaussian process model
-            // TODO valid? want to free old gp memory if it was previously allocated
-            if (gp != nullptr) { delete gp; }
-            // want persistent access to model after fitting and getting next sample in order to fit new model
-
-            // TODO move model set up to separate function, only set up function once after first sample
-            if (noiseInit != nullptr) {delete noiseInit;}
-            noiseInit = new CGaussianNoise(y_samples);
-            for(int i=0; i<noiseInit->getOutputDim(); i++) {noiseInit->setBiasVal(0.0, i);}
-            noiseInit->setParam(0.0, noiseInit->getOutputDim());
-            
-            int iters = 100;
-            // bias is not actually learned currently (was not implemented in original CGp library)
-            bool outputBiasScaleLearnt = false;
-            int approxType = 0;
-
-            gp = new CGp(kern, noiseInit, x_samples, approxType, -1, 3);
-            gp->setBetaVal(1);
-            gp->setScale(1.0);
-            gp->setBias(0.0);
-            gp->setObsNoiseVar(obsNoise);
-            gp->updateM();
-
-            gp->setVerbosity(verbosity);
-            int default_optimiser = CGp::LBFGS_B;
-            gp->setDefaultOptimiser(default_optimiser);  //options: LBFGS_B, BFGS, SCG, CG, GD
-
-            gp->setObjectiveTol(1e-6);
-            gp->setParamTol(1e-6);
-            gp->setOutputBiasLearnt(outputBiasScaleLearnt);
-            gp->setOutputScaleLearnt(outputBiasScaleLearnt);
-            gp->set_seed(seed + 10000 + num_samples);
-            gp->set_n_restarts(2);
-            gp->pkern->setInitParam();
-            gp->optimise(iters);
+            updateGP();
 
             // optimize acquisition function
-
             if (optimization_fcn.compare("grid") == 0) { x = new CMatrix(gridSearch(acq_fcn, grid_vals)); }
             #ifdef INCLUDE_OPTIM
             #ifndef _WIN
@@ -187,11 +153,54 @@ CMatrix* BayesianSearchModel::get_next_sample() {
     return x;
 }
 
+void BayesianSearchModel::updateGP() {
+    // update Gaussian process model
+    // TODO valid? want to free old gp memory if it was previously allocated
+    if (gp != nullptr) { delete gp; }
+    // want persistent access to model after fitting and getting next sample in order to fit new model
+
+    // TODO move model set up to separate function, only set up function once after first sample
+    if (noiseInit != nullptr) {delete noiseInit;}
+    noiseInit = new CGaussianNoise(y_samples);
+    for(int i=0; i<noiseInit->getOutputDim(); i++) {noiseInit->setBiasVal(0.0, i);}
+    noiseInit->setParam(0.0, noiseInit->getOutputDim());
+
+    int iters = 100;
+    // bias is not actually learned currently (was not implemented in original CGp library)
+    bool outputBiasScaleLearnt = false;
+    int approxType = 0;
+
+    gp = new CGp(kern, noiseInit, x_samples, approxType, -1, 3);
+    gp->setBetaVal(1);
+    gp->setScale(1.0);
+    gp->setBias(0.0);
+    gp->setObsNoiseVar(obsNoise);
+    gp->updateM();
+
+    gp->setVerbosity(verbosity);
+    int default_optimiser = CGp::LBFGS_B;
+    gp->setDefaultOptimiser(default_optimiser);  //options: LBFGS_B, BFGS, SCG, CG, GD
+
+    gp->setObjectiveTol(1e-6);
+    gp->setParamTol(1e-6);
+    gp->setOutputBiasLearnt(outputBiasScaleLearnt);
+    gp->setOutputScaleLearnt(outputBiasScaleLearnt);
+    gp->set_seed(seed + 10000 + num_samples);
+    gp->set_n_restarts(2);
+    gp->pkern->setInitParam();
+    gp->optimise(iters);
+}
 
 CMatrix* BayesianSearchModel::get_best_solution() {
     // optimize GP
-
     CMatrix* x = new CMatrix(1, x_dim);
+
+    if (num_samples == 0) {
+        cout << "Zero samples received. Returning NaNs for optimal solution." << endl;
+        for (int i = 0; i < x_dim; i++) { x->setVal(std::numeric_limits<double>::quiet_NaN(), i); }
+        return x;
+    }
+    else if (num_samples < initial_samples) { updateGP(); }
 
     if (optimization_fcn.compare("grid") == 0) { x = new CMatrix(gridSearch(acq_fcn, grid_vals)); }
     #ifdef INCLUDE_OPTIM

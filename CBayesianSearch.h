@@ -123,6 +123,7 @@ class BayesianSearchModel {
         std::vector<CMatrix> grid_vals;
         CMatrix* get_next_sample();
         void add_sample(const CMatrix& x, const CMatrix& y);
+        void updateGP();
         CMatrix* get_best_solution();
         void uniform_random_sample(CMatrix* x);
         // TODO switch to enumeration
