@@ -346,6 +346,7 @@ int testSearchComparison(CML::EventLog& log,
   log.Log_Handler("n_iters:\t" + to_string(n_iters) + "\n");
   log.Log_Handler("n_init_samples:\t" + to_string(n_init_samples) + "\n");
   log.Log_Handler("n_way:\t" + to_string(n_way) + "\n");
+  log.Log_Handler("n_grid:\t" + to_string(n_grid) + "\n");
   log.Log_Handler("correct_model:\t" + to_string(correct_model) + "\n");
   log.Log_Handler("Mean difference:\t" + to_string(mean_diff) + "\n");
   log.Log_Handler("Noise level:\t" + to_string(noise_level) + "\n");
@@ -423,7 +424,8 @@ int testSearchComparison(CML::EventLog& log,
   vector<vector<CMatrix>> all_grid_vals;
   if (n_grid > 0) {
     vector<CMatrix> grid_vals;
-    int n_grid_dim = (int)std::pow((double)n_grid, 1.0/((double)x_dim));
+    int n_grid_dim = n_grid;  // for simple allocation without truncation, useful particularly for smaller n_grid values
+    // int n_grid_dim = (int)std::pow((double)n_grid, 1.0/((double)x_dim));  // for fixed sample budget
     for (int i = 0; i < x_dim; i++) {
         CMatrix grid1D = linspace(dummy_test_fcn.x_interval.getVal(i,0),
                                   dummy_test_fcn.x_interval.getVal(i,1),
@@ -488,7 +490,7 @@ int testSearchComparison(CML::EventLog& log,
       clock_t start = clock();
       clock_t sample_update_start;
       json_log[fd]["run"].push_back(json::array());
-      cout << json_log << endl;
+      if (verbosity >= 2) { cout << json_log << endl; }
       for (int w = 0; w < n_way; w++) {
         json_log[fd]["run"][run].push_back(json({}));
         json_log[fd]["run"][run][w]["relative errors"] = json::array();

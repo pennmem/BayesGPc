@@ -133,12 +133,22 @@ int main(int argc, char* argv[])
     log_dir += "_" + getDateTime();
 
     if (PathExists(log_dir)) { throw std::runtime_error("Log directory " + log_dir + " already exists. Aborting test."); }
+    string json_dir = log_dir + separator + string("json_logs");
     #ifdef _WIN  // std::filesystem not working with mingw w64 7.3.0
     QString qstr = QString::fromStdString(log_dir);
     QDir qdir = QDir::current();
-    if (qdir.mkdir(qstr)) { cout << "Made log directory: " << log_dir << endl; }
+    if (qdir.mkdir(qstr)) {
+      cout << "Made log directory: " << log_dir << endl;
+      check this in windows
+      QString json_qstr = QString::fromStdString(json_dir);
+      QDir json_qdir = QDir::current();
+      if (qdir.mkdir(json_qstr)) { cout << "Made JSON log directory: " << json_dir << endl; }
+    }
     #else
-    if (fs::create_directory(log_dir)) { cout << "Made log directory: " << log_dir << endl; }
+    if (fs::create_directory(log_dir)) {
+      cout << "Made log directory: " << log_dir << endl;
+      fs::create_directory(json_dir);
+    }
     #endif
     else { throw std::runtime_error("Failed to make log directory. Aborting test."); }
 
@@ -185,8 +195,6 @@ int main(int argc, char* argv[])
     config_file << config.dump(4);
     config_file.flush();
 
-    json json_log;
-
     if (test_func_arg.compare("all") == 0) {
       vector<std::pair<std::string, int>> funcs{
                           //  {"sin", 1},
@@ -215,7 +223,7 @@ int main(int argc, char* argv[])
                           };
       for (auto p : funcs) {
         fail += testBayesianSearch(log,
-                        json_log,
+                        json_dir,
                         kern_arg, 
                         p.first,
                         n_runs,
@@ -233,7 +241,7 @@ int main(int argc, char* argv[])
     }
     else {
       fail += testBayesianSearch(log,
-                      json_log,
+                      json_dir,
                       kern_arg, 
                       test_func_arg,
                       n_runs,
@@ -251,10 +259,6 @@ int main(int argc, char* argv[])
 
     log.Log_Handler("Number of failures: " + to_string(fail) + ".\n");
     log.CloseFile_Handler();
-
-    ofstream json_out(log_dir + separator + "log.json");
-    json_out << json_log.dump(4);
-    json_out.flush();
 
     command.exitNormal();
   }
@@ -274,7 +278,7 @@ int main(int argc, char* argv[])
 }
 
 int testBayesianSearch(CML::EventLog& log,
-                       json& json_log,
+                       string& json_dir,
                        string kernel, 
                        string test_func_str,
                        int n_runs,
@@ -290,6 +294,8 @@ int testBayesianSearch(CML::EventLog& log,
                        int seed
 )
 {
+  json json_log;
+
   assert(n_init_samples < n_iters);
   int fail = 0;
   #ifdef _WIN
@@ -347,20 +353,19 @@ int testBayesianSearch(CML::EventLog& log,
 //  // for getting estimates of unknown function optima
 //  test.verbosity = 1;
 //  #ifdef _WIN
-//  std::vector<CMatrix> grid_vals;
-//  int n_grid;
-//  if (x_dim == 1) { n_grid = 100000; }
-//  else if (x_dim == 2) { n_grid = 10000; }
-//  else if (x_dim == 3) { n_grid = 1000; }
-//  else if (x_dim == 4) { n_grid = 1000; }
+//  std::vector<CMatrix> grid_vals_test;
+//  if (x_dim == 1) { n_grid = 100001; }
+//  else if (x_dim == 2) { n_grid = 10001; }
+//  else if (x_dim == 3) { n_grid = 501; }
+//  else if (x_dim == 4) { n_grid = 101; }
 //  else { throw std::runtime_error("Need to hard code n_grid for x_dim >= 5"); }
 //  for (int i = 0; i < x_dim; i++) {
 //      CMatrix grid1D = linspace(test.x_interval.getVal(i,0),
 //                                test.x_interval.getVal(i,1),
 //                                n_grid);
-//      grid_vals.push_back(grid1D);
+//      grid_vals_test.push_back(grid1D);
 //  }
-//  test.grid_vals = grid_vals;
+//  test.grid_vals = grid_vals_test;
 //  #endif  // _WIN
 //  test.get_func_optimum(true);
 //  test.get_func_optimum(false);
@@ -398,7 +403,8 @@ int testBayesianSearch(CML::EventLog& log,
   TestFunction dummy_test_fcn(test_func_str, seed, noise_level, x_dim, verbosity);
   vector<CMatrix> grid_vals;
   if (n_grid > 0) {
-    int n_grid_dim = (int)std::pow((double)n_grid, 1.0/((double)x_dim));
+    int n_grid_dim = n_grid;  // for simple allocation without truncation, useful particularly for smaller n_grid values
+    // int n_grid_dim = (int)std::pow((double)n_grid, 1.0/((double)x_dim));  // for fixed sample budget
     for (int i = 0; i < x_dim; i++) {
         CMatrix grid1D = linspace(dummy_test_fcn.x_interval.getVal(i,0),
                                   dummy_test_fcn.x_interval.getVal(i,1),
@@ -441,7 +447,6 @@ int testBayesianSearch(CML::EventLog& log,
       for (int i = 0; i < n_iters; i++) {
         sample_update_start = clock();
         CMatrix* x_sample = BO.get_next_sample();
-//        cout << "x_sample testBayesianSearch " << *x_sample << endl;
         CMatrix* y_sample = new CMatrix(test_run.func(*x_sample));
         BO.add_sample(*x_sample, *y_sample);
         if (verbosity >= 1) { cout << endl << endl; }
@@ -536,6 +541,10 @@ int testBayesianSearch(CML::EventLog& log,
 
   log.Log_Handler("\n");
   log.Flush_Handler();
+
+  ofstream json_out(json_dir + separator + string("log_") + fd + string(".json"));
+  json_out << json_log.dump(4);
+  json_out.flush();
 
   #ifndef _WIN
   if (full_time_test && plotting) { plot_BO_sample_times(sample_times, test_func_str); }

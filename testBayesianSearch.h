@@ -25,7 +25,7 @@
 #include "version.h"
 
 int testBayesianSearch(CML::EventLog& log,
-                       json& json_log,
+                       string& json_dir,
                        string kernel, 
                        string test_func_str,
                        int n_runs=25,
