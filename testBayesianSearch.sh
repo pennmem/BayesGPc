@@ -56,7 +56,7 @@ if [[ $SMOKESCREEN -eq 1 ]]; then
     init_samples=(25)
     exp_biases=(0.1)
 else
-    n_iters=(150, 250)
+    n_iters=(250)
     n_grids=(5 30)
     n_runs=50
     kernels=("Matern32")  # "Matern52" "RBF" "RationalQuadratic")

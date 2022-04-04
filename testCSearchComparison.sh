@@ -67,7 +67,7 @@ else
     exp_biases=(0.1 0.5)
     n_ways=(2 6 10 20)
     # 0.0 0.1 0.3 0.5 1.0 2.0)
-    mean_diffs=(0.3)
+    mean_diffs=(0.0)
     # 25 100
     init_samples=(100)  # 100 in Nia implementation
 fi
