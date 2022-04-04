@@ -12,7 +12,7 @@ namespace fs = std::filesystem;
 
 
 int testSearchComparison(CML::EventLog& log,
-                        json& json_log,
+                        string& json_dir,
                         string kernel, 
                         string test_func_str,
                         int n_runs=25,
@@ -168,7 +168,11 @@ int main(int argc, char* argv[])
     log_dir += "_" + getDateTime();
 
     if (PathExists(log_dir)) { throw std::runtime_error("Log directory " + log_dir + " already exists. Aborting test."); }
-    if (std::filesystem::create_directory(log_dir)) { cout << "Made log directory: " << log_dir << endl; }
+    string json_dir = log_dir + separator + string("json_logs");
+    if (std::filesystem::create_directory(log_dir)) {
+      cout << "Made log directory: " << log_dir << endl;
+      fs::create_directory(json_dir);
+    }
     else { throw std::runtime_error("Failed to make log directory. Aborting test."); }
 
     CML::EventLog log;
@@ -216,8 +220,6 @@ int main(int argc, char* argv[])
     config_file << config.dump(4);
     config_file.flush();
 
-    json json_log;
-
     if (test_func_arg.compare("all") == 0) {
       vector<std::pair<std::string, int>> funcs{
                            {"sin", 1},
@@ -246,7 +248,7 @@ int main(int argc, char* argv[])
                           };
       for (auto p : funcs) {
         fail += testSearchComparison(log,
-                        json_log,
+                        json_dir,
                         kern_arg, 
                         p.first,
                         n_runs,
@@ -266,7 +268,7 @@ int main(int argc, char* argv[])
     }
     else {
       fail += testSearchComparison(log,
-                      json_log,
+                      json_dir,
                       kern_arg, 
                       test_func_arg,
                       n_runs,
@@ -287,10 +289,6 @@ int main(int argc, char* argv[])
     log.Log_Handler("Number of failures: " + to_string(fail) + ".\n");
     log.CloseFile_Handler();
 
-    ofstream json_out(log_dir + separator + "log.json");
-    json_out << json_log.dump(4);
-    json_out.flush();
-
     command.exitNormal();
   }
   catch(ndlexceptions::Error& err) 
@@ -309,7 +307,7 @@ int main(int argc, char* argv[])
 }
 
 int testSearchComparison(CML::EventLog& log,
-                       json& json_log,
+                       string& json_dir,
                        string kernel, 
                        string test_func_str,
                        int n_runs,
@@ -327,6 +325,8 @@ int testSearchComparison(CML::EventLog& log,
                        int seed
 )
 {
+  json json_log;
+
   #ifdef _WIN
   wchar_t wchar[2] = {fs::path::preferred_separator, '\0'};
   std::wstring ws(wchar);
@@ -346,6 +346,7 @@ int testSearchComparison(CML::EventLog& log,
   log.Log_Handler("n_iters:\t" + to_string(n_iters) + "\n");
   log.Log_Handler("n_init_samples:\t" + to_string(n_init_samples) + "\n");
   log.Log_Handler("n_way:\t" + to_string(n_way) + "\n");
+  log.Log_Handler("n_grid:\t" + to_string(n_grid) + "\n");
   log.Log_Handler("correct_model:\t" + to_string(correct_model) + "\n");
   log.Log_Handler("Mean difference:\t" + to_string(mean_diff) + "\n");
   log.Log_Handler("Noise level:\t" + to_string(noise_level) + "\n");
@@ -423,7 +424,8 @@ int testSearchComparison(CML::EventLog& log,
   vector<vector<CMatrix>> all_grid_vals;
   if (n_grid > 0) {
     vector<CMatrix> grid_vals;
-    int n_grid_dim = (int)std::pow((double)n_grid, 1.0/((double)x_dim));
+    int n_grid_dim = n_grid;  // for simple allocation without truncation, useful particularly for smaller n_grid values
+    // int n_grid_dim = (int)std::pow((double)n_grid, 1.0/((double)x_dim));  // for fixed sample budget
     for (int i = 0; i < x_dim; i++) {
         CMatrix grid1D = linspace(dummy_test_fcn.x_interval.getVal(i,0),
                                   dummy_test_fcn.x_interval.getVal(i,1),
@@ -488,7 +490,7 @@ int testSearchComparison(CML::EventLog& log,
       clock_t start = clock();
       clock_t sample_update_start;
       json_log[fd]["run"].push_back(json::array());
-      cout << json_log << endl;
+      if (verbosity >= 2) { cout << json_log << endl; }
       for (int w = 0; w < n_way; w++) {
         json_log[fd]["run"][run].push_back(json({}));
         json_log[fd]["run"][run][w]["relative errors"] = json::array();
@@ -581,6 +583,10 @@ int testSearchComparison(CML::EventLog& log,
 
   log.Log_Handler("\n");
   log.Flush_Handler();
+
+  ofstream json_out(json_dir + separator + string("log_") + fd + string(".json"));
+  json_out << json_log.dump(4);
+  json_out.flush();
 
   if (full_time_test && plotting) { plot_BO_sample_times(sample_times, test_func_str); }
 
