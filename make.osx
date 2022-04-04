@@ -9,7 +9,7 @@ OPT_LEVEL=1
 # for release
 #OPT_LEVEL=3
 
-PLAT = _LINUX
+PLAT = _OSX
 LAPACKLIBS = -llapack -lblas
 F2CLIB = -lgfortran
 # commands to make statically&dynamically linked libraries and their extensions
@@ -28,7 +28,7 @@ NPYLINKFLAG =${NPYLIBS}
 OPTIMDIR =../optim/header_only_version
 # OPTIMDIR =../optim
 # ARMADILLODIR =../armadillo
-OPTIMFLAG =-O${OPT_LEVEL} -march=native -ffp-contract=fast -I${OPTIMDIR}
+OPTIMFLAG =-O${OPT_LEVEL} -march=native -ffp-contract=fast -DINCLUDE_OPTIM -I${OPTIMDIR}
 # OPTIMFLAG =-O${OPT_LEVEL} -march=native -ffp-contract=fast -I${ARMADILLODIR} -I${OPTIMDIR}
 # OPTIMLINKFLAG = -loptim  # not linking currently since linking would involve with current setup, linking to blas/lapack a second time, causing linker errors
 
@@ -56,11 +56,7 @@ JSON_INCLUDE_DIRS =-I../
 INCLUDE = $(MATLABINCLUDE)
 LD=g++
 LDFLAGS = ${LAPACKLIBS} ${F2CLIB} -lc ${NPYLINKFLAG} ${MATPLOTLINKFLAG}
-#LDFLAGS = ${LAPACKLIBS} ${F2CLIB} -lc ${NPYLINKFLAG} ${OPTIMLINKFLAG} ${MATPLOTLINKFLAG}
-#LDFLAGS = ${MATLABLIBS} ${LAPACKLIBS} ${F2CLIB} -lc ${MATLABXLINKFLAG} ${NPYLINKFLAG}
 CC=g++
 CCFLAGS = -std=c++17 -ggdb -DDBG -fPIC -I$(INCLUDE) -D$(PLAT) $(MATLABFLAG) $(OPTIMFLAG) $(JSON_INCLUDE_DIRS) -mmacosx-version-min=11.0
-#CCFLAGS = -std=c++17 -ggdb -DDBG -fPIC -I$(INCLUDE) -D$(PLAT) $(MATLABFLAG) $(OPTIMFLAG) -I${MATPLOT_INCLUDE_DIRS}
-#CCFLAGS = -O${OPT_LEVEL} -fPIC -I$(INCLUDE) -D$(PLAT) $(MATLABFLAG)
 FC=gfortran-7
 FCFLAGS = -funroll-all-loops -O${OPT_LEVEL} -fPIC

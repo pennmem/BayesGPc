@@ -398,6 +398,8 @@ double TestFunction::solution_error(const CMatrix& x_best) {
   return error;
 }
 
+#ifdef INCLUDE_OPTIM
+#ifndef _WIN
 double TestFunction::func_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_out, void* opt_data) {
     funcOptimStruct* optfn_data = reinterpret_cast<funcOptimStruct*>(opt_data);
     CMatrix x_cmat(1, (int)(x.rows()), x.data());
@@ -405,6 +407,8 @@ double TestFunction::func_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_
     if (optfn_data->neg) {out *= -1;}
     return out;
 }
+#endif  // ifndef _WIN
+#endif  // INCLUDE_OPTIM
 
 CMatrix* TestFunction::get_func_optimum(bool get_min) {
     CMatrix* x = new CMatrix(1, x_dim);
@@ -415,6 +419,7 @@ CMatrix* TestFunction::get_func_optimum(bool get_min) {
       else { fcn = [&](const CMatrix& x) { return this->func(x, false).getVal(0, 0); }; }
       x = new CMatrix(gridSearch(fcn, grid_vals));
     }
+    #ifdef INCLUDE_OPTIM
     #ifndef _WIN
     else if (optimization_fcn.compare("de") == 0) {
       Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
@@ -467,7 +472,8 @@ CMatrix* TestFunction::get_func_optimum(bool get_min) {
           throw std::runtime_error("Optimization of test function failed.");
       }
     }
-    #endif
+    #endif  // ifndef _WIN
+    #endif  // INCLUDE_OPTIM
     else { throw std::runtime_error(string("Unknown optimization function (optimization_fcn): ") + optimization_fcn); }
 
     if (verbosity >= 1) {

@@ -5,7 +5,7 @@
 #  Dec 23, 2008
 # dependencies created with gcc -MM XXX.cpp
 
-include make.linux
+include make.win
 
 all: gplvm ivm gp libgp$(LIBSEXT) libgp$(LIBDEXT)
 
@@ -292,7 +292,7 @@ ndlfortran_linpack.o: ndlfortran_linpack.f
 
 # ndlfortran_linpack.f ndlfortran_timer.f
 ndlfortran_lbfgsb.o: ndlfortran_lbfgsb.f
-	$(FC) -c ndlfortran_lbfgsb.f -o ndlfortran_lbfgsb.o $(FCFLAGS)
+	$(FC) -c ndlfortran_lbfgsb.f -o ndlfortran_lbfgsb.o $(FCFLAGS) -fdefault-integer-8
 else
 ndlfortran_timer.o: ndlfortran_timer.f
 	$(FC) -c ndlfortran_timer.f -o ndlfortran_timer.o $(FCFLAGS)

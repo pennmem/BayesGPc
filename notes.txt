@@ -347,6 +347,8 @@ base build kit:
             add Qt bin to PATH: Qt5/Qt5.12.12/Tools/mingw730_64/bin (contains gcc, make)
                 in that directory, copy mingw32-make.exe to make.exe
                 need to set CMAKE_CXX_COMPILER as g++.exe (in the above Qt bin directory) in CMakeLists.txt
+            first time build use "MinGW Makefiles" generator (should be cached after first use):
+                cmake -G "MinGW Makefiles" .
         Qt:
             need to set CMAKE_PREFIX_PATH to Qt5 directory containing Qt5Config.cmake
             set(CMAKE_PREFIX_PATH "C:/Qt/Qt5.12.12/5.12.12/mingw73_64/lib/cmake/Qt5")

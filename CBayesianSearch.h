@@ -1,12 +1,14 @@
 #ifndef BAYESIANSEARCH_H
 #define BAYESIANSEARCH_H
 
+#ifdef INCLUDE_OPTIM
 #ifndef _WIN
 #define OPTIM_ENABLE_EIGEN_WRAPPERS
 // #define OPTIM_ENABLE_ARMA_WRAPPERS
 // #define ARMA_DONT_USE_WRAPPER
 #include "optim.hpp"
-#endif
+#endif  // ifndef _WIN
+#endif  // INCLUDE_OPTIM
 
 #include "CGp.h"
 #include "CKern.h"
@@ -48,13 +50,15 @@ class BayesianSearchModel {
             x_samples = new CMatrix(1, x_dim);
             y_samples = new CMatrix(1, 1);
             grid_vals = grid;
+            #ifdef INCLUDE_OPTIM
             if (grid.size() == 0) {
                 #ifdef _WIN 
                 throw std::exception("Windows build only supports grid search. Please provide parameter [grid].");
                 #else
                 optimization_fcn = "de";
-                #endif
+                #endif  // ifndef _WIN
             }
+            #endif  // INCLUDE_OPTIM
         }
 
         // explicit copy constructor to force compiler to not apply implicit move operations
@@ -119,6 +123,7 @@ class BayesianSearchModel {
         std::vector<CMatrix> grid_vals;
         CMatrix* get_next_sample();
         void add_sample(const CMatrix& x, const CMatrix& y);
+        void updateGP();
         CMatrix* get_best_solution();
         void uniform_random_sample(CMatrix* x);
         // TODO switch to enumeration

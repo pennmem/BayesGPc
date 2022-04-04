@@ -261,6 +261,7 @@ void CGp::updateScale() const
   // and then subtraction of mean in stdCol as well as in updateM
   // cleaner API however
   setScale(stdCol(*py));
+  for(unsigned int i=0; i<getOutputDim(); i++) { setScaleVal((scale.getVal(i) > 1e-12) ? scale.getVal(i) : 1e-12, i); }
   setMupToDate(false);
 }
 

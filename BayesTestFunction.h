@@ -1,10 +1,14 @@
 #ifndef BAYESTESTFUNCTION_H
 #define BAYESTESTFUNCTION_H
 
+#ifdef INCLUDE_OPTIM
+#ifndef _WIN
 #define OPTIM_ENABLE_EIGEN_WRAPPERS
 // #define OPTIM_ENABLE_ARMA_WRAPPERS
 // #define ARMA_DONT_USE_WRAPPER
 #include "optim.hpp"
+#endif  // ifndef _WIN
+#endif  // INCLUDE_OPTIM
 
 #include <string>
 #include "CKern.h"
@@ -30,7 +34,7 @@ class TestFunction {
     double y_sol;
     std::vector<CMatrix> grid_vals;
     int verbosity;
-    // "grid" for grid search, "de" for differential evolution (optim implementation)
+    // "grid" for grid search, "de" for differential evolution (optim implementation; requires #define INCLUDE_OPTIM)
     string optimization_fcn = "grid";
 
     // noise distribution
@@ -66,7 +70,12 @@ class TestFunction {
     void _init();
     CMatrix func(const CMatrix& x, bool add_noise=true);
     double solution_error(const CMatrix& x_best);
+
+    #ifdef INCLUDE_OPTIM
+    #ifndef _WIN
     double func_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_out, void* opt_data);
+    #endif  // ifndef _WIN
+    #endif  // INCLUDE_OPTIM
     CMatrix* get_func_optimum(bool get_min = true);
     void set_seed(int i);
     int get_seed();

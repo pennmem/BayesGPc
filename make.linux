@@ -31,7 +31,7 @@ NPYLINKFLAG =${NPYLIBS}
 
 # optim library
 OPTIMDIR =./../dependencies/optim/header_only_version
-OPTIMFLAG =-O${OPT_LEVEL} -march=native -ffp-contract=fast -I${OPTIMDIR}
+OPTIMFLAG =-O${OPT_LEVEL} -march=native -ffp-contract=fast -DINCLUDE_OPTIM -I${OPTIMDIR}
 # for armadillo backend in place of eigen. Not currently being used.
 # ARMADILLODIR =/usr/local/include/armadillo
 # OPTIMFLAG =-O${OPT_LEVEL} -march=native -ffp-contract=fast -I${ARMADILLODIR} -I${OPTIMDIR}

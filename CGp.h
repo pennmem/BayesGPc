@@ -201,7 +201,7 @@ public:
     BOUNDCHECK(index<getOutputDim());
     return scale.getVal(0, index);
   }
-  void setScaleVal(double val, unsigned int index) {
+  void setScaleVal(double val, unsigned int index) const {
     BOUNDCHECK(index<getOutputDim());
     scale.setVal(val, 0, index);
     setMupToDate(false);
