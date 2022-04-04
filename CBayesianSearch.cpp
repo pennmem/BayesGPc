@@ -85,14 +85,13 @@ CMatrix* BayesianSearchModel::get_next_sample() {
             bool outputBiasScaleLearnt = false;
             int approxType = 0;
 
-            gp = new CGp(kern, noiseInit, x_samples, approxType, -1, 3);
+            gp = new CGp(kern, noiseInit, x_samples, approxType, -1, verbosity);
             gp->setBetaVal(1);
             gp->setScale(1.0);
             gp->setBias(0.0);
             gp->setObsNoiseVar(obsNoise);
             gp->updateM();
 
-            gp->setVerbosity(verbosity);
             int default_optimiser = CGp::LBFGS_B;
             gp->setDefaultOptimiser(default_optimiser);  //options: LBFGS_B, BFGS, SCG, CG, GD
 

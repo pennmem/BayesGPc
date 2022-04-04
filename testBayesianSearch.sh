@@ -48,6 +48,7 @@ touch ARGS_FILE
 
 if [[ $SMOKESCREEN -eq 1 ]]; then
     n_iters=(27)
+    n_grids=(5)
     n_runs=2
     kernels=("Matern32")
     func="schwefel"
@@ -56,6 +57,7 @@ if [[ $SMOKESCREEN -eq 1 ]]; then
     exp_biases=(0.1)
 else
     n_iters=(150, 250)
+    n_grids=(5 30)
     n_runs=50
     kernels=("Matern32")  # "Matern52" "RBF" "RationalQuadratic")
     func="all"
@@ -66,12 +68,14 @@ fi
 
 for n in "${noise_levels[@]}"
 do
+for ng in "${n_grids[@]}"
+do
 for niter in "${n_iters[@]}"
 do
 for s in "${init_samples[@]}"
 do
     if [ $IMPL == "nia" ]; then
-        args="--tag ${TAG} --func ${func} --noise_level ${n} --n_init_samples ${s} --n_iters ${niter} --n_runs ${n_runs}"
+        args="--tag ${TAG} --func ${func} --noise_level ${n} --n_init_samples ${s} --n_iters ${niter} --n_runs ${n_runs} --n_grid ${ng}"
         args="--impl ${IMPL} ${args}"
         echo $args >> $ARGS_FILE
         continue
@@ -81,13 +85,14 @@ do
     do
     for e in "${exp_biases[@]}"
     do
-        args="--tag ${TAG} --func ${func} --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs ${n_runs} --kernel ${k} --n_iters ${niter}"
+        args="--tag ${TAG} --func ${func} --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs ${n_runs} --kernel ${k} --n_iters ${niter} --n_grid ${ng}"
         if [ $IMPL == "skopt" ]; then
             args="--impl ${IMPL} ${args}"
         fi
         echo $args >> $ARGS_FILE
     done
     done
+done
 done
 done
 done

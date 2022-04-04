@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
     double noise_level    = 0.1;
     double exp_bias_ratio = 0.25;
     int seed              = 1234;
-    int verbosity         = 1;
+    int verbosity         = 0;
     bool full_time_test   = false;
     bool plotting         = false;
     bool debug            = false;

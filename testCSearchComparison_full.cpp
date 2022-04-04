@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
     double noise_level    = 0.1;
     double exp_bias_ratio = 0.25;
     int seed              = 1234;
-    int verbosity         = 1;
+    int verbosity         = 0;
     bool full_time_test   = false;
     bool plotting         = false;
     bool debug            = false;
@@ -501,7 +501,7 @@ int testSearchComparison(CML::EventLog& log,
           double val = test_run.func(*x_sample).getVal(0) + (w == correct_model ? mean_diff * test_run.noise_std : 0.0);
           CMatrix* y_sample = new CMatrix(val);
           search.add_sample(w, *x_sample, *y_sample);
-          cout << endl << endl;
+          if (verbosity >= 1) { cout << endl << endl; }
 
           // logging
           if (i >= n_init_samples) { json_log[fd]["run"][run][w]["kernel_states"].push_back(search.models[w].gp->pkern->state()); }

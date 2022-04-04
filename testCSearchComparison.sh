@@ -29,7 +29,7 @@ if [ $IMPL != "ANOVA" ]; then
     return 1
 fi
 
-if [[ $SMOKESCREEN -eq 1]]; then
+if [[ $SMOKESCREEN -eq 1 ]]; then
     LOGDIR=$(pwd)/results/debug/${TAG}_${IMPL}
 else
     LOGDIR=$(pwd)/results/${TAG}_${IMPL}
@@ -48,6 +48,7 @@ touch ARGS_FILE
 
 if [[ $SMOKESCREEN -eq 1 ]]; then
     n_iters=(27)
+    n_grids=(5)
     n_runs=2
     kernels=("Matern32")
     func="schwefel"
@@ -58,18 +59,22 @@ if [[ $SMOKESCREEN -eq 1 ]]; then
     mean_diffs=(0.3)
 else
     n_iters=(150 250)
-    n_runs=100
+    n_grids=(5 30)
+    n_runs=50
     kernels=("Matern32")
     func="all"
     noise_levels=(0.1 0.3 0.4)
     exp_biases=(0.1 0.5)
     n_ways=(2 6 10 20)
-    mean_diffs=(0.3)
     # 0.0 0.1 0.3 0.5 1.0 2.0)
-    init_samples=(25 100)  # 100 in Nia implementation
+    mean_diffs=(0.3)
+    # 25 100
+    init_samples=(100)  # 100 in Nia implementation
 fi
 
 for n in "${noise_levels[@]}"
+do
+for ng in "${n_grids[@]}"
 do
 for m in "${mean_diffs[@]}"
 do
@@ -83,11 +88,12 @@ for k in "${kernels[@]}"
 do
 for e in "${exp_biases[@]}"
 do
-    args="--tag ${TAG} --func ${func} --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs ${n_runs} --kernel ${k} --n_iters ${si} --n_way ${w} --mean_diff ${m}"
+    args="--tag ${TAG} --func ${func} --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs ${n_runs} --kernel ${k} --n_iters ${si} --n_way ${w} --mean_diff ${m} --n_grid ${ng}"
     if [ $IMPL == "skopt" ]; then
         args="--impl ${IMPL} ${args}"
     fi
     echo $args >> $ARGS_FILE
+done
 done
 done
 done
