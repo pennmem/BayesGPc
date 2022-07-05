@@ -10,6 +10,12 @@
 #endif  // ifndef _WIN
 #endif  // INCLUDE_OPTIM
 
+#if defined(_WIN32)
+#  define DECLSPEC __declspec(dllexport)
+#else // non windows
+#  define DECLSPEC
+#endif
+
 #include "CGp.h"
 #include "CKern.h"
 #include "CMatrix.h"
@@ -25,7 +31,7 @@
 
 double expected_improvement(const CMatrix& x, const CGp& model, double y_b, double exp_bias);
 
-class BayesianSearchModel {
+class DECLSPEC BayesianSearchModel {
     public:
         BayesianSearchModel() {}
         BayesianSearchModel(CCmpndKern& kernel, const CMatrix& param_bounds,

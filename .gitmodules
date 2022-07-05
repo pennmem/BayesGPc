@@ -1,0 +1,6 @@
+[submodule "include/lapack"]
+	path = include/lapack
+	url = https://github.com/Reference-LAPACK/lapack
+[submodule "include/boost_math"]
+	path = include/boost_math
+	url = https://github.com/boostorg/math

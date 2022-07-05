@@ -23,12 +23,17 @@
     #include <hdf5/hdf5_io.hpp> //in mlprojects/branches
 #endif
 
+#if defined(_WIN32)
+#  define DECLSPEC __declspec(dllexport)
+#else // non windows
+#  define DECLSPEC
+#endif
 
 //using namespace std;
 
 
 // Base matrix class that acts as an interface to LAPACK and BLAS.
-class CMatrix : public CMatInterface, public CStreamInterface
+class DECLSPEC CMatrix : public CMatInterface, public CStreamInterface
 {
 public:
   // The default constructor.

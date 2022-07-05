@@ -6,7 +6,13 @@
 #include <boost/math/distributions/fisher_f.hpp>
 #include <boost/math/distributions/students_t.hpp>
 
-struct ComparisonStruct {
+#if defined(_WIN32)
+#  define DECLSPEC __declspec(dllexport)
+#else // non windows
+#  define DECLSPEC
+#endif
+
+struct DECLSPEC ComparisonStruct {
     int idx_best;
     vector<CMatrix*> xs;
     vector<double> mus;
@@ -15,12 +21,12 @@ struct ComparisonStruct {
     double pval;
 };
 
-struct TestStruct {
+struct DECLSPEC TestStruct {
     double stat;
     double pval;
 };
 
-class CSearchComparison {
+class DECLSPEC CSearchComparison {
     public:
     CSearchComparison() {}
     CSearchComparison(int n_models, double alpha, vector<CCmpndKern> kernels, vector<CMatrix> bounds,
@@ -72,8 +78,8 @@ class CSearchComparison {
     int verbosity;
 };
 
-TestStruct anova_welch(vector<double> mus, vector<double> sems, vector<double> ns);
+TestStruct DECLSPEC anova_welch(vector<double> mus, vector<double> sems, vector<double> ns);
 // one-sided Welch's t-test for testing the alternative mu1 > mu2
-TestStruct ttest_welch(double mu1, double mu2, double sem1, double sem2, double n1, double n2);
+TestStruct DECLSPEC ttest_welch(double mu1, double mu2, double sem1, double sem2, double n1, double n2);
 
 #endif
