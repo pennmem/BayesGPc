@@ -18,6 +18,9 @@ else (IS_RELEASE)
   set(BUILD_TYPE "")
 endif (IS_RELEASE)
 
+# for building DLL
+add_definitions (-DEXPORTING_BAYES)
+
 set(CMAKE_VERBOSE_MAKEFILE TRUE)
 
 set (CMAKE_INCLUDE_CURRENT_DIR ON)

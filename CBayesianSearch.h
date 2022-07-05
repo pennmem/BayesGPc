@@ -11,7 +11,11 @@
 #endif  // INCLUDE_OPTIM
 
 #if defined(_WIN32)
-#  define DECLSPEC __declspec(dllexport)
+#  if defined(EXPORTING_BAYES)
+#    define DECLSPEC __declspec(dllexport)
+#  else
+#    define DECLSPEC __declspec(dllimport)
+#  endif
 #else // non windows
 #  define DECLSPEC
 #endif
