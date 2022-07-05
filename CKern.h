@@ -26,6 +26,11 @@
 using namespace std;
 using namespace nlohmann;
 
+#if defined(_WIN32)
+#  define DECLSPEC __declspec(dllexport)
+#else // non windows
+#  define DECLSPEC
+#endif
 
 const string KERNVERSION="0.1";
 
@@ -35,7 +40,7 @@ const string KERNVERSION="0.1";
 // transformed so that they are only optimised in, for example,
 // positive half-spaces
 
-class CKern : public CMatInterface, public CStreamInterface, public CTransformable, public CRegularisable {
+class DECLSPEC CKern : public CMatInterface, public CStreamInterface, public CTransformable, public CRegularisable {
  public:
   CKern() : updateXused(false) {}
   CKern(const CMatrix& X) : updateXused(false) {}
@@ -451,7 +456,7 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
 };
 
 // CArdKern is the base class for any kernel that uses multiple input parameters.
-class CArdKern : public CKern {
+class DECLSPEC CArdKern : public CKern {
  public:
   CArdKern() : CKern() {}
   CArdKern(const CMatrix& X) : CKern(X) {}
@@ -469,7 +474,7 @@ class CArdKern : public CKern {
 };
 
 // Component kernel (such as cmpnd or tensor)
-class CComponentKern : public CKern 
+class DECLSPEC CComponentKern : public CKern
 {
  public:
   CComponentKern() : CKern() {}
@@ -685,7 +690,7 @@ class CComponentKern : public CKern
   
 };
 // Compound Kernel --- This kernel combines other kernels additively together.
-class CCmpndKern: public CComponentKern {
+class DECLSPEC CCmpndKern: public CComponentKern {
  public:
   CCmpndKern();
   CCmpndKern(unsigned int inDim);
@@ -730,7 +735,7 @@ private:
 };
 
 // Tensor Kernel --- This kernel combines kernels multiplicatively together.
-class CTensorKern: public CComponentKern {
+class DECLSPEC CTensorKern: public CComponentKern {
  public:
   CTensorKern();
   CTensorKern(unsigned int inDim);
@@ -775,7 +780,7 @@ private:
 };
 
 // White Noise Kernel.
-class CWhiteKern: public CKern {
+class DECLSPEC CWhiteKern: public CKern {
  public:
   CWhiteKern();
   CWhiteKern(unsigned int inDim);
@@ -816,7 +821,7 @@ class CWhiteKern: public CKern {
   double init_variance = exp(-2.0);
 };
 // Whitefixed Noise Kernel.
-class CWhitefixedKern: public CKern {
+class DECLSPEC CWhitefixedKern: public CKern {
  public:
   CWhitefixedKern();
   CWhitefixedKern(unsigned int inDim);
@@ -860,7 +865,7 @@ class CWhitefixedKern: public CKern {
 };
 
 // Bias Kernel.
-class CBiasKern: public CKern {
+class DECLSPEC CBiasKern: public CKern {
  public:
   CBiasKern();
   CBiasKern(unsigned int inDim);
@@ -904,7 +909,7 @@ class CBiasKern: public CKern {
 };
 
 // RBF Kernel, also known as the Gaussian or squared exponential kernel.
-class CRbfKern: public CKern {
+class DECLSPEC CRbfKern: public CKern {
  public:
   CRbfKern();
   CRbfKern(unsigned int inDim);
@@ -965,7 +970,7 @@ class CRbfKern: public CKern {
 };
 
 // Exponential Kernel, written by Karel Lebeda with no guarantees whatsoever...
-class CExpKern: public CKern {
+class DECLSPEC CExpKern: public CKern {
  public:
   CExpKern();
   CExpKern(unsigned int inDim);
@@ -1023,7 +1028,7 @@ class CExpKern: public CKern {
 };
 
 // Rational Quadratic Kernel
-class CRatQuadKern: public CKern {
+class DECLSPEC CRatQuadKern: public CKern {
  public:
   CRatQuadKern();
   CRatQuadKern(unsigned int inDim);
@@ -1070,7 +1075,7 @@ class CRatQuadKern: public CKern {
 };
 
 // Matern kernel with dof=3/2.
-class CMatern32Kern: public CKern {
+class DECLSPEC CMatern32Kern: public CKern {
  public:
   CMatern32Kern();
   CMatern32Kern(unsigned int inDim);
@@ -1115,7 +1120,7 @@ class CMatern32Kern: public CKern {
 };
 
 // Matern kernel with dof=5/2.
-class CMatern52Kern: public CKern {
+class DECLSPEC CMatern52Kern: public CKern {
  public:
   CMatern52Kern();
   CMatern52Kern(unsigned int inDim);
@@ -1160,7 +1165,7 @@ class CMatern52Kern: public CKern {
 };
 
 // Linear Kernel, also known as the inner product kernel.
-class CLinKern: public CKern {
+class DECLSPEC CLinKern: public CKern {
  public:
   CLinKern();
   CLinKern(unsigned int inDim);
@@ -1201,7 +1206,7 @@ class CLinKern: public CKern {
 };
 
 // MLP Kernel or arcsin kernel. Based on a multi-layer perceptron with infinite hidden nodes. See Williams (1996) "Computing with Infinite Networks" in NIPS 9.
-class CMlpKern: public CKern {
+class DECLSPEC CMlpKern: public CKern {
  public:
   CMlpKern();
   CMlpKern(unsigned int inDim);
@@ -1246,7 +1251,7 @@ class CMlpKern: public CKern {
 };
 
 // Polynomial Kernel, not generally recommended as it `extreme behaviour' outside the region where the argument's absolute value is less than 1.
-class CPolyKern: public CKern {
+class DECLSPEC CPolyKern: public CKern {
  public:
   CPolyKern();
   CPolyKern(unsigned int inDim);
@@ -1305,7 +1310,7 @@ class CPolyKern: public CKern {
 };
 
 // Linear ARD Kernel --- automatic relevance determination version of the linear kernel.
-class CLinardKern: public CArdKern {
+class DECLSPEC CLinardKern: public CArdKern {
  public:
   CLinardKern();
   CLinardKern(unsigned int inDim);
@@ -1345,7 +1350,7 @@ class CLinardKern: public CArdKern {
 };
 
 // RBF ARD Kernel --- automatic relevance determination of the RBF kernel.
-class CRbfardKern: public CArdKern {
+class DECLSPEC CRbfardKern: public CArdKern {
  public:
   CRbfardKern();
   CRbfardKern(unsigned int inDim);
@@ -1388,7 +1393,7 @@ class CRbfardKern: public CArdKern {
 };
 
 // MLP ARD Kernel --- automatic relevance determination version of the MLP kernel.
-class CMlpardKern: public CArdKern {
+class DECLSPEC CMlpardKern: public CArdKern {
  public:
   CMlpardKern();
   CMlpardKern(unsigned int inDim);
@@ -1435,7 +1440,7 @@ class CMlpardKern: public CArdKern {
 };
 
 // Polynomial ARD Kernel --- automatic relevance determination version of the polynomial kernel.
-class CPolyardKern: public CArdKern {
+class DECLSPEC CPolyardKern: public CArdKern {
  public:
   CPolyardKern();
   CPolyardKern(unsigned int inDim);
