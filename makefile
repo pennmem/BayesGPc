@@ -5,7 +5,20 @@
 #  Dec 23, 2008
 # dependencies created with gcc -MM XXX.cpp
 
-include make.linux
+include make.win
+
+# how to print with makefile (write a variable):
+# $(warning INCLUDE_DIR)target: $(INCLUDE_DIR)
+# $(warning A top-level warning)
+
+# FOO := $(warning ${INCLUDE_DIR})bar
+# FOO2 := $(warning ${BOOSTLIB_INCLUDE})bar
+#FOO := $(warning Right-hand side of a simple variable)bar
+# BAZ = $(warning Right-hand side of a recursive variable)boo
+
+# $(warning A target)target: $(warning $(INCLUDE_DIR))makefile $(INCLUDE_DIR)
+# 		$(warning In a command script)
+# 		ls
 
 all: gplvm ivm gp libgp$(LIBSEXT) libgp$(LIBDEXT)
 
@@ -317,6 +330,7 @@ endif
 	echo "#define GIT_BRANCH \"$(GIT_BRANCH)\"" > $@
 	echo "#define GIT_COMMIT \"$(GIT_COMMIT)\"" >> $@
 	echo "#define GIT_URL \"$(GIT_URL)\"" >> $@
+# echo "$(INCLUDE_DIR)"  # not working
 
 # compile these fortran files after make clean since they aren't compiling with 
 # other make commands as expected, might be that including a header file [header.h]

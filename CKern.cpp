@@ -22,19 +22,6 @@ vector<double> CKern::state() const
   return v;
 }
 
-json CKern::json_state() const
-{
-  json j;
-  string n;
-  double* temp;
-  for(unsigned int i=0; i<nParams; i++)
-  {
-    n = getParamName(i);
-    j[n] = getParam(i);
-  }
-  return j;
-}
-
 json CKern::json_structure() const
 {
   json j;
@@ -46,6 +33,19 @@ json CKern::json_structure() const
     CMatrix b(getBoundsByName(n));
     j["parameters"][n]["bounds"] = vector<double>(b.getVals(), b.getVals() + 2);
     j["parameters"][n]["init_value"] = getInitParamVal(i);
+  }
+  return j;
+}
+
+json CKern::json_state() const
+{
+  json j;
+  string n;
+  double* temp;
+  for(unsigned int i=0; i<nParams; i++)
+  {
+    n = getParamName(i);
+    j[n] = getParam(i);
   }
   return j;
 }

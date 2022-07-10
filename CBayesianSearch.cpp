@@ -318,3 +318,47 @@ void BayesianSearchModel::uniform_random_sample(CMatrix* x) {
         }
     }
 }
+
+json BayesianSearchModel::json_structure() const
+{
+  json j;
+  j["x_dim"] = x_dim;
+  j["initial_sampling"] = string("random uniform");
+  j["n_initial_samples"] = initial_samples;
+  j["observation_noise"] = obsNoise;
+  j["x_bounds"] = to_vector(bounds);
+  j["x_optimization_function"] = optimization_fcn;
+  j["acquisition"]["function"] = string("expected improvement");
+  j["acquisition"]["exploration_bias"] = exploration_bias;
+  j["seed"] = seed;
+
+  string n;
+  j["kernel"] = kern->json_structure();
+//  json kj = kern->json_structure();
+//  for(unsigned int i=0; i < kern->nParams; i++)
+//  {
+//    n = kern->getParamName(i);
+//    j["kernel"]["parameters"][n]["bounds"] = kj["parameters"][n]["bounds"];
+//    j["kernel"]["parameters"][n]["init_value"] = kj["parameters"][n]["init_value"];
+//  }
+  return j;
+}
+
+// BayesianSearchModel state JSON is flat for simpler logging
+json BayesianSearchModel::json_state() const
+{
+  json j;
+  string n;
+  j["num_samples"] = num_samples;
+  j["acquisition:y_best"] = y_best;
+
+  json kj = kern->json_state();
+  for (json::iterator it = kj.begin(); it != kj.end(); ++it) { j[string("kernel:") + it.key()] = it.value(); }
+//  for(unsigned int i=0; i<nParams; i++)
+//  {
+//    n = kern->getParamName(i);
+//    j[string("kernel:") + n] = getParam(i);
+//  }
+  return j;
+}
+

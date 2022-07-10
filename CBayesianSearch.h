@@ -20,6 +20,7 @@
 #include <boost/math/distributions/normal.hpp>
 
 #include <stdexcept>
+#include <nlohmann/json.hpp>
 
 #define _NDLCASSERT
 
@@ -130,6 +131,8 @@ class BayesianSearchModel {
         string acq_func_name;
         std::function<double(const CMatrix&)> acq_fcn;
         // double expected_improvement(const CMatrix* x, const CGp model, double y_b, double exp_bias);
+        json json_structure() const;
+        json json_state() const;
 };
 
 #endif

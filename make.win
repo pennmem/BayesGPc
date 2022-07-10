@@ -19,6 +19,7 @@ QTLIBS=-L. -lQt5Core
 #LIBDEXT = .so
 
 DEP_DIR =..
+INCLUDE_DIR =${DEP_DIR}
 # for dependency dir used for direct include
 
 # Python-numpy interface
@@ -42,8 +43,8 @@ OPTIMFLAG =-O${OPT_LEVEL} -march=native -ffp-contract=fast -I${OPTIMDIR}
 #NODESOUP_LINK_FLAG =-L$(DEP_DIR)/matplotplusplus/build/source/3rd_party/ -lnodesoup
 #MATPLOTLINKFLAG =-L$(DEP_DIR)/matplotplusplus/build/source/matplot/ -lmatplot $(NODESOUP_LINK_FLAG) -lm -lpthread -lX11 -ltiff -ljpeg -lpng -lz
 
-JSON_INCLUDE=-I/${INCLUDE_DIR}/
-BOOSTLIB_INCLUDE=-I/${INCLUDE_DIR}/
+JSON_INCLUDE=-I${INCLUDE_DIR}/
+BOOSTLIB_INCLUDE=-I${INCLUDE_DIR}/boost_math/include/
 
 # Uncomment these lines to set up the MATLAB interface.
 #MATLABLIBS = -lmat -lmx

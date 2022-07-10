@@ -139,15 +139,18 @@ int main(int argc, char* argv[])
     QDir qdir = QDir::current();
     if (qdir.mkdir(qstr)) {
       cout << "Made log directory: " << log_dir << endl;
-      check this in windows
       QString json_qstr = QString::fromStdString(json_dir);
       QDir json_qdir = QDir::current();
       if (qdir.mkdir(json_qstr)) { cout << "Made JSON log directory: " << json_dir << endl; }
+      else { throw std::runtime_error("Failed to make JSON log directory. Aborting test."); }
     }
     #else
     if (fs::create_directory(log_dir)) {
       cout << "Made log directory: " << log_dir << endl;
-      fs::create_directory(json_dir);
+      if (fs::create_directory(json_dir);) {
+          cout << "Made log directory: " << log_dir << endl;
+      }
+      else { throw std::runtime_error("Failed to make JSON log directory. Aborting test."); }
     }
     #endif
     else { throw std::runtime_error("Failed to make log directory. Aborting test."); }
@@ -440,7 +443,11 @@ int testBayesianSearch(CML::EventLog& log,
 
       BayesianSearchModel BO(kern, test_run.x_interval, obsNoise * obsNoise, exp_bias, n_init_samples, seed, verbosity, grid_vals);
       if (n_grid > 0) { BO.init_points_on_grid = true; }
-      if (run == 0) { json_log[fd]["kernel_structure"] = BO.kern->json_structure(); }
+      if (run == 0) {
+          json_log[fd]["kernel_structure"] = BO.kern->json_structure();  // kept for backwards compatibility, TODO remove
+          json_log[fd]["BO_structure"] = BO.json_structure();
+          json_log[fd]["BO_state"] = BO.json_state();  // TODO remove, just here for testing
+      }
 
       clock_t start = clock();
       clock_t sample_update_start;
