@@ -334,13 +334,6 @@ json BayesianSearchModel::json_structure() const
 
   string n;
   j["kernel"] = kern->json_structure();
-//  json kj = kern->json_structure();
-//  for(unsigned int i=0; i < kern->nParams; i++)
-//  {
-//    n = kern->getParamName(i);
-//    j["kernel"]["parameters"][n]["bounds"] = kj["parameters"][n]["bounds"];
-//    j["kernel"]["parameters"][n]["init_value"] = kj["parameters"][n]["init_value"];
-//  }
   return j;
 }
 
@@ -350,15 +343,10 @@ json BayesianSearchModel::json_state() const
   json j;
   string n;
   j["num_samples"] = num_samples;
-  j["acquisition:y_best"] = y_best;
+  j["acquisition__y_best"] = y_best;
 
   json kj = kern->json_state();
-  for (json::iterator it = kj.begin(); it != kj.end(); ++it) { j[string("kernel:") + it.key()] = it.value(); }
-//  for(unsigned int i=0; i<nParams; i++)
-//  {
-//    n = kern->getParamName(i);
-//    j[string("kernel:") + n] = getParam(i);
-//  }
+  for (json::iterator it = kj.begin(); it != kj.end(); ++it) { j[string("kernel__") + it.key()] = it.value(); }
   return j;
 }
 

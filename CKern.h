@@ -569,12 +569,12 @@ class CComponentKern : public CKern
     DIMENSIONMATCH(b.getCols()==2);
     // parse parameter name
     int loc;
-    loc = full_name.find_first_of(":");
-    if (loc == full_name.npos) { throw ndlexceptions::Error("No kernel name delimiter ':' found in <name>. Try e.g. 'CRBFKern_0:inverseWidth'."); }
+    loc = full_name.find("__");
+    if (loc == full_name.npos) { throw ndlexceptions::Error("No kernel name delimiter '__' found in <name>. Try e.g. 'CRBFKern_0__inverseWidth'."); }
     string kern_name = full_name.substr(0, loc);
-    string param_name = full_name.substr(loc + 1);
+    string param_name = full_name.substr(loc + 2);
     loc = kern_name.find_first_of("_");
-    if (loc == kern_name.npos) { throw ndlexceptions::Error("No kernel index delimiter '_' found in <name>. Try e.g. 'CRBFKern_0:inverseWidth'."); }
+    if (loc == kern_name.npos) { throw ndlexceptions::Error("No kernel index delimiter '_' found in <name>. Try e.g. 'CRBFKern_0__inverseWidth'."); }
     int kern_idx = stoi(full_name.substr(loc + 1));
     kern_name = full_name.substr(0, loc);
     
@@ -594,19 +594,19 @@ class CComponentKern : public CKern
     cout << "setBoundsByName: Parameter name " << full_name << " not found." << endl;
     throw ndlexceptions::Error("setBoundsByName: Parameter name not found. "
                                "Kernel names must be prepended to parameter names with "
-                               "an index and a colon delimiter, e.g., 'rbf_0:inverseWidth' or "
-                               "'cmpnd_0:rbf_0:inverseWidth'");
+                               "an index and a double underscore delimiter, e.g., 'rbf_0__inverseWidth' or "
+                               "'cmpnd_0__rbf_0__inverseWidth'");
   }
   virtual CMatrix getBoundsByName(const string full_name) const
   {
     // parse parameter name
     int loc;
-    loc = full_name.find_first_of(":");
-    if (loc == full_name.npos) { throw ndlexceptions::Error("No kernel name delimiter ':' found in <name>. Try e.g. 'CRBFKern_0:inverseWidth'."); }
+    loc = full_name.find("__");
+    if (loc == full_name.npos) { throw ndlexceptions::Error("No kernel name delimiter '__' found in <name>. Try e.g. 'CRBFKern_0__inverseWidth'."); }
     string kern_name = full_name.substr(0, loc);
-    string param_name = full_name.substr(loc + 1);
+    string param_name = full_name.substr(loc + 2);
     loc = kern_name.find_first_of("_");
-    if (loc == kern_name.npos) { throw ndlexceptions::Error("No kernel index delimiter '_' found in <name>. Try e.g. 'CRBFKern_0:inverseWidth'."); }
+    if (loc == kern_name.npos) { throw ndlexceptions::Error("No kernel index delimiter '_' found in <name>. Try e.g. 'CRBFKern_0__inverseWidth'."); }
     int kern_idx = stoi(full_name.substr(loc + 1));
     kern_name = full_name.substr(0, loc);
     
@@ -625,8 +625,8 @@ class CComponentKern : public CKern
     cout << "setBoundsByName: Parameter name " << full_name << " not found." << endl;
     throw ndlexceptions::Error("setBoundsByName: Parameter name not found. "
                                "Kernel names must be prepended to parameter names with "
-                               "an index and a colon delimiter, e.g., 'rbf_0:inverseWidth' or "
-                               "'cmpnd_0:rbf_0:inverseWidth'");
+                               "an index and a double underscore delimiter, e.g., 'rbf_0__inverseWidth' or "
+                               "'cmpnd_0__rbf_0__inverseWidth'");
   }
   virtual string getParamName(unsigned int paramNo) const
   {
@@ -637,7 +637,7 @@ class CComponentKern : public CKern
       end = start+components[i]->getNumParams()-1;
       if(paramNo <= end)
       {
-	      string n = components[i]->getType() + string("_") + to_string(i) + string(":") + components[i]->getParamName(paramNo-start);
+        string n = components[i]->getType() + string("_") + to_string(i) + string("__") + components[i]->getParamName(paramNo-start);
         return n;
       }
       start = end + 1;
