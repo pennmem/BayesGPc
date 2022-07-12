@@ -17,7 +17,7 @@ fi
 
 # shift 2
 
-SMOKESCREEN=1
+SMOKESCREEN=0
 # if [[ "$#" -lt 1 ]]; then
 #     SMOKESCREEN=1
 # else
