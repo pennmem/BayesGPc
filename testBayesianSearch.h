@@ -111,7 +111,7 @@ CCmpndKern getTestKernel(const string kernel,
     b(0, 1) = var_ub;
     kern.setBoundsByName("ratquad_0__variance", b);
     }
-    b(0, 0) = 1e-4 + white_lb * fcn.noise_level * fcn.noise_level;  //0.001;
+    b(0, 0) = 1e-4 + white_lb; //* fcn.noise_level * fcn.noise_level;  //0.001;
     b(0, 1) = white_ub;
     kern.setBoundsByName("white_1__variance", b);
     return kern;

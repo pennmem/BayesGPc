@@ -60,7 +60,7 @@ if [[ $SMOKESCREEN -eq 1 ]]; then
 else
     n_iters=(150)
     n_grids=(10)
-    n_runs=50
+    n_runs=100
     kernels=("Matern32")  # "Matern52" "RBF" "RationalQuadratic")
     func="all"
     noise_levels=(0.3 0.5)

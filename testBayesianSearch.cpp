@@ -148,6 +148,10 @@ int main(int argc, char* argv[])
     log_dir += "-iters_" + to_string(n_iters);
     log_dir += "-init_samp_" + to_string(n_init_samples);
     log_dir += "-noise_" + to_string(noise_level);
+    log_dir += "-len_lb_" + to_string(lengthscale_lb);
+    log_dir += "-len_ub_" + to_string(lengthscale_ub);
+    log_dir += "-white_lb_" + to_string(white_lb);
+    log_dir += "-white_ub_" + to_string(white_ub);
     log_dir += "-exp_bias_" + to_string(exp_bias_ratio);
     log_dir += "-n_grid_" + to_string(n_grid);
     log_dir += "_" + getDateTime();
