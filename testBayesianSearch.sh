@@ -65,7 +65,7 @@ else
     lengthscale_lbs=(0.1 0.25 0.4)
     white_lbs=(0.1 0.5 1.0)
     exp_biases=(0.25 1.0)
-    init_samples=(15 30 50)  # 100 in Nia implementation
+    init_samples=(15 30 45)  # 100 in Nia implementation
 fi
 
 for whl in "${white_lbs[@]}"
