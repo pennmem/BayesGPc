@@ -41,7 +41,7 @@ echo ""
 
 while IFS=" " ; read -r arr
     do
-        sleep 5
+        sleep 2
         echo "$arr"
         if [[ $PYEXEC -eq 0 ]]; then
             qsub -b y -N $JOB_NAME -q "RAM.q" -l h_vmem=90G,s_vmem=90G -e "${LOGDIR}/err.${arr// /_}" -o "${LOGDIR}/out.${arr// /_}" $EXEC ${arr} --logdir $LOGDIR

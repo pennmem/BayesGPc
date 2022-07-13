@@ -24,7 +24,7 @@ SMOKESCREEN=0
 #     SMOKESCREEN=0
 # fi
 
-if [ $IMPL != "CBay" -a $IMPL != "skopt" -a $IMPL != "nia"]; then
+if [ $IMPL != "CBay" -a $IMPL != "skopt" -a $IMPL != "nia" ]; then
     echo "Implementation '${IMPL}' not implemented. Only 'CBay', 'skopt', and 'nia' currently supported. Exiting."
     return 1
 fi
@@ -44,7 +44,7 @@ fi
 
 mkdir $LOGDIR
 ARGS_FILE=$LOGDIR/args.txt
-touch ARGS_FILE
+touch $ARGS_FILE
 
 if [[ $SMOKESCREEN -eq 1 ]]; then
     n_iters=(27)
@@ -52,9 +52,11 @@ if [[ $SMOKESCREEN -eq 1 ]]; then
     n_runs=2
     kernels=("Matern32")
     func="schwefel"
-    noise_levels=(0.0)
+    noise_levels=(0.1)
     init_samples=(25)
     exp_biases=(0.1)
+    lengthscale_lbs=(0.2)
+    white_lbs=(0.2)
 else
     n_iters=(150)
     n_grids=(10)
@@ -83,6 +85,7 @@ do
     if [ $IMPL == "nia" ]; then
         args="--tag ${TAG} --func ${func} --noise_level ${n} --n_init_samples ${s} --n_iters ${niter} --n_runs ${n_runs} --n_grid ${ng} --white_lb ${whl} --lenscale_lb ${lsl}"
         args="--impl ${IMPL} ${args}"
+        echo $args
         echo $args >> $ARGS_FILE
         continue
     fi
@@ -91,13 +94,15 @@ do
     do
     for e in "${exp_biases[@]}"
     do
-        args="--tag ${TAG} --func ${func} --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs ${n_runs} --kernel ${k} --n_iters ${niter} --n_grid ${ng}"
+        args="--tag ${TAG} --func ${func} --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs ${n_runs} --kernel ${k} --n_iters ${niter} --n_grid ${ng} --white_lb ${whl} --lenscale_lb ${lsl}"
         if [ $IMPL == "skopt" ]; then
             args="--impl ${IMPL} ${args}"
         fi
         echo $args >> $ARGS_FILE
     done
     done
+done
+done
 done
 done
 done

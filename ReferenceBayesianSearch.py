@@ -64,6 +64,22 @@ class hartmann4dfcn():
 
     def f(self, x):
         return self.F(x[None, :]).item()
+    
+
+class quadratic():
+    def __init__(self, n_var=1):
+        self.n_var = n_var
+        
+    def F(self, X):
+#         for i in range(X.shape[0]):
+#             for (int j = 0; j < self.n_var; j++):
+#                 y(i, 0) -= (x.getVal(i, j) - 1.0)*(x.getVal(i, j) - 1.0);
+        y = np.ones((X.shape[0],)) - ((X - 1) ** 2).sum(axis=1)
+        y /= self.n_var
+        return y
+        
+    def f(self, x):
+        return self.F(x[None, :]).item()
 
 
 class TestFunction:
@@ -74,6 +90,7 @@ class TestFunction:
         self.verbosity = verbosity
         if self.name == "sum_squares": self._benchmark_fcn = Factory.set_sop("sumsquares", self.x_dim)
         elif self.name == "hartmann4d": self._benchmark_fcn = hartmann4dfcn(self.x_dim)
+        elif self.name in ["quadratic", "quadratic_over_edge"]: self._benchmark_fcn = quadratic(self.x_dim)
         else: self._benchmark_fcn = Factory.set_sop(self.name, self.x_dim)
         self.x_interval = np.zeros((self.x_dim, 2))
         self.y_interval = np.zeros((2,))
@@ -93,7 +110,6 @@ class TestFunction:
             self.y_interval[1] = 1
         
         elif self.name == "quadratic":
-            raise NotImplementedError
             # simulates monotonic improvement to edge, testing for edge bias of global optimizer within BO
             for i in range(self.x_dim):
                 self.x_interval[i, 0] = 0
@@ -102,7 +118,6 @@ class TestFunction:
             self.y_interval[1] = 1
 
         elif self.name == "quadratic_over_edge":
-            raise NotImplementedError
             # simulates monotonic improvement to edge, testing for edge bias of global optimizer within BO
             for i in range(self.x_dim):
                 self.x_interval[i, 0] = 0
