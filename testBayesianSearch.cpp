@@ -43,6 +43,10 @@ int main(int argc, char* argv[])
     int n_grid            = 0;  // use grid search if greater than zero with grid having roughly n_grid total points with equal density across dimensions
     double noise_level    = 0.1;
     double exp_bias_ratio = 0.25;
+    double lengthscale_lb = 0.1;
+    double lengthscale_ub = 2.0;
+    double white_lb       = 0.1;
+    double white_ub       = 4.0;
     int seed              = 1234;
     int verbosity         = 0;
     bool full_time_test   = false;
@@ -93,6 +97,22 @@ int main(int argc, char* argv[])
         if (command.isCurrentArg("-n", "--noise_level")) {
           command.incrementArgument();
           noise_level = std::stod(command.getCurrentArgument());
+        }
+        if (command.isCurrentArg("-lsl", "--lenscale_lb")) {
+          command.incrementArgument();
+          lengthscale_lb = std::stod(command.getCurrentArgument());
+        }
+        if (command.isCurrentArg("-lsu", "--lenscale_ub")) {
+          command.incrementArgument();
+          lengthscale_ub = std::stod(command.getCurrentArgument());
+        }
+        if (command.isCurrentArg("-wl", "--white_lb")) {
+          command.incrementArgument();
+          white_lb = std::stod(command.getCurrentArgument());
+        }
+        if (command.isCurrentArg("-wu", "--white_ub")) {
+          command.incrementArgument();
+          white_ub = std::stod(command.getCurrentArgument());
         }
         if (command.isCurrentArg("-e", "--exp_bias")) {
           command.incrementArgument();
@@ -147,7 +167,7 @@ int main(int argc, char* argv[])
     #else
     if (fs::create_directory(log_dir)) {
       cout << "Made log directory: " << log_dir << endl;
-      if (fs::create_directory(json_dir);) {
+      if (fs::create_directory(json_dir)) {
           cout << "Made log directory: " << log_dir << endl;
       }
       else { throw std::runtime_error("Failed to make JSON log directory. Aborting test."); }
@@ -189,6 +209,10 @@ int main(int argc, char* argv[])
     config["n_iters"] = n_iters;
     config["n_init_samp"] = n_init_samples;
     config["noise_level"] = noise_level;
+    config["lengthscale_lb"] = lengthscale_lb;
+    config["lengthscale_ub"] = lengthscale_ub;
+    config["white_lb"] = white_lb;
+    config["white_ub"] = white_ub;
     config["exp_bias"] = exp_bias_ratio;
     config["datetime"] = getDateTime();
     config["GIT_BRANCH"] = string(GIT_BRANCH);
@@ -200,29 +224,30 @@ int main(int argc, char* argv[])
 
     if (test_func_arg.compare("all") == 0) {
       vector<std::pair<std::string, int>> funcs{
-                          //  {"sin", 1},
-                          //  {"quadratic", 1},
-                          //  {"quadratic_over_edge", 1},
+                           {"sin", 1},
+                          //  {"null", 1},
+                           {"quadratic", 1},
+                           {"quadratic_over_edge", 1},
                           //  {"PS4_1", 1},
-                          //  {"PS4_2", 1},
-                          //  {"PS4_3", 1},
+                           {"PS4_2", 1},
+                           {"PS4_3", 1},
                           //  {"PS4_4", 1},
-                           {"schwefel", 1},
-                           {"schwefel", 2},
-                           {"schwefel", 4},
-                           {"hartmann4d", 4},
-                           {"ackley", 1},
-                           {"ackley", 2},
-                           {"ackley", 4},
-                           {"rastrigin", 1},
-                           {"rastrigin", 2},
-                           {"rastrigin", 4},
-                           {"eggholder", 2},
-                           {"sum_squares", 1},
-                           {"sum_squares", 2},
-                           {"sum_squares", 4},
-                           {"rosenbrock", 2},
-                           {"rosenbrock", 4},
+                          //  {"schwefel", 1},
+                          //  {"schwefel", 2},
+                          //  {"schwefel", 4},
+                          //  {"hartmann4d", 4},
+                          //  {"ackley", 1},
+                          //  {"ackley", 2},
+                          //  {"ackley", 4},
+                          //  {"rastrigin", 1},
+                          //  {"rastrigin", 2},
+                          //  {"rastrigin", 4},
+                          //  {"eggholder", 2},
+                          //  {"sum_squares", 1},
+                          //  {"sum_squares", 2},
+                          //  {"sum_squares", 4},
+                          //  {"rosenbrock", 2},
+                          //  {"rosenbrock", 4},
                           };
       for (auto p : funcs) {
         fail += testBayesianSearch(log,
@@ -235,6 +260,10 @@ int main(int argc, char* argv[])
                         p.second,
                         n_grid,
                         noise_level,
+                        lengthscale_lb,
+                        lengthscale_ub,
+                        white_lb,
+                        white_ub,
                         exp_bias_ratio,
                         verbosity,
                         full_time_test,
@@ -253,6 +282,10 @@ int main(int argc, char* argv[])
                       x_dim,
                       n_grid,
                       noise_level,
+                      lengthscale_lb,
+                      lengthscale_ub,
+                      white_lb,
+                      white_ub,
                       exp_bias_ratio,
                       verbosity,
                       full_time_test,
@@ -290,6 +323,10 @@ int testBayesianSearch(CML::EventLog& log,
                        int x_dim,
                        int n_grid,
                        double noise_level,
+                       double lengthscale_lb,
+                       double lengthscale_ub,
+                       double white_lb,
+                       double white_ub,
                        double exp_bias_ratio,
                        int verbosity,
                        bool full_time_test,
@@ -316,6 +353,10 @@ int testBayesianSearch(CML::EventLog& log,
   log.Log_Handler("n_iters:\t" + to_string(n_iters) + "\n");
   log.Log_Handler("n_init_samples:\t" + to_string(n_init_samples) + "\n");
   log.Log_Handler("Noise level:\t" + to_string(noise_level) + "\n");
+  log.Log_Handler("lengthscale lower bound:\t" + to_string(lengthscale_lb) + "\n");
+  log.Log_Handler("lengthscale upper bound:\t" + to_string(lengthscale_ub) + "\n");
+  log.Log_Handler("white variance lower bound:\t" + to_string(white_lb) + "\n");
+  log.Log_Handler("white variance upper bound:\t" + to_string(white_ub) + "\n");
   log.Log_Handler("exp_bias_ratio:\t" + to_string(exp_bias_ratio) + "\n");
 
   log.Log_Handler("Initial RNG seed:\t" + to_string(seed) + "\n");
@@ -439,7 +480,9 @@ int testBayesianSearch(CML::EventLog& log,
     }
 
     try {
-      CCmpndKern kern = getTestKernel(kernel, test_run);
+      CCmpndKern kern = getTestKernel(kernel, test_run, 
+                                      lengthscale_lb, lengthscale_ub, 
+                                      white_lb, white_ub);
 
       BayesianSearchModel BO(kern, test_run.x_interval, obsNoise * obsNoise, exp_bias, n_init_samples, seed, verbosity, grid_vals);
       if (n_grid > 0) { BO.init_points_on_grid = true; }

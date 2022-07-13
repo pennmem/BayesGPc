@@ -56,16 +56,22 @@ if [[ $SMOKESCREEN -eq 1 ]]; then
     init_samples=(25)
     exp_biases=(0.1)
 else
-    n_iters=(250)
-    n_grids=(5 30)
+    n_iters=(150)
+    n_grids=(10)
     n_runs=50
     kernels=("Matern32")  # "Matern52" "RBF" "RationalQuadratic")
     func="all"
-    noise_levels=(0.0 0.1 0.3)
-    exp_biases=(0.0 0.01 0.05 0.25 0.5 1.0 2.0)
-    init_samples=(25 100)  # 100 in Nia implementation
+    noise_levels=(0.3 0.5)
+    lengthscale_lbs=(0.1 0.25 0.4)
+    white_lbs=(0.1 0.5 1.0)
+    exp_biases=(0.25 1.0)
+    init_samples=(15 30 50)  # 100 in Nia implementation
 fi
 
+for whl in "${white_lbs[@]}"
+do
+for lsl in "${lengthscale_lbs[@]}"
+do
 for n in "${noise_levels[@]}"
 do
 for ng in "${n_grids[@]}"
@@ -75,7 +81,7 @@ do
 for s in "${init_samples[@]}"
 do
     if [ $IMPL == "nia" ]; then
-        args="--tag ${TAG} --func ${func} --noise_level ${n} --n_init_samples ${s} --n_iters ${niter} --n_runs ${n_runs} --n_grid ${ng}"
+        args="--tag ${TAG} --func ${func} --noise_level ${n} --n_init_samples ${s} --n_iters ${niter} --n_runs ${n_runs} --n_grid ${ng} --white_lb ${whl} --lenscale_lb ${lsl}"
         args="--impl ${IMPL} ${args}"
         echo $args >> $ARGS_FILE
         continue
