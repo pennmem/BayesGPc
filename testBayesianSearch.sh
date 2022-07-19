@@ -65,7 +65,7 @@ else
     func="all"
     noise_levels=(0.3 0.5)
     lengthscale_lbs=(0.1 0.25 0.4)
-    white_lbs=(0.1 0.5 1.0)
+    white_lbs=(0.1 0.5 1.0 2.0)
     exp_biases=(0.25 1.0)
     init_samples=(15 30 45)  # 100 in Nia implementation
 fi

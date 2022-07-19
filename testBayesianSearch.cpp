@@ -500,9 +500,9 @@ int testBayesianSearch(CML::EventLog& log,
       clock_t sample_update_start;
       for (int i = 0; i < n_iters; i++) {
         sample_update_start = clock();
-        CMatrix* x_sample = BO.get_next_sample();
-        CMatrix* y_sample = new CMatrix(test_run.func(*x_sample));
-        BO.add_sample(*x_sample, *y_sample);
+        CMatrix x_sample(BO.get_next_sample());
+        CMatrix y_sample(test_run.func(x_sample));
+        BO.add_sample(x_sample, y_sample);
         if (verbosity >= 1) { cout << endl << endl; }
 
         // logging
@@ -523,12 +523,12 @@ int testBayesianSearch(CML::EventLog& log,
       // FIXME needed for now with janky way I'm deleting CGp gp and CNoise attributes to allow for updating with new 
       // samples
       cout << "Computing next sample after last sample in run:" << endl;
-      CMatrix* x_sample = BO.get_next_sample();
-      CMatrix* y_sample = new CMatrix(test_run.func(*x_sample));
+      CMatrix x_sample = BO.get_next_sample();
+      CMatrix y_sample(test_run.func(x_sample));
 
       // metrics
-      CMatrix* x_best = BO.get_best_solution();
-      search_rel_errors(run) = test_run.solution_error(*x_best);
+      CMatrix x_best = BO.get_best_solution();
+      search_rel_errors(run) = test_run.solution_error(x_best);
 
       cout << "Relative error for run " << run << ": " << search_rel_errors(run) << endl;
       cout << "Run time (s): " << run_times(run) << endl;

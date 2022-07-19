@@ -62,18 +62,18 @@ double model_predict_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_out, 
 #endif  // ifndef _WIN
 #endif  // INCLUDE_OPTIM
 
-CMatrix* BayesianSearchModel::get_next_sample() {
-    CMatrix* x = new CMatrix(1, x_dim);
+CMatrix BayesianSearchModel::get_next_sample() {
+    CMatrix x(1, x_dim);
     
     // initial random samples
     // TODO upgrade to Latin hypercube sampling
-    if (num_samples < initial_samples) { uniform_random_sample(x); }
+    if (num_samples < initial_samples) { x = uniform_random_sample(); }
     else {
         try {
             updateGP();
 
             // optimize acquisition function
-            if (optimization_fcn.compare("grid") == 0) { x = new CMatrix(gridSearch(acq_fcn, grid_vals)); }
+            if (optimization_fcn.compare("grid") == 0) { x = CMatrix(gridSearch(acq_fcn, grid_vals)); }
             #ifdef INCLUDE_OPTIM
             #ifndef _WIN
             else if (optimization_fcn.compare("de") == 0) {
@@ -114,7 +114,7 @@ CMatrix* BayesianSearchModel::get_next_sample() {
                 // latest version of optim has RNG seeding, but not current version used
                 // optim_settings.rng_seed_value = seed;
                 // seed eigen library instead with std library seeding
-                srand((unsigned int) seed + num_samples);
+                srand(static_cast<unsigned int>(seed) + num_samples);
 
                 bool success;
 
@@ -128,7 +128,7 @@ CMatrix* BayesianSearchModel::get_next_sample() {
 
                 if (success) {
                     for (int i = 0; i < x_dim; i++) {
-                        x->setVal(x_optim[i], i);
+                        x.setVal(x_optim[i], i);
                     }
                 }
                 else {
@@ -147,7 +147,7 @@ CMatrix* BayesianSearchModel::get_next_sample() {
             cout << "Rethrowing exception rather than handling with random resampling for debugging." << endl;
             throw e;
             
-            uniform_random_sample(x);
+            x = uniform_random_sample();
         }
     }
     return x;
@@ -155,13 +155,7 @@ CMatrix* BayesianSearchModel::get_next_sample() {
 
 void BayesianSearchModel::updateGP() {
     // update Gaussian process model
-    // TODO valid? want to free old gp memory if it was previously allocated
-    if (gp != nullptr) { delete gp; }
-    // want persistent access to model after fitting and getting next sample in order to fit new model
-
-    // TODO move model set up to separate function, only set up function once after first sample
-    if (noiseInit != nullptr) {delete noiseInit;}
-    noiseInit = new CGaussianNoise(y_samples);
+    noiseInit.reset(new CGaussianNoise(y_samples.get()));
     for(int i=0; i<noiseInit->getOutputDim(); i++) {noiseInit->setBiasVal(0.0, i);}
     noiseInit->setParam(0.0, noiseInit->getOutputDim());
 
@@ -170,7 +164,8 @@ void BayesianSearchModel::updateGP() {
     bool outputBiasScaleLearnt = false;
     int approxType = 0;
 
-    gp = new CGp(kern, noiseInit, x_samples, approxType, -1, verbosity);
+    // CGp does not manage the memory of kern, noiseInit, or x_samples so get() should be safe
+    gp.reset(new CGp(kern.get(), noiseInit.get(), x_samples.get(), approxType, -1, verbosity));
     gp->setBetaVal(1);
     gp->setScale(1.0);
     gp->setBias(0.0);
@@ -190,23 +185,21 @@ void BayesianSearchModel::updateGP() {
     gp->optimise(iters);
 }
 
-CMatrix* BayesianSearchModel::get_best_solution() {
+CMatrix BayesianSearchModel::get_best_solution() {
     // optimize GP
-    CMatrix* x = new CMatrix(1, x_dim);
+    CMatrix x(1, x_dim);
 
     if (num_samples == 0) {
         cout << "Zero samples received. Returning NaNs for optimal solution." << endl;
-        for (int i = 0; i < x_dim; i++) { x->setVal(std::numeric_limits<double>::quiet_NaN(), i); }
+        for (int i = 0; i < x_dim; i++) { x.setVal(std::numeric_limits<double>::quiet_NaN(), i); }
         return x;
     }
     else if (num_samples < initial_samples) { updateGP(); }
 
-    if (optimization_fcn.compare("grid") == 0) { x = new CMatrix(gridSearch(acq_fcn, grid_vals)); }
+    if (optimization_fcn.compare("grid") == 0) { x = gridSearch(acq_fcn, grid_vals); }
     #ifdef INCLUDE_OPTIM
     #ifndef _WIN
     else if (optimization_fcn.compare("de") == 0) {
-        x = new CMatrix(1, x_dim);
-
         Eigen::VectorXd x_optim = Eigen::VectorXd(x_dim);
         Eigen::VectorXd lower_bounds = Eigen::VectorXd(x_dim);
         Eigen::VectorXd upper_bounds = Eigen::VectorXd(x_dim);
@@ -250,7 +243,7 @@ CMatrix* BayesianSearchModel::get_best_solution() {
         success = optim::de(x_optim, model_predict_optim, &opt_data, optim_settings);
         if (success) {
             for (int i = 0; i < x_dim; i++) {
-                x->setVal(x_optim[i], i);
+                x.setVal(x_optim[i], i);
             }
         }
         else {
@@ -264,11 +257,11 @@ CMatrix* BayesianSearchModel::get_best_solution() {
     else { throw std::runtime_error(string("Unknown optimization function (optimization_fcn): ") + optimization_fcn); }
     if (verbosity >= 0) {
         CMatrix y(1, 1);
-        gp->out(y, *x);
+        gp->out(y, x);
         cout << "CBayesianSearch: Best solution with " << num_samples << " samples: (x_best, y_pred): (";
         if (x_dim > 1) cout << "[";
         for (int i = 0; i < x_dim; i++) {
-            cout  << x->getVal(i) << ", ";
+            cout  << x.getVal(i) << ", ";
         }
         if (x_dim > 1) cout << "]";
         cout << ", " << y.getVal(0) << ")" << endl;
@@ -302,21 +295,23 @@ void BayesianSearchModel::add_sample(const CMatrix& x, const CMatrix& y) {
     }
 }
 
-void BayesianSearchModel::uniform_random_sample(CMatrix* x) {
+CMatrix BayesianSearchModel::uniform_random_sample() {
+    CMatrix x(1, x_dim);
     if (init_points_on_grid) {
         for (unsigned int i = 0; i < x_dim; i++) {
             std::uniform_int_distribution<> dist(0, grid_vals[i].getRows() - 1);
             // fix uniform random samples to grid points
-            x->setVal(grid_vals[i].getVal(dist(rng)), i);
+            x.setVal(grid_vals[i].getVal(dist(rng)), i);
         }
     }
     else {
         std::uniform_real_distribution<> dist(0.0, 1.0);
         for (unsigned int i = 0; i < x_dim; i++) {
             // fix uniform random samples to grid points
-            x->setVal(bounds.getVal(i, 0) + dist(rng) * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
+            x.setVal(bounds.getVal(i, 0) + dist(rng) * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
         }
     }
+    return x;
 }
 
 json BayesianSearchModel::json_structure() const

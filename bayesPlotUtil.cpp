@@ -3,14 +3,10 @@
 void plot_BO_state(const BayesianSearchModel& BO,
                    const CMatrix& x_plot, const CMatrix& y_plot, 
                    const CMatrix& y_pred, const CMatrix& std_pred, 
-                   CMatrix* x_sample, CMatrix* y_sample) {
+                   const CMatrix& x_sample, const CMatrix& y_sample) {
   // plotting
   int x_dim = BO.x_dim;
   int n_plot = x_plot.getRows();
-
-  // TODO remove these variables, likely unnecessary
-  CMatrix* x_sample_plot = x_sample;
-  CMatrix* y_sample_plot = y_sample;
 
   double y_min = BO.y_samples->min();
   double y_max = BO.y_samples->max();
@@ -20,7 +16,7 @@ void plot_BO_state(const BayesianSearchModel& BO,
   std::vector<double> y_samples_vec(BO.y_samples->getVals(), BO.y_samples->getVals() + BO.num_samples);
   std::vector<double> y_pred_vec(y_pred.getVals(), y_pred.getVals() + n_plot);
   std::vector<double> std_pred_vec(std_pred.getVals(), std_pred.getVals() + n_plot);
-  std::vector<double> y_new_sample_vec(y_sample_plot->getVals(), y_sample_plot->getVals() + 1);
+  std::vector<double> y_new_sample_vec(y_sample.getVals(), y_sample.getVals() + 1);
 
   // 1D plotting
   if (x_dim == 1) {
@@ -28,7 +24,7 @@ void plot_BO_state(const BayesianSearchModel& BO,
 
     vector<double> x_vec(x_plot.getVals(), x_plot.getVals() + n_plot);
     std::vector<double> x_samples_vec(BO.x_samples->getVals(), BO.x_samples->getVals() + BO.num_samples);
-    std::vector<double> x_new_sample_vec(x_sample_plot->getVals(), x_sample_plot->getVals() + 1);
+    std::vector<double> x_new_sample_vec(x_sample.getVals(), x_sample.getVals() + 1);
 
     std::vector<double> y_pred_plus_std(y_pred_vec);
     std::vector<double> y_pred_minus_std(y_pred_vec);

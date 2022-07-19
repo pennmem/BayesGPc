@@ -8,7 +8,7 @@
 
 struct ComparisonStruct {
     int idx_best;
-    vector<CMatrix*> xs;
+    vector<CMatrix> xs;
     vector<double> mus;
     vector<double> sems;
     vector<double> ns;  // effective sample sizes
@@ -46,15 +46,8 @@ class CSearchComparison {
             models.push_back(bay);
         }
     }
-    // ~CSearchComparison() {
-    //     for (int i = 0; i < num_models; i++) {
-    //         BayesianSearchModel* temp = models.back();
-    //         models.pop_back();
-    //         delete temp;
-    //     }
-    // }
 
-    CMatrix* get_next_sample(unsigned int model_idx);
+    CMatrix get_next_sample(unsigned int model_idx);
     void add_sample(unsigned int model_idx, const CMatrix& x, const CMatrix& y);
     ComparisonStruct get_best_solution();
     TestStruct compare_GP_to_sample(const ComparisonStruct& res, const vector<double>& dist_results);
