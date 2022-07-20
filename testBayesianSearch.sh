@@ -17,14 +17,14 @@ fi
 
 # shift 2
 
-SMOKESCREEN=1
+SMOKESCREEN=0
 # if [[ "$#" -lt 1 ]]; then
 #     SMOKESCREEN=1
 # else
 #     SMOKESCREEN=0
 # fi
 
-if [ $IMPL != "CBay" -a $IMPL != "skopt" -a $IMPL != "nia"]; then
+if [ $IMPL != "CBay" -a $IMPL != "skopt" -a $IMPL != "nia" ]; then
     echo "Implementation '${IMPL}' not implemented. Only 'CBay', 'skopt', and 'nia' currently supported. Exiting."
     return 1
 fi
@@ -44,7 +44,7 @@ fi
 
 mkdir $LOGDIR
 ARGS_FILE=$LOGDIR/args.txt
-touch ARGS_FILE
+touch $ARGS_FILE
 
 if [[ $SMOKESCREEN -eq 1 ]]; then
     n_iters=(27)
@@ -52,20 +52,28 @@ if [[ $SMOKESCREEN -eq 1 ]]; then
     n_runs=2
     kernels=("Matern32")
     func="schwefel"
-    noise_levels=(0.0)
+    noise_levels=(0.1)
     init_samples=(25)
     exp_biases=(0.1)
+    lengthscale_lbs=(0.2)
+    white_lbs=(0.2)
 else
-    n_iters=(250)
-    n_grids=(5 30)
-    n_runs=50
+    n_iters=(150)
+    n_grids=(10)
+    n_runs=100
     kernels=("Matern32")  # "Matern52" "RBF" "RationalQuadratic")
     func="all"
-    noise_levels=(0.0 0.1 0.3)
-    exp_biases=(0.0 0.01 0.05 0.25 0.5 1.0 2.0)
-    init_samples=(25 100)  # 100 in Nia implementation
+    noise_levels=(0.3 0.5)
+    lengthscale_lbs=(0.1 0.25 0.4)
+    white_lbs=(0.1 0.5 1.0 2.0)
+    exp_biases=(0.25 1.0)
+    init_samples=(15 30 45)  # 100 in Nia implementation
 fi
 
+for whl in "${white_lbs[@]}"
+do
+for lsl in "${lengthscale_lbs[@]}"
+do
 for n in "${noise_levels[@]}"
 do
 for ng in "${n_grids[@]}"
@@ -75,8 +83,9 @@ do
 for s in "${init_samples[@]}"
 do
     if [ $IMPL == "nia" ]; then
-        args="--tag ${TAG} --func ${func} --noise_level ${n} --n_init_samples ${s} --n_iters ${niter} --n_runs ${n_runs} --n_grid ${ng}"
+        args="--tag ${TAG} --func ${func} --noise_level ${n} --n_init_samples ${s} --n_iters ${niter} --n_runs ${n_runs} --n_grid ${ng} --white_lb ${whl} --lenscale_lb ${lsl}"
         args="--impl ${IMPL} ${args}"
+        echo $args
         echo $args >> $ARGS_FILE
         continue
     fi
@@ -85,13 +94,15 @@ do
     do
     for e in "${exp_biases[@]}"
     do
-        args="--tag ${TAG} --func ${func} --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs ${n_runs} --kernel ${k} --n_iters ${niter} --n_grid ${ng}"
+        args="--tag ${TAG} --func ${func} --noise_level ${n} --exp_bias ${e} --n_init_samples ${s} --n_runs ${n_runs} --kernel ${k} --n_iters ${niter} --n_grid ${ng} --white_lb ${whl} --lenscale_lb ${lsl}"
         if [ $IMPL == "skopt" ]; then
             args="--impl ${IMPL} ${args}"
         fi
         echo $args >> $ARGS_FILE
     done
     done
+done
+done
 done
 done
 done

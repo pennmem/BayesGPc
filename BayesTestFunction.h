@@ -45,21 +45,6 @@ class TestFunction {
                  double noise_level_temp, 
                  int x_dim_temp=1,
                  int verbose=0);
-    // TestFunction(string func_name, 
-    //              int seed_temp, 
-    //              double noise_level_temp, 
-    //              int x_dim_temp=1,
-    //              int verbose=0) {
-    //   seed = seed_temp;
-    //   noise_level = noise_level_temp;
-    //   name = func_name;
-    //   verbosity = verbose;
-    //   x_dim = x_dim_temp;
-    //   default_random_engine e(seed);
-    //   _init();
-    //   noise_std = noise_level * range;
-    //   dist = normal_distribution(0.0, noise_std);
-    // }
 
     struct funcOptimStruct {
       TestFunction* test;

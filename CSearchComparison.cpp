@@ -4,8 +4,10 @@
 // using Welch's F-test/ANOVA
 ComparisonStruct CSearchComparison::get_best_solution() {
     double best_val = -std::numeric_limits<double>::infinity();
-    size_t idx_best = 0;
-    vector<CMatrix*> xs;
+    // if none of the solutions are non-Infs/NaNs, idx_best is invalid index into models (must
+    // be checked on caller side)
+    size_t idx_best = num_models;
+    vector<CMatrix> xs;
     vector<double> mus;
     vector<double> sems;
     // effective GP sample sizes
@@ -18,7 +20,7 @@ ComparisonStruct CSearchComparison::get_best_solution() {
     for (size_t i = 0; i < num_models; i++) {
         // get best predictions
         xs.push_back(models[i].get_best_solution());
-        models[i].gp->out_sem(y_pred, sem_pred, *(xs[i]));
+        models[i].gp->out_sem(y_pred, sem_pred, xs[i]);
         mus.push_back(y_pred.getVal(0));
         // estimates of standard errors of the mean (SEM)
         sems.push_back(sem_pred.getVal(0));
@@ -29,7 +31,7 @@ ComparisonStruct CSearchComparison::get_best_solution() {
         }
         
         // estimate effective GP sample sizes
-        models[i].gp->out(y_pred, std_pred, *(xs[i]));
+        models[i].gp->out(y_pred, std_pred, xs[i]);
         eff_ns.push_back(std::pow(std_pred.getVal(0) / sems[i], 2));
     }
 
@@ -80,7 +82,7 @@ TestStruct CSearchComparison::compare_GP_to_sample(const ComparisonStruct& res, 
     return ttest_res;
 }
 
-CMatrix* CSearchComparison::get_next_sample(size_t model_idx) {
+CMatrix CSearchComparison::get_next_sample(size_t model_idx) {
     return models[model_idx].get_next_sample();
 }
 

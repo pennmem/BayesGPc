@@ -32,6 +32,15 @@ void TestFunction::_init() {
     y_interval(0) = -1;
     y_interval(1) = 1;
   }
+  else if (name.compare("null") == 0) {
+    // simulates null effect (outputs zero)
+    for (int i=0; i<x_dim; i++) {
+      x_interval(i, 0) = 0;
+      x_interval(i, 1) = 1;
+    }
+    y_interval(0) = 0;
+    y_interval(1) = 1;  // not the max for null function but noise scale depends on interval...
+  }
   else if (name.compare("quadratic") == 0) {
     // simulates monotonic improvement to edge, testing for edge bias of global optimizer within BO
     for (int i=0; i<x_dim; i++) {
@@ -206,6 +215,7 @@ void TestFunction::_init() {
       throw std::invalid_argument("Test function " + name + " not implemented." + 
                                   " Current options: " + 
                                   "'sin', " + 
+                                  "'null', " +
                                   "'quadratic', " + 
                                   "'quadratic_over_edge', " + 
                                   "'PS4_1', " + 
@@ -242,6 +252,11 @@ CMatrix TestFunction::func(const CMatrix& x, bool add_noise) {
     assert(x.getCols()==1);
     for (int i = 0; i < x.getRows(); i++) {
       y(i, 0) = sin(x.getVal(i, 0));
+    }
+  }
+  else if (name.compare("null") == 0) {
+    for (int i = 0; i < x.getRows(); i++) {
+      y(i, 0) = 0;
     }
   }
   else if (name.compare("quadratic") == 0 || name.compare("quadratic_over_edge") == 0) {

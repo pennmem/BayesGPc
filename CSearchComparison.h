@@ -8,7 +8,7 @@
 
 struct ComparisonStruct {
     size_t idx_best;
-    vector<CMatrix*> xs;
+    vector<CMatrix> xs;
     vector<double> mus;
     vector<double> sems;
     vector<double> ns;  // effective sample sizes
@@ -47,7 +47,7 @@ class CSearchComparison {
         }
     }
 
-    CMatrix* get_next_sample(size_t model_idx);
+    CMatrix get_next_sample(size_t model_idx);
     void add_sample(size_t model_idx, const CMatrix& x, const CMatrix& y);
     ComparisonStruct get_best_solution();
     TestStruct compare_GP_to_sample(const ComparisonStruct& res, const vector<double>& dist_results);

@@ -14,14 +14,6 @@ if test_dirs is None:
     cluster_run_dirs = ["results/debug/",
                         "results/debug/"]
 
-# tips = sns.load_dataset("tips")
-# ax = sns.boxplot(x=tips["total_bill"])
-# ax = sns.boxplot(x="day", y="total_bill", hue="smoker",
-#                  data=tips, palette="Set3")
-# import pdb; pdb.set_trace()
-# plt.show()
-# exit()
-
 configs = []
 results = []
 run_results = []

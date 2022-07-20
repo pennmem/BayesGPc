@@ -5,7 +5,7 @@
 #  Dec 23, 2008
 # dependencies created with gcc -MM XXX.cpp
 
-include make.win
+include make.linux
 
 # how to print with makefile (write a variable):
 # $(warning INCLUDE_DIR)target: $(INCLUDE_DIR)

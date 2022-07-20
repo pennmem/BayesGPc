@@ -498,30 +498,27 @@ int testSearchComparison(CML::EventLog& log,
         json_log[fd]["run"][run][w]["x_samples"] = json::array();
         json_log[fd]["run"][run][w]["y_samples"] = json::array();
         for (int i = 0; i < n_iters; i++) {
-          CMatrix* x_sample = search.get_next_sample(w);
+          CMatrix x_sample(search.get_next_sample(w));
           // difference in means between group/model 0 vs. others
-          double val = test_run.func(*x_sample).getVal(0) + (w == correct_model ? mean_diff * test_run.noise_std : 0.0);
-          CMatrix* y_sample = new CMatrix(val);
-          search.add_sample(w, *x_sample, *y_sample);
+          double val = test_run.func(x_sample).getVal(0) + (w == correct_model ? mean_diff * test_run.noise_std : 0.0);
+          CMatrix y_sample(val);
+          search.add_sample(w, x_sample, y_sample);
           if (verbosity >= 1) { cout << endl << endl; }
 
           // logging
           if (i >= n_init_samples) { json_log[fd]["run"][run][w]["kernel_states"].push_back(search.models[w].gp->pkern->state()); }
-          json_log[fd]["run"][run][w]["x_samples"].push_back(to_vector(*x_sample));
-          json_log[fd]["run"][run][w]["y_samples"].push_back(to_vector(*y_sample));
+          json_log[fd]["run"][run][w]["x_samples"].push_back(to_vector(x_sample));
+          json_log[fd]["run"][run][w]["y_samples"].push_back(to_vector(y_sample));
         }
 
-        // FIXME needed for now with janky way I'm deleting CGp gp and CNoise attributes to allow for updating with new 
-        // samples
         cout << "Computing next sample after last sample in run:" << endl;
-        CMatrix* x_sample = search.models[w].get_next_sample();
-        CMatrix* y_sample = new CMatrix(test_run.func(*x_sample));
+        CMatrix x_sample(search.models[w].get_next_sample());
+        CMatrix y_sample(test_run.func(x_sample));
 
         // run metrics
-        CMatrix* x_best;
-        x_best = search.models[w].get_best_solution();
+        CMatrix x_best(search.models[w].get_best_solution());
         // allow extra dimension for generalizing to getting error at each sample
-        json_log[fd]["run"][run][w]["relative errors"][0] = test_run.solution_error(*x_best);
+        json_log[fd]["run"][run][w]["relative errors"][0] = test_run.solution_error(x_best);
         cout << "Relative error for run " << run << ", group " << w << ": " << json_log[fd]["run"][run][w]["relative errors"][0] << endl;
 
         // plotting
@@ -535,7 +532,7 @@ int testSearchComparison(CML::EventLog& log,
       ComparisonStruct sol = search.get_best_solution();
       vector<vector<double>> xs;
       for (int w = 0; w < n_way; w++) {
-        xs.push_back(to_vector1D(*(sol.xs[w])));
+        xs.push_back(to_vector1D(sol.xs[w]));
       }
       // store comparison_structs in json for first group to simplify json structure
       json_log[fd]["run"][run][0]["comparison_struct"] = json({});
