@@ -254,7 +254,7 @@ public:
   {
     return vals;
   }
-  inline const double* getVals() const
+  inline double* getVals() const
   {
     return vals;
   }
@@ -371,12 +371,12 @@ public:
 	return false;
   }
   // Returns true if the matrix has the same number of rows as columns.
-  inline const bool isSquare() const
+  inline bool isSquare() const
   {
     return nrows==ncols;
   }
   // Returns true if matrix is triangular.
-  inline const bool isTriangular() const
+  inline bool isTriangular() const
   {
     return triangular;
   }
@@ -387,15 +387,15 @@ public:
     triangular=val;
   }
   // Explicitly checks (and returns true) if the matrix is symmetric.
-  inline const bool checkSymmetric(bool verbose=false) const
+  inline bool checkSymmetric(bool verbose=false) const
   {
     MATRIXPROPERTIES(isSquare());
     double error = 0;
     double mean_err = 0;
     double max_err = 0;
     double lim = 0.0;
-    for (int i = 0; i < nrows; i++) {
-      for (int j = i + 1; j < ncols; j++) {
+    for (size_t i = 0; i < nrows; i++) {
+      for (size_t j = i + 1; j < ncols; j++) {
         error = abs(this->getVal(i, j) - this->getVal(j, i));
         if ( error > lim ) {
           if (!verbose) { return false; }
@@ -415,7 +415,7 @@ public:
     return true;
   }
   // Returns true if the matrix is symmetric.
-  inline const bool isSymmetric() const
+  inline bool isSymmetric() const
   {
     return symmetric;
   }
@@ -426,17 +426,17 @@ public:
     symmetric=val;
   }
   // Returns true if the matrix A has the same dimensions as the matrix.
-  inline const bool dimensionsMatch(const CMatrix& A) const
+  inline bool dimensionsMatch(const CMatrix& A) const
   {
     return (nrows==A.nrows && ncols==A.ncols);
   }
   // Returns true if A has the same number of rows as the matrix.
-  inline const bool rowsMatch(const CMatrix& A) const
+  inline bool rowsMatch(const CMatrix& A) const
   {
     return (nrows==A.nrows);
   }
   // Returns true if A has the same number of columns as the matrix.
-  inline const bool colsMatch(const CMatrix& A) const
+  inline bool colsMatch(const CMatrix& A) const
   {
     return (ncols==A.ncols);
   }
@@ -974,12 +974,12 @@ public:
     negate();
   }
 
-  double& operator()(int i, int j) {
+  double& operator()(size_t i, size_t j) {
     BOUNDCHECK(i < getRows() && j < getCols());
     return getVals()[i + getRows() * j];
   }
 
-  double& operator()(int i) {
+  double& operator()(size_t i) {
     BOUNDCHECK(i < getRows() * getCols());
     return getVals()[i];
   }
@@ -1183,13 +1183,13 @@ public:
   {
     dcopy_(nrows*ncols, vals, 1, outVals, 1);
   }
-  void toArray(double* outVals, int numRows, int numCols) const
+  void toArray(double* outVals, size_t numRows, size_t numCols) const
   {
     DIMENSIONMATCH(nrows==numRows);
     DIMENSIONMATCH(ncols==numCols);
     dcopy_(nrows*ncols, vals, 1, outVals, 1);
   }
-  void toSingleArray(double* outVals, int numElements) const
+  void toSingleArray(double* outVals, size_t numElements) const
   {
     DIMENSIONMATCH(nrows*ncols==numElements);
     dcopy_(nrows*ncols, vals, 1, outVals, 1);

@@ -201,9 +201,9 @@ class CMlpMapping: public CMapModel, public COptimisable, public CStreamInterfac
   mutable CMatrix tanhActive;
   mutable CMatrix outActive;
   double variance;
-  unsigned int hiddenDim;
   CMatrix* pX;
   CMatrix* py;
+  unsigned int hiddenDim;
 
   void _init(); // initialise the structure.
 };

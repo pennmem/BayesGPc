@@ -111,7 +111,7 @@ namespace ndlexceptions
   {
   public:
   FileError() : Error() {}
-  FileError(std::string file) : fileName(file), Error("File error " + file) {}
+  FileError(std::string file) : Error("File error " + file), fileName(file) {}
     virtual ~FileError() throw() {}
     std::string getMessage() const
     {

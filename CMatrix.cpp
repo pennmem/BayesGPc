@@ -457,8 +457,7 @@ int CMatrix::syev(CMatrix& eigVals, const char* jobz, const char* uplo, int lwor
   CHARARGUMENTS(uplo[0]=='l' || uplo[0]=='L' || uplo[0]=='u' || uplo[0]=='U');
   MATRIXPROPERTIES(isSymmetric());
   DIMENSIONMATCH(eigVals.getNumElements()==nrows);
-  if(lwork<3*ncols-1)
-    lwork = 3*ncols-1;
+  if(lwork < static_cast<int>(3*ncols-1)) { lwork = 3*ncols-1; }
   CMatrix work(1, lwork);
   C2F_BASE_INT_TYPE info=0;
 #ifndef _NOSYSEV
@@ -930,7 +929,6 @@ double jitChol(CMatrix& outMatrix, const CMatrix& inMatrix, unsigned int maxTrie
     }
     catch(ndlexceptions::MatrixNonPosDef& e)
     {
-      bool nonPosDef = true;
       jitter *= 10.0;
       if(i==maxTries) {
         cout << "max tries for adding jitter exceeded" << endl;
@@ -1158,8 +1156,8 @@ CMatrix linspace(double x0, double x1, int n) {
 CMatrix mesh1d(const CMatrix& x, const CMatrix& y) {
   assert(x.getCols() == 1 && y.getCols() == 1);
   CMatrix X(x.getRows() * y.getRows(), 2);
-  for (int i = 0; i < x.getRows(); i++) {
-    for (int j = 0; j < y.getRows(); j++) {
+  for (unsigned int i = 0; i < x.getRows(); i++) {
+    for (unsigned int j = 0; j < y.getRows(); j++) {
       X(i * x.getRows() + j, 0) = x.getVal(i, 0);
       X(i * x.getRows() + j, 1) = y.getVal(j, 0);
     }
@@ -1192,11 +1190,13 @@ void CMatrix::readParamsFromStream(istream& in)
       throw ndlexceptions::StreamFormatError("matrix", "Incorrect number of columns in row " + ndlstrutil::itoa(i) + " of matrix.");
     for(unsigned int j=0; j<tokens.size(); j++) 
     {
-      int ind = tokens[j].find('.');
-      if(ind==std::string::npos||ind<0)
-	setVal((double)atoi(tokens[j].c_str()), i, j);
-      else
-	setVal(atof(tokens[j].c_str()), i, j);
+      size_t ind = tokens[j].find('.');
+      if(ind == std::string::npos) {
+        setVal((double)atoi(tokens[j].c_str()), i, j);
+      }
+      else {
+        setVal(atof(tokens[j].c_str()), i, j);
+      }
     }
   }
 }
@@ -1230,10 +1230,8 @@ void CMatrix::fromUnheadedStream(istream& in)
   unsigned int allocateRows = ndlstrutil::ALLOCATECHUNK/getCols();
   while(getline(in, line)) 
   {
-    if(line[line.size()-1]=='\r')
-      line.erase(line.size()-1);
-    if(line[0]=='#')
-      continue;
+    if(line[line.size()-1]=='\r') { line.erase(line.size()-1); }
+    if(line[0]=='#') { continue; }
     tokens.clear();
     ndlstrutil::tokenise(tokens, line);
     
@@ -1241,7 +1239,7 @@ void CMatrix::fromUnheadedStream(istream& in)
     {
       int cols = tokens.size();
       if(getRows()==0)
-	resize(allocateRows, cols);	  
+      resize(allocateRows, cols);
     }
     
     if(rowNo>=getRows())
@@ -1250,11 +1248,11 @@ void CMatrix::fromUnheadedStream(istream& in)
       throw ndlexceptions::StreamFormatError("numCols");
     for(unsigned int j=0; j<tokens.size(); j++) 
     {
-      int ind = tokens[j].find('.');
-      if(ind==std::string::npos||ind<0)
-	setVal((double)atoi(tokens[j].c_str()), rowNo, j);
+      size_t ind = tokens[j].find('.');
+      if(ind == std::string::npos)
+        setVal((double)atoi(tokens[j].c_str()), rowNo, j);
       else
-	setVal(atof(tokens[j].c_str()), rowNo, j);
+        setVal(atof(tokens[j].c_str()), rowNo, j);
     }
     rowNo++;
   }
@@ -1287,9 +1285,9 @@ void CMatrix::toUnheadedStream(ostream& out) const
 
 std::vector<std::vector<double>> to_vector(const CMatrix& x) {
   std::vector<std::vector<double>> vec;
-  for (int i = 0; i < x.getRows(); i++) {
+  for (unsigned int i = 0; i < x.getRows(); i++) {
     vec.push_back(std::vector<double>());
-    for (int j = 0; j < x.getCols(); j++) {
+    for (unsigned int j = 0; j < x.getCols(); j++) {
       vec[i].push_back(x.getVal(i, j));
     }
   }
@@ -1297,8 +1295,8 @@ std::vector<std::vector<double>> to_vector(const CMatrix& x) {
 }
 CMatrix from_vector(const std::vector<std::vector<double>>& vec) {
   CMatrix x(vec.size(), vec[0].size());
-  for (int i = 0; i < x.getRows(); i++) {
-    for (int j = 0; j < x.getCols(); j++) {
+  for (unsigned int i = 0; i < x.getRows(); i++) {
+    for (unsigned int j = 0; j < x.getCols(); j++) {
       x(i, j) = vec[i][j];
     }
   }
@@ -1308,12 +1306,12 @@ std::vector<double> to_vector1D(const CMatrix& x) {
   DIMENSIONMATCH(x.getRows() == 1 || x.getCols() == 1);
   std::vector<double> vec;
   if (x.getRows() == 1) {
-    for (int j = 0; j < x.getCols(); j++) {
+    for (unsigned int j = 0; j < x.getCols(); j++) {
       vec.push_back(x.getVal(0, j));
     }
   }
   else {
-    for (int i = 0; i < x.getRows(); i++) {
+    for (unsigned int i = 0; i < x.getRows(); i++) {
       vec.push_back(x.getVal(i, 0));
     }
   }

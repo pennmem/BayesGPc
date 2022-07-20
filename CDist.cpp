@@ -337,7 +337,7 @@ void writeDistToStream(const CDist& dist, ostream& out)
 }
 CDist* readDistFromStream(istream& in)
 {
-  double ver = CStreamInterface::readVersionFromStream(in); 
+  double ver = CStreamInterface::readVersionFromStream(in);
   string tbaseType = CStreamInterface::getBaseTypeStream(in);
   if(tbaseType != "dist")
     throw ndlexceptions::StreamFormatError("baseType", "Error mismatch between saved base type, " + tbaseType + ", and Class base type, dist.");

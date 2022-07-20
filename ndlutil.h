@@ -133,7 +133,7 @@ namespace ndlutil {
   const unsigned long M=397;
     
   static unsigned long mt[N]; /* the array for the state vector  */
-  static int mti=N+1; /* mti==N+1 means mt[N] is not initialized */
+  static unsigned int mti=N+1; /* mti==N+1 means mt[N] is not initialized */
   void init_genrand(unsigned long s);
   void init_by_array(unsigned long init_key[], int key_length);
   unsigned long genrand_int32(void);

@@ -7,7 +7,7 @@
 #include <boost/math/distributions/students_t.hpp>
 
 struct ComparisonStruct {
-    int idx_best;
+    size_t idx_best;
     vector<CMatrix> xs;
     vector<double> mus;
     vector<double> sems;
@@ -23,8 +23,8 @@ struct TestStruct {
 class CSearchComparison {
     public:
     CSearchComparison() {}
-    CSearchComparison(int n_models, double alpha, vector<CCmpndKern> kernels, vector<CMatrix> bounds,
-            vector<double> observation_noises, vector<double> exploration_biases, vector<int> init_samples,
+    CSearchComparison(size_t n_models, double alpha, vector<CCmpndKern> kernels, vector<CMatrix> bounds,
+            vector<double> observation_noises, vector<double> exploration_biases, vector<size_t> init_samples,
             vector<int> rng_seeds, int verbose, vector<vector<CMatrix>> grids_vals = vector<vector<CMatrix>>()) {
         num_models = n_models;
         pthreshold = alpha;
@@ -38,7 +38,7 @@ class CSearchComparison {
         grids = grids_vals;
         if (grids_vals.size() > 0) { assert(grids.size() == num_models); }
 
-        for (int i = 0; i < num_models; i++) {
+        for (size_t i = 0; i < num_models; i++) {
             BayesianSearchModel bay(kerns[i], param_bounds[i],
                                     obsNoises[i], exp_biases[i],
                                     initial_samples[i], seeds[i], verbosity,
@@ -47,19 +47,19 @@ class CSearchComparison {
         }
     }
 
-    CMatrix get_next_sample(unsigned int model_idx);
-    void add_sample(unsigned int model_idx, const CMatrix& x, const CMatrix& y);
+    CMatrix get_next_sample(size_t model_idx);
+    void add_sample(size_t model_idx, const CMatrix& x, const CMatrix& y);
     ComparisonStruct get_best_solution();
     TestStruct compare_GP_to_sample(const ComparisonStruct& res, const vector<double>& dist_results);
 
-    unsigned int num_models;
+    size_t num_models;
     double pthreshold;
     vector<BayesianSearchModel> models;
     vector<CCmpndKern> kerns;
     vector<CMatrix> param_bounds;
     vector<double> obsNoises;
     vector<double> exp_biases;
-    vector<int> initial_samples;
+    vector<size_t> initial_samples;
     vector<vector<CMatrix>> grids;
     vector<int> seeds;
     int verbosity;

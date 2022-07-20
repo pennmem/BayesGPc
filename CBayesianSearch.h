@@ -31,7 +31,7 @@ class BayesianSearchModel {
         BayesianSearchModel() {}
         BayesianSearchModel(CCmpndKern& kernel, const CMatrix& param_bounds,
                             double observation_noise, double exp_bias,
-                            int init_samples, int rng_seed, int verbose, vector<CMatrix> grid=vector<CMatrix>()) {
+                            size_t init_samples, int rng_seed, int verbose, vector<CMatrix> grid=vector<CMatrix>()) {
             kern.reset(kernel.clone());
             DIMENSIONMATCH(param_bounds.getCols() == 2);
             bounds = param_bounds;
@@ -103,10 +103,10 @@ class BayesianSearchModel {
         std::unique_ptr<CCmpndKern> kern;
         std::unique_ptr<CGaussianNoise> noiseInit;
 
+        size_t num_samples;
+        size_t x_dim;
+        size_t initial_samples;
         int seed;
-        int num_samples;
-        int x_dim;
-        int initial_samples;
         int verbosity;
         std::mt19937 rng;
         std::unique_ptr<CMatrix> x_samples;

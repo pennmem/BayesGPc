@@ -353,7 +353,7 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
   virtual CMatrix getBoundsByName(const string name) const
   {
     string n;
-    for (int paramNo = 0; paramNo < nParams; paramNo++)
+    for (size_t paramNo = 0; paramNo < nParams; paramNo++)
     {
       n = getParamName(paramNo);
       if (n.compare(name) == 0) {
@@ -372,7 +372,7 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
     DIMENSIONMATCH(b.getRows()==1);
     DIMENSIONMATCH(b.getCols()==2);
     string n;
-    for (int paramNo = 0; paramNo < nParams; paramNo++)
+    for (size_t paramNo = 0; paramNo < nParams; paramNo++)
     {
       n = getParamName(paramNo);
       if (n.compare(name) == 0) {
@@ -397,7 +397,7 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
   }
   virtual void setDefaultBounds() {
     CMatrix b(nParams, 2);
-    for (int i = 0; i < nParams; i++) {
+    for (size_t i = 0; i < nParams; i++) {
       b(i, 0) = 1e-6;
       b(i, 1) = 1e6;
     }
@@ -568,7 +568,7 @@ class CComponentKern : public CKern
     DIMENSIONMATCH(b.getRows()==1);
     DIMENSIONMATCH(b.getCols()==2);
     // parse parameter name
-    int loc;
+    size_t loc;
     loc = full_name.find("__");
     if (loc == full_name.npos) { throw ndlexceptions::Error("No kernel name delimiter '__' found in <name>. Try e.g. 'CRBFKern_0__inverseWidth'."); }
     string kern_name = full_name.substr(0, loc);
@@ -581,7 +581,7 @@ class CComponentKern : public CKern
     assert(kern_name.compare(components[kern_idx]->getType()) == 0);
     string n;
 
-    for (int paramNo = 0; paramNo < components[kern_idx]->getNumParams(); paramNo++)
+    for (size_t paramNo = 0; paramNo < components[kern_idx]->getNumParams(); paramNo++)
     {
       n = components[kern_idx]->getParamName(paramNo);
       if (n.compare(param_name) == 0) 
@@ -600,7 +600,7 @@ class CComponentKern : public CKern
   virtual CMatrix getBoundsByName(const string full_name) const
   {
     // parse parameter name
-    int loc;
+    size_t loc;
     loc = full_name.find("__");
     if (loc == full_name.npos) { throw ndlexceptions::Error("No kernel name delimiter '__' found in <name>. Try e.g. 'CRBFKern_0__inverseWidth'."); }
     string kern_name = full_name.substr(0, loc);
@@ -610,11 +610,12 @@ class CComponentKern : public CKern
     int kern_idx = stoi(full_name.substr(loc + 1));
     kern_name = full_name.substr(0, loc);
     
-    assert(kern_idx < components.size());
+    assert(kern_idx >= 0);  // guarantee non-negative kernel integers
+    assert(static_cast<size_t>(kern_idx) < components.size());
     assert(kern_name.compare(components[kern_idx]->getType()) == 0);
     string n;
 
-    for (int paramNo = 0; paramNo < components[kern_idx]->getNumParams(); paramNo++)
+    for (size_t paramNo = 0; paramNo < components[kern_idx]->getNumParams(); paramNo++)
     {
       n = components[kern_idx]->getParamName(paramNo);
       if (n.compare(param_name) == 0) 

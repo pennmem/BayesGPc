@@ -26,8 +26,7 @@ json CKern::json_structure() const
 {
   json j;
   string n;
-  double* temp;
-  for(unsigned int i=0; i<nParams; i++)
+  for(unsigned int i = 0; i < nParams; i++)
   {
     n = getParamName(i);
     CMatrix b(getBoundsByName(n));
@@ -41,8 +40,7 @@ json CKern::json_state() const
 {
   json j;
   string n;
-  double* temp;
-  for(unsigned int i=0; i<nParams; i++)
+  for (unsigned int i = 0; i < nParams; i++)
   {
     n = getParamName(i);
     j[n] = getParam(i);
@@ -1585,7 +1583,10 @@ void CExpKern::getGradParams(CMatrix& g, const CMatrix& X, const CMatrix& X2, co
 			// invdist = 1. / np.where(dist != 0., dist, np.inf)
             double invdist = (dist != 0 ? 1 / dist :  0 );
 			// dist2M = np.square(X[:, None, :] - X2[None, :, :]) / self.lengthscale ** 3
-			double dist2M = dist2 * inverseWidth*inverseWidth*inverseWidth;
+
+            // commenting out definition of dist2M which was in the original Sheffield GPc library
+            // not sure if there's a bug in which dist2M was intended. CExpKern was never tested against sklearn
+            // double dist2M = dist2 * inverseWidth*inverseWidth*inverseWidth;
 			// dvar = np.exp(-dist)
 			double k = exp(-dist);
 			// target[0] += np.sum(dvar * dL_dK)
@@ -3329,7 +3330,7 @@ void CLinardKern::_init()
 {
   nParams = 1;
   init_scales.resize(1, getInputDim());
-  for (int i = 0; i < getInputDim(); i++) { init_scales(0, i) = 0.5; }
+  for (unsigned int i = 0; i < getInputDim(); i++) { init_scales(0, i) = 0.5; }
 
   setType("linard");
   setName("linear ARD");
@@ -3608,7 +3609,7 @@ void CRbfardKern::_init()
 {
   nParams = 2;
   init_scales.resize(1, getInputDim());
-  for (int i = 0; i < getInputDim(); i++) { init_scales(0, i) = 0.5; }
+  for (unsigned int i = 0; i < getInputDim(); i++) { init_scales(0, i) = 0.5; }
 
   setType("rbfard");
   setName("RBF ARD");
@@ -3915,7 +3916,7 @@ void CMlpardKern::_init()
 {
   nParams = 3;
   init_scales.resize(1, getInputDim());
-  for (int i = 0; i < getInputDim(); i++) { init_scales(0, i) = 0.5; }
+  for (unsigned int i = 0; i < getInputDim(); i++) { init_scales(0, i) = 0.5; }
   setType("mlpard");
   setName("MLP ARD");
   setParamName("weightVariance", 0);
@@ -4402,7 +4403,7 @@ void CPolyardKern::_init()
 {
   nParams = 3;
   init_scales.resize(1, getInputDim());
-  for (int i = 0; i < getInputDim(); i++) { init_scales(0, i) = 0.5; }
+  for (unsigned int i = 0; i < getInputDim(); i++) { init_scales(0, i) = 0.5; }
   setType("polyard");
   setName("Polynomial ARD");
   setParamName("weightVariance", 0);
