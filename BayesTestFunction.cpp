@@ -469,11 +469,15 @@ CMatrix* TestFunction::get_func_optimum(bool get_min) {
       bool success;
 
       funcOptimStruct opt_data = {this, false, !get_min};
+
+      auto optim_func = [this](const Eigen::VectorXd& x, 
+                               Eigen::VectorXd* grad_out, 
+                               void* opt_data) {
+          return func_optim(x, grad_out, opt_data);
+      };
+
       success = optim::de(x_optim, 
-                          [this](const Eigen::VectorXd& x, 
-                                  Eigen::VectorXd* grad_out,
-                                  void* opt_data)
-                              { return func_optim(x, grad_out, opt_data); },
+                          optim_func,
                           &opt_data,
                           optim_settings);
       if (success) {

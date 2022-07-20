@@ -265,7 +265,7 @@ void CGp::updateScale() const
   setMupToDate(false);
 }
 
-void CGp::updateM() const 
+void CGp::updateM() const
 {
   if (getVerbosity() >= 3) { cout << "entering updateM()" << endl; }
   if(!isMupToDate())
@@ -489,6 +489,9 @@ void CGp::out(CMatrix& yPred, CMatrix& probPred, const CMatrix& Xin) const
   posteriorMeanVar(muTest, varSigmaTest, Xin);
   pnoise->out(yPred, probPred, muTest, varSigmaTest);
 }
+// compute naive Gaussian process estimate of the standard error of the mean (SEM)
+// assuming variance estimate can be broken into additive noise variance and
+// variance of the mean estimate (from which the SEM estimate is derived)
 void CGp::out_sem(CMatrix& yPred, CMatrix& probPred, const CMatrix& Xin) const
 {
   out(yPred, probPred, Xin);

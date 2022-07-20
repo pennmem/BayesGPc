@@ -95,10 +95,18 @@ class BayesianSearchModel {
             rng.seed(seed);
         }
 
+        // CGp model
+        std::unique_ptr<CGp> gp;
+        // #ifndef DEBUG
+        // private:
+        // #endif
+        std::unique_ptr<CCmpndKern> kern;
+        std::unique_ptr<CGaussianNoise> noiseInit;
+
+        int seed;
         int num_samples;
         int x_dim;
         int initial_samples;
-        int seed;
         int verbosity;
         std::mt19937 rng;
         std::unique_ptr<CMatrix> x_samples;
@@ -107,11 +115,6 @@ class BayesianSearchModel {
         // observation noise variance. Currently applied to only training samples.
         double obsNoise;
         double exploration_bias;
-
-        // CGp model
-        std::unique_ptr<CCmpndKern> kern;
-        std::unique_ptr<CGaussianNoise> noiseInit;
-        std::unique_ptr<CGp> gp;
 
         CMatrix bounds;
         // for grid search-based global optimization
