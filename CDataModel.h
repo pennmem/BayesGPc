@@ -81,7 +81,7 @@ class CMapModel : public CDataModel
   {
     _init();
   }
-  CMapModel(unsigned int inDim, unsigned int outDim, unsigned int nData) : inputDim(inDim), outputDim(outDim), CDataModel(nData) 
+  CMapModel(unsigned int inDim, unsigned int outDim, unsigned int nData) : CDataModel(nData), inputDim(inDim), outputDim(outDim)
   {
     _init();
   }
@@ -117,8 +117,8 @@ class CMapModel : public CDataModel
   {
     setBaseType("mapModel");
   }
-  unsigned int outputDim;
-  unsigned int inputDim;
+  size_t inputDim;
+  size_t outputDim;
   string modelName;
   string type;
 };

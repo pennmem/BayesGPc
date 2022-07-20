@@ -182,15 +182,12 @@ double COptimisable::oneDObjectiveVal(const double val)
   setOptParams(paramStoreOne);
   return objective;
 }
+
 void COptimisable::lbfgs_b_Optimise()
 {
   assert(bounds_set);
-  if(getVerbosity()>2)
-  {
-    cout << "Limited Memory Bounded BFGS Optimisation." << endl;
-  }
+  if(getVerbosity() > 2) { cout << "Limited Memory Bounded BFGS Optimisation." << endl; }
 
-  C2F_BASE_INT_TYPE maxiters = 50;
   C2F_BASE_INT_TYPE funcEval = 0;
   C2F_BASE_INT_TYPE maxFuncEval = 10000;
   
@@ -314,7 +311,8 @@ void COptimisable::lbfgs_b_Optimise()
 //        for (int i = 0; i < 4; i++) { cout << lsave[i] << " "; }
 //        cout << endl;
 
-        setulb_( // pass arrays to fortran with pointers
+        // L-BFGS-B (Limited Memory BFGS-Bounded algorithm; Nocedal & Morales, 2011)
+        setulb_(  // pass arrays to fortran with pointers
           nParams,
           memSize,  // number of corrections
           Xvals, // length n

@@ -1393,10 +1393,10 @@ void CNcnmNoise::readParamsFromStream(istream& in)
   par.fromStream(in);
   setNumData(1);
   initStoreage();
-  if(numPar==getNumParams())
-    setParams(par);
-  else
+  if(numPar==static_cast<int>(getNumParams())) { setParams(par); }
+  else {
     throw ndlexceptions::StreamFormatError("numParams", "Number of parameters in file does not match computed number.");
+  }
 }
 COrderedNoise::~COrderedNoise()
 {
@@ -1490,21 +1490,17 @@ void COrderedNoise::setParams(const CMatrix& params)
 double COrderedNoise::getParam(unsigned int index) const
 {
   BOUNDCHECK(index<getNumParams());
-  if(index<getOutputDim())
-    return bias.getVal(index);
-  if(index>=getOutputDim())
-    return widths.getVal(index-getOutputDim());
+  if(index<getOutputDim()) { return bias.getVal(index); }
+  if(index>=getOutputDim()) { return widths.getVal(index-getOutputDim()); }
   return -1;
 }
 void COrderedNoise::getParams(CMatrix& params) const
 {
   DIMENSIONMATCH(params.getCols()==getNumParams());
   DIMENSIONMATCH(params.getRows()==1);
-  int nProc=getOutputDim();
-  for(unsigned int j=0; j<nProc; j++)
-    params.setVal(bias.getVal(j), j);
-  for(unsigned int j=0; j<getNumCategories()-2; j++)
-    params.setVal(widths.getVal(j), j+getOutputDim());
+  unsigned int nProc=getOutputDim();
+  for(unsigned int j=0; j<nProc; j++) { params.setVal(bias.getVal(j), j); }
+  for(unsigned int j=0; j<getNumCategories()-2; j++) { params.setVal(widths.getVal(j), j+getOutputDim()); }
 }
  
 void COrderedNoise::getGradParams(CMatrix& g) const
@@ -1525,38 +1521,36 @@ void COrderedNoise::getGradParams(CMatrix& g) const
       double c = 1/sqrt(sigma2+getVarSigma(i, j));
       if(targVal==0)
       {
-	muAdj*=c;
-	gbias -= c*ndlutil::gradLnCumGaussian(-muAdj);
+        muAdj*=c;
+        gbias -= c*ndlutil::gradLnCumGaussian(-muAdj);
       }
-      else if(targVal>0 && targVal<getNumCategories()-1)
+      else if(targVal > 0 && targVal < static_cast<int>(getNumCategories()-1))
       {
-	for(unsigned int k=0; k<targVal-1; k++)
-	  muAdj -= widths.getVal(k);
-	double u = muAdj*c;
-	double uprime = (muAdj-widths.getVal(targVal-1))*c;
-	double B1 = ndlutil::gaussOverDiffCumGaussian(u, uprime, 1);
-	double B2 = ndlutil::gaussOverDiffCumGaussian(u, uprime, 2);
-	gbias += c*(B1-B2);
-	double addPart = c*B2;
-	for(unsigned int k=0; k<targVal; k++)
-	  gwidth.setVal(gwidth.getVal(k)+addPart, k);
-	if(targVal>1)
-	{
-	  addPart = c*B1;
-	  for(unsigned int k=0; k<targVal-1; k++)
-	    gwidth.setVal(gwidth.getVal(k)-addPart, k);	      
-	}
+        for(int k=0; k<targVal-1; k++) { muAdj -= widths.getVal(k); }
+        double u = muAdj*c;
+        double uprime = (muAdj-widths.getVal(targVal-1))*c;
+        double B1 = ndlutil::gaussOverDiffCumGaussian(u, uprime, 1);
+        double B2 = ndlutil::gaussOverDiffCumGaussian(u, uprime, 2);
+        gbias += c*(B1-B2);
+        double addPart = c*B2;
+        for(int k=0; k < targVal; k++) { gwidth.setVal(gwidth.getVal(k)+addPart, k); }
+        if(targVal > 1)
+        {
+          addPart = c*B1;
+          for(int k = 0; k < targVal-1; k++) { gwidth.setVal(gwidth.getVal(k)-addPart, k); }
+        }
       }
-      else if(targVal==getNumCategories()-1)
+      else if(targVal==static_cast<int>(getNumCategories()-1))
       {
-	for(unsigned int k=0; k<targVal-1; k++)
-	  muAdj -= widths.getVal(k);
-	muAdj*=c;
-	double addPart = c*ndlutil::gradLnCumGaussian(muAdj);
-	gbias += addPart;
-	if(getNumCategories()>2)
-	  for(unsigned int k=0; k<gwidth.getCols(); k++)
-	    gwidth.setVal(gwidth.getVal(k)-addPart, k);
+        for(int k = 0; k < targVal-1; k++) { muAdj -= widths.getVal(k); }
+        muAdj*=c;
+        double addPart = c*ndlutil::gradLnCumGaussian(muAdj);
+        gbias += addPart;
+        if(getNumCategories()>2) {
+          for(unsigned int k=0; k<gwidth.getCols(); k++) {
+            gwidth.setVal(gwidth.getVal(k)-addPart, k);
+          }
+        }
       }
       else if(isnan(getTarget(i, j)))
       { /* do nothing*/  }
@@ -1582,10 +1576,9 @@ void COrderedNoise::getGradInputs(double& gmu, double& gvs, unsigned int i, unsi
     gvs=-.5*gmu*c*muAdj;
   }
   
-  else if(targ>0 && targ < getNumCategories() - 1)
+  else if(targ>0 && targ < static_cast<int>(getNumCategories() - 1))
   {
-    for(unsigned int k=0; k<targ-1; k++)
-      muAdj-=widths.getVal(k);
+    for(int k=0; k<targ-1; k++) { muAdj-=widths.getVal(k); }
     double u = muAdj*c;
     double uprime = (muAdj - widths.getVal(targ-1))*c;
     double B1 = ndlutil::gaussOverDiffCumGaussian(u, uprime, 1);
@@ -1593,10 +1586,9 @@ void COrderedNoise::getGradInputs(double& gmu, double& gvs, unsigned int i, unsi
     gmu = c*(B1-B2);
     gvs = -.5*c*c*(u*B1 - uprime*B2);
   }
-  else if (targ==getNumCategories()-1) // missing data
+  else if (targ==static_cast<int>(getNumCategories()-1)) // missing data
   {
-    for(unsigned int k=0; k<targ-1; k++)
-      muAdj-=widths.getVal(k);
+    for(int k=0; k<targ-1; k++) { muAdj-=widths.getVal(k); }
     muAdj*=c;
     gmu = c*ndlutil::gradLnCumGaussian(muAdj);
     gvs = -.5*gmu*c*muAdj;
@@ -1689,17 +1681,17 @@ void COrderedNoise::likelihoods(CMatrix& L, const CMatrix& muTest, const CMatrix
       {
 	L.setVal(ndlutil::cumGaussian(-muAdj*c), i, j);
       }
-      else if(targVal>0 && targVal < getNumCategories()-1)
+      else if(targVal>0 && targVal < static_cast<int>(getNumCategories()-1))
       {
-	for(unsigned int k=0; k<targVal-1; k++)
-	  muAdj+=widths.getVal(k);
-	L.setVal(ndlutil::cumGaussian(muAdj*c)-ndlutil::cumGaussian((muAdj - widths.getVal(targVal-1))*c), i, j);
+        for(int k=0; k<targVal-1; k++)
+          muAdj+=widths.getVal(k);
+        L.setVal(ndlutil::cumGaussian(muAdj*c)-ndlutil::cumGaussian((muAdj - widths.getVal(targVal-1))*c), i, j);
       }
-      else if(targVal==getNumCategories()-1)
+      else if(targVal==static_cast<int>(getNumCategories()-1))
       {
-	for(unsigned int k=0; k<targVal-1; k++)
-	  muAdj+=widths.getVal(k);
-	L.setVal(ndlutil::cumGaussian(muAdj*c), i, j);
+        for(int k=0; k<targVal-1; k++)
+          muAdj+=widths.getVal(k);
+        L.setVal(ndlutil::cumGaussian(muAdj*c), i, j);
       }
       else if(isnan(getTarget(i, j)))
       {
@@ -1731,19 +1723,18 @@ double COrderedNoise::logLikelihood(const CMatrix& muTest, const CMatrix& varSig
       {
 	L+=ndlutil::lnCumGaussian(-muAdj*c);
       }
-      else if(targVal>0 && targVal < getNumCategories()-1)
+      else if(targVal>0 && targVal < static_cast<int>(getNumCategories()-1))
       {
-	for(unsigned int k=0; k<targVal-1; k++)
-	  muAdj-=widths.getVal(k);
-	double u = muAdj*c;
-	double uprime = (muAdj - widths.getVal(targVal-1))*c;
-	L+=ndlutil::lnDiffCumGaussian(u, uprime);
+        for(int k=0; k<targVal-1; k++) { muAdj-=widths.getVal(k); }
+        double u = muAdj*c;
+        double uprime = (muAdj - widths.getVal(targVal-1))*c;
+        L+=ndlutil::lnDiffCumGaussian(u, uprime);
       }
-      else if(targVal==getNumCategories()-1)
+      else if(targVal == static_cast<int>(getNumCategories()-1))
       {
-	for(unsigned int k=0; k<targVal-1; k++)
-	  muAdj-=widths.getVal(k);
-	L+=ndlutil::lnCumGaussian(muAdj*c);
+        for(int k = 0; k<targVal-1; k++)
+          muAdj-=widths.getVal(k);
+        L+=ndlutil::lnCumGaussian(muAdj*c);
       }
       else if(isnan(getTarget(i, j)))
       {/*do nothing*/}
@@ -1799,7 +1790,6 @@ void writeNoiseToStream(const CNoise& noise, ostream& out)
 
 CNoise* readNoiseFromStream(istream& in)
 {
-  double ver = CStreamInterface::readVersionFromStream(in); 
   string tbaseType = CStreamInterface::getBaseTypeStream(in);
   if(tbaseType != "noise")
     throw ndlexceptions::StreamFormatError("baseType", "Error mismatch between saved base type, " + tbaseType + ", and Class base type, noise.");
@@ -1818,7 +1808,7 @@ CNoise* readNoiseFromStream(istream& in)
     pnoise = new CScaleNoise();
   else
     throw ndlexceptions::StreamFormatError("type", "Unknown noise type " + type);
-  pnoise->readParamsFromStream(in);  
+  pnoise->readParamsFromStream(in);
   return pnoise;
 }
  

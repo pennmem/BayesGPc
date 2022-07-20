@@ -10,7 +10,7 @@ CGp::CGp(unsigned int q, unsigned int d,
 	 CKern* pkernel, CNoise* pnois, 
 	 int approxType, 
 	 unsigned int actSetSize, int verbos)
-  : CMapModel(), CProbabilisticOptimisable(), pkern(pkernel), pnoise(pnois), pX(pXin), py(pyin)
+  : CMapModel(), CProbabilisticOptimisable(), pX(pXin), py(pyin), pkern(pkernel), pnoise(pnois)
 {
   DIMENSIONMATCH(pXin->getCols()==q);
   DIMENSIONMATCH(pyin->getCols()==d);
@@ -57,7 +57,7 @@ CGp::CGp(CKern* pkernel, CNoise* pnois,
 	 unsigned int actSetSize, int verbos)
   :
   CMapModel(), CProbabilisticOptimisable(),
-  pkern(pkernel), pnoise(pnois), pX(pXin)
+  pX(pXin), pkern(pkernel), pnoise(pnois)
 {
   DIMENSIONMATCH(pXin->getRows()==pnoise->getNumData());
   _init();
@@ -1161,7 +1161,6 @@ void CGp::updateG() const
   if(!isMupToDate())
     throw ndlexceptions::Error("updateG() called when M is not updated.");
   unsigned int numKernParams = pkern->getNumParams();
-  unsigned int numParams = numKernParams;
 
   if (getVerbosity() >= 2) { cout << "updateG" << endl; }
   updateK();

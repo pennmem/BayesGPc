@@ -162,7 +162,7 @@ void BayesianSearchModel::updateGP() {
     // TODO move model set up to separate function, only set up function once after first sample
     if (noiseInit != nullptr) {delete noiseInit;}
     noiseInit = new CGaussianNoise(y_samples);
-    for(int i=0; i<noiseInit->getOutputDim(); i++) {noiseInit->setBiasVal(0.0, i);}
+    for(size_t i = 0; i < noiseInit->getOutputDim(); i++) {noiseInit->setBiasVal(0.0, i);}
     noiseInit->setParam(0.0, noiseInit->getOutputDim());
 
     int iters = 100;
@@ -196,7 +196,7 @@ CMatrix* BayesianSearchModel::get_best_solution() {
 
     if (num_samples == 0) {
         cout << "Zero samples received. Returning NaNs for optimal solution." << endl;
-        for (int i = 0; i < x_dim; i++) { x->setVal(std::numeric_limits<double>::quiet_NaN(), i); }
+        for (size_t i = 0; i < x_dim; i++) { x->setVal(std::numeric_limits<double>::quiet_NaN(), i); }
         return x;
     }
     else if (num_samples < initial_samples) { updateGP(); }
@@ -267,7 +267,7 @@ CMatrix* BayesianSearchModel::get_best_solution() {
         gp->out(y, *x);
         cout << "CBayesianSearch: Best solution with " << num_samples << " samples: (x_best, y_pred): (";
         if (x_dim > 1) cout << "[";
-        for (int i = 0; i < x_dim; i++) {
+        for (size_t i = 0; i < x_dim; i++) {
             cout  << x->getVal(i) << ", ";
         }
         if (x_dim > 1) cout << "]";
@@ -294,7 +294,7 @@ void BayesianSearchModel::add_sample(const CMatrix& x, const CMatrix& y) {
     if (verbosity >= 1) {
         cout << "Sample " << num_samples << ": (x, y): (";
         if (x_dim > 1) cout << "[";
-        for (int i = 0; i < x_dim; i++) {
+        for (size_t i = 0; i < x_dim; i++) {
             cout  << x.getVal(i) << ", ";
         }
         if (x_dim > 1) cout << "]";
@@ -304,7 +304,7 @@ void BayesianSearchModel::add_sample(const CMatrix& x, const CMatrix& y) {
 
 void BayesianSearchModel::uniform_random_sample(CMatrix* x) {
     if (init_points_on_grid) {
-        for (unsigned int i = 0; i < x_dim; i++) {
+        for (size_t i = 0; i < x_dim; i++) {
             std::uniform_int_distribution<> dist(0, grid_vals[i].getRows() - 1);
             // fix uniform random samples to grid points
             x->setVal(grid_vals[i].getVal(dist(rng)), i);
@@ -312,7 +312,7 @@ void BayesianSearchModel::uniform_random_sample(CMatrix* x) {
     }
     else {
         std::uniform_real_distribution<> dist(0.0, 1.0);
-        for (unsigned int i = 0; i < x_dim; i++) {
+        for (size_t i = 0; i < x_dim; i++) {
             // fix uniform random samples to grid points
             x->setVal(bounds.getVal(i, 0) + dist(rng) * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
         }

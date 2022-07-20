@@ -20,7 +20,6 @@ CMatrix gridSearch(std::function<double(const CMatrix&)> fcn,
         default:
             throw std::runtime_error("Grid search not implemented for dimensionality higher than 4D.");
     }
-//    cout << "before return gridSearch: x " << x << endl;
     return x;
 }
 
@@ -31,7 +30,7 @@ CMatrix gridSearch1D(std::function<double(const CMatrix&)> fcn,
     CMatrix x(1, grid_vals.size());
     double y_best = -std::numeric_limits<double>::infinity();
     double y;
-    for (int i = 0; i < grid_vals[0].getRows(); i++) {
+    for (unsigned int i = 0; i < grid_vals[0].getRows(); i++) {
         x(0, 0) = grid_vals[0].getVal(i);
         y = fcn(x);
         if (y > y_best) {
@@ -48,9 +47,9 @@ CMatrix gridSearch2D(std::function<double(const CMatrix&)> fcn,
     CMatrix x(1, grid_vals.size());
     double y_best = -std::numeric_limits<double>::infinity();
     double y;
-    for (int i = 0; i < grid_vals[0].getRows(); i++) {
+    for (unsigned int i = 0; i < grid_vals[0].getRows(); i++) {
         x(0, 0) = grid_vals[0].getVal(i);
-        for (int j = 0; j < grid_vals[1].getRows(); j++) {
+        for (unsigned int j = 0; j < grid_vals[1].getRows(); j++) {
             x(0, 1) = grid_vals[1].getVal(j);
             y = fcn(x);
             if (y > y_best) {
@@ -69,11 +68,11 @@ CMatrix gridSearch3D(std::function<double(const CMatrix&)> fcn,
     CMatrix x(1, grid_vals.size());
     double y_best = -std::numeric_limits<double>::infinity();
     double y;
-    for (int i = 0; i < grid_vals[0].getRows(); i++) {
+    for (unsigned int i = 0; i < grid_vals[0].getRows(); i++) {
         x(0, 0) = grid_vals[0].getVal(i);
-        for (int j = 0; j < grid_vals[1].getRows(); j++) {
+        for (unsigned int j = 0; j < grid_vals[1].getRows(); j++) {
             x(0, 1) = grid_vals[1].getVal(j);
-            for (int k = 0; k < grid_vals[2].getRows(); k++) {
+            for (unsigned int k = 0; k < grid_vals[2].getRows(); k++) {
                 x(0, 2) = grid_vals[2].getVal(k);
                 y = fcn(x);
                 if (y > y_best) {
@@ -93,13 +92,13 @@ CMatrix gridSearch4D(std::function<double(const CMatrix&)> fcn,
     CMatrix x(1, grid_vals.size());
     double y_best = -std::numeric_limits<double>::infinity();
     double y;
-    for (int i = 0; i < grid_vals[0].getRows(); i++) {
+    for (unsigned int i = 0; i < grid_vals[0].getRows(); i++) {
         x(0, 0) = grid_vals[0].getVal(i);
-        for (int j = 0; j < grid_vals[1].getRows(); j++) {
+        for (unsigned int j = 0; j < grid_vals[1].getRows(); j++) {
             x(0, 1) = grid_vals[1].getVal(j);
-            for (int k = 0; k < grid_vals[2].getRows(); k++) {
+            for (unsigned int k = 0; k < grid_vals[2].getRows(); k++) {
                 x(0, 2) = grid_vals[2].getVal(k);
-                for (int h = 0; h < grid_vals[3].getRows(); h++) {
+                for (unsigned int h = 0; h < grid_vals[3].getRows(); h++) {
                     x(0, 3) = grid_vals[3].getVal(h);
                     y = fcn(x);
                     if (y > y_best) {

@@ -4,7 +4,7 @@
 // using Welch's F-test/ANOVA
 ComparisonStruct CSearchComparison::get_best_solution() {
     double best_val = -std::numeric_limits<double>::infinity();
-    int idx_best = -1;
+    size_t idx_best = 0;
     vector<CMatrix*> xs;
     vector<double> mus;
     vector<double> sems;
@@ -15,11 +15,12 @@ ComparisonStruct CSearchComparison::get_best_solution() {
     CMatrix y_pred(1, 1);
     CMatrix sem_pred(1, 1);
     CMatrix std_pred(1, 1);
-    for (int i = 0; i < num_models; i++) {
+    for (size_t i = 0; i < num_models; i++) {
         // get best predictions
         xs.push_back(models[i].get_best_solution());
         models[i].gp->out_sem(y_pred, sem_pred, *(xs[i]));
         mus.push_back(y_pred.getVal(0));
+        // estimates of standard errors of the mean (SEM)
         sems.push_back(sem_pred.getVal(0));
 
         if (mus[i] > best_val) {
@@ -45,10 +46,12 @@ ComparisonStruct CSearchComparison::get_best_solution() {
     }
 
     // if means not significantly different, choose most reliable model (smallest SEM)
+    // if none of the SEMs are non-Infs/NaNs, idx_best is invalid index into models (must
+    // be checked on caller side)
     if (test.pval > pthreshold) {
         best_val = std::numeric_limits<double>::infinity();
-        idx_best = -1;
-        for (int i = 0; i < num_models; i++) {
+        idx_best = num_models;
+        for (size_t i = 0; i < num_models; i++) {
             if (sems[i] < best_val) {
                 best_val = sems[i];
                 idx_best = i;
@@ -77,11 +80,11 @@ TestStruct CSearchComparison::compare_GP_to_sample(const ComparisonStruct& res, 
     return ttest_res;
 }
 
-CMatrix* CSearchComparison::get_next_sample(unsigned int model_idx) {
+CMatrix* CSearchComparison::get_next_sample(size_t model_idx) {
     return models[model_idx].get_next_sample();
 }
 
-void CSearchComparison::add_sample(unsigned int model_idx, const CMatrix& x, const CMatrix& y) {
+void CSearchComparison::add_sample(size_t model_idx, const CMatrix& x, const CMatrix& y) {
     models[model_idx].add_sample(x, y);
 }
 
