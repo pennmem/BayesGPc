@@ -22,11 +22,6 @@ void CMatrix::copy(const CMatrix& x)
   // Level 1 Blas operation y <- x
   DIMENSIONMATCH(x.ncols == ncols);
   DIMENSIONMATCH(x.nrows == nrows);
-//  for (int i = 0; i < x.nrows; i++) {
-//    for (int j = 0; j < x.ncols; j++) {
-//      setVal(x.getVal(i, j), i, j);
-//    }
-//  }
   dcopy_(ncols*nrows, x.vals, 1, vals, 1);
   symmetric = x.symmetric;
   triangular = x.triangular;
@@ -862,10 +857,6 @@ ostream& operator<<(ostream& out, const CMatrix& A)
   for(unsigned int i = 0; i < A.getRows(); i++){
     for(unsigned int j = 0; j < A.getCols(); j++){
       out << A.getVal(i, j) << " ";
-      // if (A.getVal(i, j) > ndlutil::DISPEPS && A.getVal(i, j) < -ndlutil::DISPEPS)
-      //   out << A.getVal(i, j) << " ";
-      // else
-      //   out << 0 << " ";
     }
     out << endl;
   }

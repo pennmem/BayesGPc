@@ -4542,7 +4542,8 @@ double CPolyardKern::getInitParamVal(unsigned int paramNo) const
       throw ndlexceptions::Error("Requested parameter doesn't exist.");
     }  
   }
-}void CPolyardKern::getGradX(CMatrix& gX, const CMatrix& X, unsigned int row, const CMatrix& X2, bool addG) const
+}
+void CPolyardKern::getGradX(CMatrix& gX, const CMatrix& X, unsigned int row, const CMatrix& X2, bool addG) const
 {
   DIMENSIONMATCH(gX.getRows() == X2.getRows());
   BOUNDCHECK(row < X.getRows());

@@ -3,6 +3,85 @@
 #include <limits>
 
 
+BayesianSearchModel::BayesianSearchModel() {}
+BayesianSearchModel::~BayesianSearchModel() {}
+BayesianSearchModel::BayesianSearchModel(CCmpndKern& kernel, const CMatrix& param_bounds,
+                                         double observation_noise, double exp_bias,
+                                         size_t init_samples, int rng_seed, int verbose, vector<CMatrix> grid) {
+    kern.reset(kernel.clone());
+    DIMENSIONMATCH(param_bounds.getCols() == 2);
+    bounds = param_bounds;
+    seed = rng_seed;
+    verbosity = verbose;
+    _init();
+    x_dim = bounds.getRows();
+    num_samples = 0;
+    initial_samples = init_samples;
+    obsNoise = observation_noise;
+    exploration_bias = exp_bias;
+    acq_func_name = "expected_improvement";
+    // hard code expected improvement for now
+    acq_fcn = [&](const CMatrix& x) {
+            return expected_improvement(x, *(this->gp), this->y_best, this->exploration_bias); };
+    y_best = -INFINITY;
+
+    x_samples.reset(new CMatrix(1, x_dim));
+    y_samples.reset(new CMatrix(1, 1));
+    grid_vals = grid;
+    #ifdef INCLUDE_OPTIM
+    if (grid.size() == 0) {
+        #ifdef _WIN
+        throw std::exception("Windows build only supports grid search. Please provide parameter [grid].");
+        #else
+        optimization_fcn = "de";
+        #endif  // ifndef _WIN
+    }
+    #endif  // INCLUDE_OPTIM
+}
+
+// explicit copy constructor to force compiler to not apply implicit move operations
+BayesianSearchModel::BayesianSearchModel(const BayesianSearchModel& bay) {
+    kern.reset(bay.kern->clone());
+    DIMENSIONMATCH(bay.bounds.getCols() == 2);
+    bounds = bay.bounds;
+    grid_vals = bay.grid_vals;
+    seed = bay.seed;
+    verbosity = bay.verbosity;
+    _init();
+    x_dim = bay.x_dim;
+    num_samples = 0;
+    initial_samples = bay.initial_samples;
+    obsNoise = bay.obsNoise;
+    exploration_bias = bay.exploration_bias;
+    // expected_improvement is only acquisition function supported currently
+    acq_func_name = "expected_improvement";
+    acq_fcn = [&](const CMatrix& x) {
+            return expected_improvement(x, *(this->gp), this->y_best, this->exploration_bias); };
+    y_best = -INFINITY;
+    x_samples.reset(new CMatrix(1, x_dim));
+    y_samples.reset(new CMatrix(1, 1));
+}
+
+void BayesianSearchModel::operator=(const BayesianSearchModel& bay) {
+    DIMENSIONMATCH(bay.bounds.getCols() == 2);
+    bounds = bay.bounds;
+    grid_vals = bay.grid_vals;
+    verbosity = bay.verbosity;
+    x_dim = bay.x_dim;
+    num_samples = bay.num_samples;
+    initial_samples = bay.initial_samples;
+    obsNoise = bay.obsNoise;
+    exploration_bias = bay.exploration_bias;
+
+    // Bayesian optimization model state
+    seed = bay.seed;
+    _init();
+    kern.reset(bay.kern->clone());
+    y_best = bay.y_best;
+    x_samples.reset(new CMatrix(*(bay.x_samples)));
+    y_samples.reset(new CMatrix(*(bay.y_samples)));
+}
+
 double expected_improvement(const CMatrix& x, const CGp& model, double y_b, double exp_bias) {
     double EI;
 
@@ -41,6 +120,7 @@ struct EIOptimStruct {
 // wrapper for eigen vector input x
 double expected_improvement_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_out, void* opt_data) {
 // double expected_improvement_optim(const ColVec_t& x, ColVec_t* grad_out, void* opt_data) {
+    // This function is an eigen optimization function and all eigen optimization functions have these parameters.
     EIOptimStruct* optfn_data = reinterpret_cast<EIOptimStruct*>(opt_data);
     CMatrix x_cmat(1, (int)(x.rows()), x.data());
     return -expected_improvement(x_cmat, optfn_data->model, optfn_data->y_b, optfn_data->exp_bias);
@@ -52,6 +132,7 @@ struct GPOptimStruct {
 
 // double model_predict_optim(const ColVec_t& x, ColVec_t* grad_out, void* opt_data) {
 double model_predict_optim(const Eigen::VectorXd& x, Eigen::VectorXd* grad_out, void* opt_data) {
+    // This function is an eigen optimization function and all eigen optimization functions have these parameters.
     GPOptimStruct* optfn_data = reinterpret_cast<GPOptimStruct*>(opt_data);
     CMatrix x_cmat(1, (int)(x.rows()), x.data());
     CMatrix mu_mat(1, 1);
@@ -151,6 +232,17 @@ CMatrix BayesianSearchModel::get_next_sample() {
         }
     }
     return x;
+}
+
+void BayesianSearchModel::_init() {
+    if (seed != -1) {
+        set_seed(seed);
+    }
+}
+
+void BayesianSearchModel::set_seed(int val) {
+    seed = val;
+    rng.seed(seed);
 }
 
 void BayesianSearchModel::updateGP() {

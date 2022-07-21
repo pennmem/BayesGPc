@@ -390,13 +390,12 @@ public:
   inline bool checkSymmetric(bool verbose=false) const
   {
     MATRIXPROPERTIES(isSquare());
-    double error = 0;
     double mean_err = 0;
     double max_err = 0;
     double lim = 0.0;
     for (size_t i = 0; i < nrows; i++) {
       for (size_t j = i + 1; j < ncols; j++) {
-        error = abs(this->getVal(i, j) - this->getVal(j, i));
+        double error = abs(this->getVal(i, j) - this->getVal(j, i));
         if ( error > lim ) {
           if (!verbose) { return false; }
           else {

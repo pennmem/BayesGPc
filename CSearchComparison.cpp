@@ -115,14 +115,11 @@ TestStruct anova_welch(vector<double> mus,
     
     double lambda = 0;
     for (int i = 0; i < n_groups; i++) {
-        // TODO test this, problematic if noise level is not homogeneous over input space
         // estimate effective number of local samples by comparing sem to total variance at x_best
         //      which it certainly isn't for amplitude (and likely duration and frequency as well)
         //      may still not matter a ton
-        // likely problematic overall since white noise level along with other kernel hyperparameters
-        // are somewhat unstable and highly dependent on initialization. I need to run tests of the
-        // parameter stability and talk with Mike.
-        // better estimates of degrees of freedom available, see https://hastie.su.domains/Papers/cantoni_biometrika.pdf
+        // Warning: potentially problematic overall since white noise level along with other kernel hyperparameters
+        // are somewhat unstable and highly dependent on initialization.
         assert(ns[i] > 1);
         lambda += std::pow(1.0 - ws[i]/w_sum, 2)/(ns[i] - 1);
     }
