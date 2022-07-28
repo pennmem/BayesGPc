@@ -41,7 +41,8 @@ class CKern : public CMatInterface, public CStreamInterface, public CTransformab
   CKern(const CMatrix& X) : updateXused(false) {}
   CKern(unsigned int inDim) : updateXused(false) {}
   CKern(const CKern& kern) : updateXused(false) {}
-  
+  CKern& operator=(const CKern&) = default;
+
   virtual ~CKern()  {}
   virtual CKern* clone() const=0;
   // set initial parameters.
@@ -476,6 +477,7 @@ class CComponentKern : public CKern
   CComponentKern(unsigned int inDim) : CKern(inDim) {}
   CComponentKern(const CMatrix& X) : CKern(X) {}
   CComponentKern(const CComponentKern& kern) : CKern(kern) {}
+  CComponentKern& operator=(const CComponentKern&) = default;
   virtual unsigned int addKern(const CKern* kern)
   {
     components.push_back(kern->clone());
@@ -693,6 +695,7 @@ class CCmpndKern: public CComponentKern {
   CCmpndKern(const CMatrix& X);
   ~CCmpndKern();
   CCmpndKern(const CCmpndKern&);
+  CCmpndKern& operator=(const CCmpndKern&) = default;
   CCmpndKern* clone() const
   {
     return new CCmpndKern(*this);

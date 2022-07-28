@@ -1799,7 +1799,7 @@ CGp* readGpFromFile(const string modelFileName, int verbosity)
   {
     pmodel = readGpFromStream(in);
   }
-  catch(ndlexceptions::StreamFormatError err) 
+  catch(ndlexceptions::StreamFormatError &err)
   {
     throw ndlexceptions::FileFormatError(modelFileName, err);
   }

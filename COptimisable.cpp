@@ -411,7 +411,7 @@ void COptimisable::lbfgs_b_Optimise()
 
     // restart search with random parameters if any restarts remain
     std::uniform_real_distribution<> dist(0.0, 1.0);
-    for (unsigned int i = 0; i < nParams; i++) {
+    for (unsigned int i = 0; i < (unsigned int)nParams; i++) {
         X.setVal(bounds.getVal(i, 0) + dist(rng) * (bounds.getVal(i, 1) - bounds.getVal(i, 0)), i);
     }
 
@@ -757,17 +757,17 @@ void COptimisable::cgOptimise()
 	      cout << "cgOptimise: Warning gradient or function value was NaN or inf." << endl;
 	  }
 	}
-	catch(ndlexceptions::MatrixNonPosDef err)
+	catch(ndlexceptions::MatrixNonPosDef &err)
 	{
 	  if(getVerbosity()>1)
 	    cout << "cgOptimise: Matrix non-positive definite in gradient of function value computation." << endl;
 	}
-	catch(ndlexceptions::MatrixConditionError err)
+	catch(ndlexceptions::MatrixConditionError &err)
 	{
 	  if(getVerbosity()>1)
 	    cout << "cgOptimise: Matrix conditioning error in gradient of function value computation." << endl;
 	}
-	catch(ndlexceptions::MatrixSingular err)
+	catch(ndlexceptions::MatrixSingular &err)
 	{
 	  if(getVerbosity()>1)
 	    cout << "cgOptimise: Matrix singularity error in gradient of function value computation." << endl;

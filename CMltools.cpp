@@ -462,7 +462,7 @@ CMlpMapping* readMlpMappingFromFile(const string modelFileName, int verbosity)
   {
     pmodel = readMlpMappingFromStream(in);
   }
-  catch(ndlexceptions::StreamFormatError err) 
+  catch(ndlexceptions::StreamFormatError &err)
   {
     throw ndlexceptions::FileFormatError(modelFileName, err);
   }
@@ -848,7 +848,7 @@ CLinearMapping* readLinearMappingFromFile(const string modelFileName, int verbos
   {
     pmodel = readLinearMappingFromStream(in);
   }
-  catch(ndlexceptions::StreamFormatError err) 
+  catch(ndlexceptions::StreamFormatError &err)
   {
     throw ndlexceptions::FileFormatError(modelFileName, err);
   }

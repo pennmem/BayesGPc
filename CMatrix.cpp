@@ -322,7 +322,7 @@ void CMatrix::syrk(const CMatrix& A, double alpha, double beta, const char* type
 }
 void CMatrix::sumRow(const CMatrix& A, double alpha, double beta)
 {
-  DIMENSIONMATCH(rowsMatch(A) && ncols==1 || ncols==A.nrows && nrows==1);
+  DIMENSIONMATCH((rowsMatch(A) && ncols==1) || (ncols==A.nrows && nrows==1));
   for(unsigned int i=0; i<A.getRows(); i++)
   {
     double s = 0.0;
@@ -335,7 +335,7 @@ void CMatrix::sumRow(const CMatrix& A, double alpha, double beta)
 } 
 void CMatrix::sumCol(const CMatrix& A, double alpha, double beta)
 {
-  DIMENSIONMATCH(colsMatch(A) && nrows==1 || nrows==A.ncols && ncols==1);
+  DIMENSIONMATCH((colsMatch(A) && nrows==1) || (nrows==A.ncols && ncols==1));
   for(unsigned int j=0; j<A.getCols(); j++)
   {
     double s = 0.0;
@@ -1207,7 +1207,7 @@ void CMatrix::fromUnheadedFile(const string fileName) {
   {
       fromUnheadedStream(in);
   }
-  catch(ndlexceptions::StreamFormatError err) 
+  catch(ndlexceptions::StreamFormatError &err)
   {
     throw ndlexceptions::FileFormatError(fileName, err);
   }
