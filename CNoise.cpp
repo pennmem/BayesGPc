@@ -447,7 +447,7 @@ void CGaussianNoise::getNuG(CMatrix& g, CMatrix& nu, unsigned int index) const
   }
 }
 void CGaussianNoise::updateSites(CMatrix& m, CMatrix& beta, unsigned int actIndex, 
-				 const CMatrix& g, const CMatrix& nu, 
+				 const CMatrix& /*g*/, const CMatrix& /*nu*/,
 				 unsigned int index) const
 {
   for(unsigned int j=0; j<getOutputDim(); j++)
@@ -638,7 +638,7 @@ void CScaleNoise::getParams(CMatrix& params) const
     params.setVal(scale.getVal(j), j+getOutputDim());
 }
  
-void CScaleNoise::getGradParams(CMatrix& g) const
+void CScaleNoise::getGradParams(CMatrix& /*g*/) const
 {
   throw ndlexceptions::Error("ScaleNoise doesn't have gradients implemented.");
   /*~
@@ -667,7 +667,7 @@ void CScaleNoise::getGradParams(CMatrix& g) const
     ~*/
 }
 
-void CScaleNoise::getGradInputs(double& gmu, double& gvs, unsigned int i, unsigned int j) const
+void CScaleNoise::getGradInputs(double& /*gmu*/, double& /*gvs*/, unsigned int /*i*/, unsigned int /*j*/) const
 {
   throw ndlexceptions::Error("ScaleNoise doesn't have gradients implemented.");
   /*~
@@ -678,8 +678,8 @@ void CScaleNoise::getGradInputs(double& gmu, double& gvs, unsigned int i, unsign
     gvs = 0.5*(gmu*gmu - gvs);
     ~*/
 }
-  
-void CScaleNoise::getNuG(CMatrix& g, CMatrix& nu, unsigned int index) const
+
+void CScaleNoise::getNuG(CMatrix& /*g*/, CMatrix& /*nu*/, unsigned int /*index*/) const
 {
   throw ndlexceptions::Error("ScaleNoise doesn't have gradients implemented.");
   /*~
@@ -700,9 +700,8 @@ void CScaleNoise::getNuG(CMatrix& g, CMatrix& nu, unsigned int index) const
     }
     ~*/
 }
-void CScaleNoise::updateSites(CMatrix& m, CMatrix& beta, unsigned int actIndex, 
-			      const CMatrix& g, const CMatrix& nu, 
-			      unsigned int index) const
+void CScaleNoise::updateSites(CMatrix& m, CMatrix& beta, unsigned int actIndex,
+    const CMatrix& /*g*/, const CMatrix& /*nu*/, unsigned int index) const
 {
   // beta(actIndex,:) := 1/sigma^2
   // m(actIndex,:) :=  ( y(index,:) - bias(:) ) ./ scale(:)
@@ -712,7 +711,7 @@ void CScaleNoise::updateSites(CMatrix& m, CMatrix& beta, unsigned int actIndex,
     m.setVal((getTarget(index, j)-bias.getVal(j))/scale.getVal(j), actIndex, j);
   }
 }
-void CScaleNoise::test(const CMatrix& muout, const CMatrix& varSigmaOut, const CMatrix& yTest) const
+void CScaleNoise::test(const CMatrix& /*muout*/, const CMatrix& /*varSigmaOut*/, const CMatrix& /*yTest*/) const
 {
   throw ndlexceptions::Error("ScaleNoise doesn't have site updates implemented.");
   /*~
@@ -745,8 +744,8 @@ void CScaleNoise::out(CMatrix& yPred, CMatrix& errorBars, const CMatrix& muTest,
     for(unsigned int j=0; j<errorBars.getCols(); j++)
       errorBars.setVal(sqrt(varSigmaTest.getVal(i, j) + sigma2)*scale.getVal(j), i, j);
 }
-void CScaleNoise::likelihoods(CMatrix& L, const CMatrix& muTest, const CMatrix& varSigmaTest, 
-			      const CMatrix& yTest) const
+void CScaleNoise::likelihoods(CMatrix& /*L*/, const CMatrix& /*muTest*/, const CMatrix& /*varSigmaTest*/,
+    const CMatrix& /*yTest*/) const
 {
   throw ndlexceptions::Error("ScaleNoise doesn't have site likelihoods implemented.");
   /*~
@@ -770,8 +769,8 @@ void CScaleNoise::likelihoods(CMatrix& L, const CMatrix& muTest, const CMatrix& 
     ~*/
 }
 
-double CScaleNoise::logLikelihood(const CMatrix& muTest, const CMatrix& varSigmaTest, 
-				  const CMatrix& yTest) const
+double CScaleNoise::logLikelihood(const CMatrix& /*muTest*/, const CMatrix& /*varSigmaTest*/,
+    const CMatrix& /*yTest*/) const
 {
   throw ndlexceptions::Error("ScaleNoise doesn't have site loglikelihoods implemented.");
   /*~

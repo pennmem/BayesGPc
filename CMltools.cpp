@@ -220,7 +220,7 @@ void CMlpMapping::out(CMatrix& yPred, const CMatrix& Xin) const
   }
 
 }
-double CMlpMapping::outGradX(CMatrix& g, const CMatrix &Xin, unsigned int pointNo, unsigned int outputNo) const
+double CMlpMapping::outGradX(CMatrix& /*g*/, const CMatrix &/*Xin*/, unsigned int /*pointNo*/, unsigned int /*outputNo*/) const
 {
   throw ndlexceptions::NotImplementedError("outGradX not yet implemented for CMlpMapping.");
 }
@@ -375,7 +375,7 @@ bool CMlpMapping::equals(const CMlpMapping& model, const double tol) const
   return true;
 }
 
-void CMlpMapping::display(ostream& os) const 
+void CMlpMapping::display(ostream& /*os*/) const 
 {
   cout << "Multi-Layer Perceptron Model:" << endl;
   cout << "Optimiser: " << getDefaultOptimiserStr() << endl;
@@ -629,7 +629,7 @@ void CLinearMapping::out(CMatrix& yPred, const CMatrix& Xin) const
   }
 
 }
-double CLinearMapping::outGradX(CMatrix& g, const CMatrix &Xin, unsigned int pointNo, unsigned int outputNo) const
+double CLinearMapping::outGradX(CMatrix& /*g*/, const CMatrix &/*Xin*/, unsigned int /*pointNo*/, unsigned int /*outputNo*/) const
 {
   throw ndlexceptions::NotImplementedError("outGradX not yet implemented for CLinearMapping.");
 }
@@ -765,7 +765,7 @@ bool CLinearMapping::equals(const CLinearMapping& model, const double tol) const
   return true;
 }
 
-void CLinearMapping::display(ostream& os) const 
+void CLinearMapping::display(ostream& /*os*/) const 
 {
   cout << "Linear Mapping:" << endl;
   cout << "Optimiser: " << getDefaultOptimiserStr() << endl;

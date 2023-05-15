@@ -5,6 +5,8 @@ extern "C" double erf(double);
 #endif /* _MSC_VER */
 
 namespace ndlutil {
+  static unsigned long mt[N]; /* the array for the state vector  */
+  static unsigned int mti=N+1; /* mti==N+1 means mt[N] is not initialized */
 
   const double ROBUSTADD=1e-300; // added in various points to prevent log of zero.
   double ngaussian(double x)

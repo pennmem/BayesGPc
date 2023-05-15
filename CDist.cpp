@@ -326,7 +326,7 @@ void CParamPriors::fromMxArray(const mxArray* distArray)
       else
 	throw ndlexceptions::NotImplementedError("Dist type " + distType + " is currently not implemented.");
     }
-  }    
+  }
 }
 
 #endif
@@ -338,6 +338,7 @@ void writeDistToStream(const CDist& dist, ostream& out)
 CDist* readDistFromStream(istream& in)
 {
   double ver = CStreamInterface::readVersionFromStream(in);
+  (void)ver;  // unused
   string tbaseType = CStreamInterface::getBaseTypeStream(in);
   if(tbaseType != "dist")
     throw ndlexceptions::StreamFormatError("baseType", "Error mismatch between saved base type, " + tbaseType + ", and Class base type, dist.");
@@ -352,6 +353,6 @@ CDist* readDistFromStream(istream& in)
     pdist = new CWangDist();
   else
     throw ndlexceptions::StreamFormatError("type", "Unknown distribution type " + type + ".");
-  pdist->readParamsFromStream(in);  
+  pdist->readParamsFromStream(in);
   return pdist;
 }

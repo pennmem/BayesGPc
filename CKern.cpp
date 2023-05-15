@@ -61,11 +61,11 @@ void CKern::writeParamsToStream(ostream& out) const
   writePriorsToStream(out);
 }
 
-void CKern::getGradPrior(CMatrix& G) const
+void CKern::getGradPrior(CMatrix& /*G*/) const
 {
 }
 
-void CKern::getPriorLogProb(CMatrix& G) const
+void CKern::getPriorLogProb(CMatrix& /*G*/) const
 {
 }
 
@@ -136,6 +136,7 @@ void CComponentKern::readParamsFromStream(istream& in)
 //     throw ndlexceptions::StreamFormatError("type", "Error mismatch between saved type, " + ttype + ", and Class type, " + getType() + ".");
   setInputDim(readIntFromStream(in, "inputDim"));
   unsigned int nPar = readIntFromStream(in, "numParams");
+  (void)nPar; // unused
   unsigned int numKerns = readIntFromStream(in, "numKerns");
   for(unsigned int i=0; i<numKerns; i++)
   {
@@ -678,10 +679,10 @@ void CWhiteKern::_init()
 }
 void CWhiteKern::setInitParam()
 {
-  variance = init_variance;  
+  variance = init_variance;
 }
 
-inline double CWhiteKern::diagComputeElement(const CMatrix& X, unsigned int index) const
+inline double CWhiteKern::diagComputeElement(const CMatrix& /*X*/, unsigned int /*index*/) const
 {
   return variance;
 }
@@ -762,8 +763,8 @@ double CWhiteKern::getWhite() const
   return variance;
 }
 
-inline double CWhiteKern::computeElement(const CMatrix& X1, unsigned int index1,
-					 const CMatrix& X2, unsigned int index2) const
+inline double CWhiteKern::computeElement(const CMatrix& /*X1*/, unsigned int /*index1*/,
+    const CMatrix& /*X2*/, unsigned int /*index2*/) const
 {
   return 0.0;
 }
@@ -784,18 +785,18 @@ void CWhiteKern::compute(CMatrix& K, const CMatrix& X, const CMatrix& X2) const
   DIMENSIONMATCH(K.getCols()==X2.getRows());
   K.zeros();
 }
-void CWhiteKern::compute(CMatrix& K, const CMatrix& X, const CMatrix& X2, unsigned int row) const
+void CWhiteKern::compute(CMatrix& K, const CMatrix& X, const CMatrix& /*X2*/, unsigned int /*row*/) const
 {
   DIMENSIONMATCH(K.rowsMatch(X));
   DIMENSIONMATCH(K.getCols()==1);
   K.zeros();
 }
-double CWhiteKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& X2, const CMatrix& covGrad) const
+double CWhiteKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*X2*/, const CMatrix& /*covGrad*/) const
 {
   BOUNDCHECK(index==0);
   return 0.0;
 }
-double CWhiteKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& covGrad) const
+double CWhiteKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& covGrad) const
 {
   BOUNDCHECK(index==0);
   return trace(covGrad);
@@ -815,7 +816,7 @@ CWhitefixedKern::CWhitefixedKern(const CMatrix& X) : CKern(X)
 {
   _init();
   setInputDim(X.getCols());
-}  
+}
 CWhitefixedKern::CWhitefixedKern(const CWhitefixedKern& kern) : CKern(kern)
 {
   _init();
@@ -852,6 +853,7 @@ void CWhitefixedKern::readParamsFromStream(istream& in)
 //     throw ndlexceptions::StreamFormatError("type", "Error mismatch between saved type, " + ttype + ", and Class type, " + getType() + ".");
   setInputDim(readIntFromStream(in, "inputDim"));
   unsigned int numParams=readIntFromStream(in, "numParams");
+  (void)numParams;  // unused
   setVariance(readDoubleFromStream(in, "variance"));
 }
 
@@ -873,7 +875,7 @@ void CWhitefixedKern::setInitParam()
   variance = init_variance;  
 }
 
-inline double CWhitefixedKern::diagComputeElement(const CMatrix& X, unsigned int index) const
+inline double CWhitefixedKern::diagComputeElement(const CMatrix& /*X8*/, unsigned int /*index*/) const
 {
   return variance;
 }
@@ -883,21 +885,21 @@ void CWhitefixedKern::diagCompute(CMatrix& d, const CMatrix& X) const
   DIMENSIONMATCH(X.rowsMatch(d));
   d.setVals(variance);
 }
-void CWhitefixedKern::setParam(double val, unsigned int paramNo)
+void CWhitefixedKern::setParam(double /*val*/, unsigned int /*paramNo*/)
 {
   throw ndlexceptions::Error("Requested parameter doesn't exist.");
 }
 // Parameters are kernel parameters
-double CWhitefixedKern::getParam(unsigned int paramNo) const
+double CWhitefixedKern::getParam(unsigned int /*paramNo*/) const
 {
   throw ndlexceptions::Error("Requested parameter doesn't exist.");
 }
-void CWhitefixedKern::setInitParamVal(double val, unsigned int paramNo)
+void CWhitefixedKern::setInitParamVal(double /*val*/, unsigned int /*paramNo*/)
 {
   throw ndlexceptions::Error("Requested parameter doesn't exist.");
 }
 // Parameters are kernel parameters
-double CWhitefixedKern::getInitParamVal(unsigned int paramNo) const
+double CWhitefixedKern::getInitParamVal(unsigned int /*paramNo*/) const
 {
   throw ndlexceptions::Error("Requested parameter doesn't exist.");
 }
@@ -922,8 +924,8 @@ double CWhitefixedKern::getWhite() const
   return variance;
 }
 
-inline double CWhitefixedKern::computeElement(const CMatrix& X1, unsigned int index1,
-					 const CMatrix& X2, unsigned int index2) const
+inline double CWhitefixedKern::computeElement(const CMatrix& /*X1*/, unsigned int /*index1*/,
+    const CMatrix& /*X2*/, unsigned int /*index2*/) const
 {
   return 0.0;
 }
@@ -944,18 +946,18 @@ void CWhitefixedKern::compute(CMatrix& K, const CMatrix& X, const CMatrix& X2) c
   DIMENSIONMATCH(K.getCols()==X2.getRows());
   K.zeros();
 }
-void CWhitefixedKern::compute(CMatrix& K, const CMatrix& X, const CMatrix& X2, unsigned int row) const
+void CWhitefixedKern::compute(CMatrix& K, const CMatrix& X, const CMatrix& /*X2*/, unsigned int /*row*/) const
 {
   DIMENSIONMATCH(K.rowsMatch(X));
   DIMENSIONMATCH(K.getCols()==1);
   K.zeros();
 }
-double CWhitefixedKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& X2, const CMatrix& covGrad) const
+double CWhitefixedKern::getGradParam(unsigned int /*index*/, const CMatrix& /*X*/, const CMatrix& /*X2*/, const CMatrix& /*covGrad*/) const
 {
   throw ndlexceptions::Error("Requested parameter doesn't exist.");
 
 }
-double CWhitefixedKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& covGrad) const
+double CWhitefixedKern::getGradParam(unsigned int /*index*/, const CMatrix& /*X*/, const CMatrix& /*covGrad*/) const
 {
   throw ndlexceptions::Error("Requested parameter doesn't exist.");
 }
@@ -1004,10 +1006,10 @@ void CBiasKern::_init()
 
 void CBiasKern::setInitParam()
 {
-  variance = init_variance;  
+  variance = init_variance;
 }
 
-double CBiasKern::diagComputeElement(const CMatrix& X, unsigned int index) const
+double CBiasKern::diagComputeElement(const CMatrix& /*X*/, unsigned int /*index*/) const
 {
   return variance;
 }
@@ -1087,8 +1089,8 @@ double CBiasKern::getWhite() const
   return 0.0;
 }
 
-inline double CBiasKern::computeElement(const CMatrix& X1, unsigned int index1, 
-					const CMatrix& X2, unsigned int index2) const
+inline double CBiasKern::computeElement(const CMatrix& /*X1*/, unsigned int /*index1*/,
+    const CMatrix& /*X2*/, unsigned int /*index2*/) const
 {
   return variance;
 }
@@ -1107,18 +1109,18 @@ void CBiasKern::compute(CMatrix& K, const CMatrix& X, const CMatrix& X2) const
   DIMENSIONMATCH(K.getCols()==X2.getRows());
   K.setVals(variance);
 }
-void CBiasKern::compute(CMatrix& K, const CMatrix& X, const CMatrix& X2, unsigned int row) const
+void CBiasKern::compute(CMatrix& K, const CMatrix& X, const CMatrix& /*X2*/, unsigned int /*row*/) const
 {
   DIMENSIONMATCH(K.rowsMatch(X));
   DIMENSIONMATCH(K.getCols()==1);
   K.setVals(variance);
 }
-double CBiasKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& X2, const CMatrix& covGrad) const 
+double CBiasKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*X2*/, const CMatrix& covGrad) const
 {
   BOUNDCHECK(index==0);
   return covGrad.sum();
 }
-double CBiasKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& covGrad) const 
+double CBiasKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& covGrad) const
 {
   BOUNDCHECK(index==0);
   return covGrad.sum();
@@ -1175,7 +1177,7 @@ void CRbfKern::setInitParam()
   variance = init_variance;
 }
 
-inline double CRbfKern::diagComputeElement(const CMatrix& X, unsigned int index) const
+inline double CRbfKern::diagComputeElement(const CMatrix& /*X*/, unsigned int /*index*/) const
 {
   return variance;
 }
@@ -1375,14 +1377,14 @@ void CRbfKern::getGradParams(CMatrix& g, const CMatrix& X, const CMatrix& covGra
     addPriorGrad(g);
 }
 
-double CRbfKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& X2, const CMatrix& covGrad) const
+double CRbfKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*X2*/, const CMatrix& /*covGrad*/) const
 {
   
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError( "Error getGradParam is not currently implemented for CRbfKern");
   
 }
-double CRbfKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& covGrad) const
+double CRbfKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*covGrad*/) const
 {
   
   BOUNDCHECK(index<nParams);
@@ -1443,7 +1445,7 @@ void CExpKern::setInitParam()
   variance = init_variance;
 }
 
-inline double CExpKern::diagComputeElement(const CMatrix& X, unsigned int index) const
+inline double CExpKern::diagComputeElement(const CMatrix& /*X*/, unsigned int /*index*/) const
 {
   return variance;
 }
@@ -1611,12 +1613,12 @@ void CExpKern::getGradParams(CMatrix& g, const CMatrix& X, const CMatrix& covGra
 	return; // it could be sped up by exploiting the fact it's symmetric
 }
 
-double CExpKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& X2, const CMatrix& covGrad) const
+double CExpKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*X2*/, const CMatrix& /*covGrad*/) const
 {
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError( "Error getGradParam is not currently implemented for CExpKern");
 }
-double CExpKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& covGrad) const
+double CExpKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*covGrad*/) const
 {
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError( "Error getGradParam is not currently implemented for CExpKern");
@@ -1678,7 +1680,7 @@ void CRatQuadKern::setInitParam()
   variance = init_variance;
 }
 
-inline double CRatQuadKern::diagComputeElement(const CMatrix& X, unsigned int index) const
+inline double CRatQuadKern::diagComputeElement(const CMatrix& /*X*/, unsigned int /*index*/) const
 {
   return variance;
 }
@@ -1899,13 +1901,13 @@ void CRatQuadKern::getGradParams(CMatrix& g, const CMatrix& X, const CMatrix& co
     addPriorGrad(g);
 }
 
-double CRatQuadKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& X2, const CMatrix& covGrad) const
+double CRatQuadKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*X2*/, const CMatrix& /*covGrad*/) const
 {
   
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError("getGradParam is not currently implemented for CRatQuadKern.");
 }
-double CRatQuadKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& covGrad) const
+double CRatQuadKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*covGrad*/) const
 {
   
   BOUNDCHECK(index<nParams);
@@ -1963,7 +1965,7 @@ void CMatern32Kern::setInitParam()
   variance = init_variance;
 }
 
-inline double CMatern32Kern::diagComputeElement(const CMatrix& X, unsigned int index) const
+inline double CMatern32Kern::diagComputeElement(const CMatrix& /*X*/, unsigned int /*index*/) const
 {
   return variance;
 }
@@ -2179,18 +2181,15 @@ void CMatern32Kern::getGradParams(CMatrix& g, const CMatrix& X, const CMatrix& c
     addPriorGrad(g);
 }
 
-double CMatern32Kern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& X2, const CMatrix& covGrad) const
+double CMatern32Kern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*X2*/, const CMatrix& /*covGrad*/) const
 {
-  
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError("Error getGradParam is not currently implemented for CMatern32Kern");
-  
 }
-double CMatern32Kern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& covGrad) const
+double CMatern32Kern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*covGrad*/) const
 {
-  
   BOUNDCHECK(index<nParams);
-  throw ndlexceptions::NotImplementedError("Error getGradParam is not currently implemented for CMatern32Kern"); 
+  throw ndlexceptions::NotImplementedError("Error getGradParam is not currently implemented for CMatern32Kern");
 }
 
 // the Matern 5/2 kernel.
@@ -2243,7 +2242,7 @@ void CMatern52Kern::setInitParam()
   variance = init_variance;
 }
 
-inline double CMatern52Kern::diagComputeElement(const CMatrix& X, unsigned int index) const
+inline double CMatern52Kern::diagComputeElement(const CMatrix& /*X*/, unsigned int /*index*/) const
 {
   return variance;
 }
@@ -2476,18 +2475,18 @@ void CMatern52Kern::getGradParams(CMatrix& g, const CMatrix& X, const CMatrix& c
     addPriorGrad(g);
 }
 
-double CMatern52Kern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& X2, const CMatrix& covGrad) const
+double CMatern52Kern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*X2*/, const CMatrix& /*covGrad*/) const
 {
-  
+
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError("Error getGradParam is not currently implemented for CMatern52Kern");
-  
+
 }
-double CMatern52Kern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& covGrad) const
+double CMatern52Kern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*covGrad*/) const
 {
-  
+
   BOUNDCHECK(index<nParams);
-  throw ndlexceptions::NotImplementedError("Error getGradParam is not currently implemented for CMatern52Kern"); 
+  throw ndlexceptions::NotImplementedError("Error getGradParam is not currently implemented for CMatern52Kern");
 }
 
 
@@ -2962,19 +2961,19 @@ void CMlpKern::getGradParams(CMatrix& g, const CMatrix& X, const CMatrix& covGra
     addPriorGrad(g);
 
 }
-double CMlpKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& X2, const CMatrix& covGrad) const
+double CMlpKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*X2*/, const CMatrix& /*covGrad*/) const
 {
-  
+
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError( "Error getGradParam is not currently implemented for CMlpKern");
-  
+
 }
-double CMlpKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& covGrad) const
+double CMlpKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*covGrad*/) const
 {
-  
+
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError( "Error getGradParam is not currently implemented for CMlpKern");
-  
+
 }
 
 CPolyKern::CPolyKern() : CKern()
@@ -3267,19 +3266,19 @@ void CPolyKern::getGradParams(CMatrix& g, const CMatrix& X, const CMatrix& covGr
     addPriorGrad(g);
 
 }
-double CPolyKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& X2, const CMatrix& covGrad) const
+double CPolyKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*X2*/, const CMatrix& /*covGrad*/) const
 {
-  
+
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError( "Error getGradParam is not currently implemented for CPolyKern");
-  
+
 }
-double CPolyKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& covGrad) const
+double CPolyKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*covGrad*/) const
 {
-  
+
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError( "Error getGradParam is not currently implemented for CPolyKern");
-  
+
 }
 #ifdef _NDLMATLAB
 void CPolyKern::addParamToMxArray(mxArray* matlabArray) const
@@ -3559,19 +3558,19 @@ void CLinardKern::getGradParams(CMatrix& g, const CMatrix& X, const CMatrix& cov
     addPriorGrad(g);
 
 }
-double CLinardKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& X2, const CMatrix& covGrad) const
+double CLinardKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*X2*/, const CMatrix& /*covGrad*/) const
 {
-  
+
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError( "Error getGradParam is not currently implemented for CLinardKern");
-  
+
 }
-double CLinardKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& covGrad) const
+double CLinardKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*covGrad*/) const
 {
-  
+
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError( "Error getGradParam is not currently implemented for CLinardKern");
-  
+
 }
 // the RBF ARD kernel.
 CRbfardKern::CRbfardKern() : CArdKern()
@@ -3640,14 +3639,14 @@ void CRbfardKern::setInitParam()
 
 }
 
-double CRbfardKern::diagComputeElement(const CMatrix& X, unsigned int index1) const
+double CRbfardKern::diagComputeElement(const CMatrix& /*X*/, unsigned int /*index1*/) const
 {
   return variance;
 }
 // Parameters are kernel parameters
 void CRbfardKern::setParam(double val, unsigned int paramNo)
 {
-  
+
   BOUNDCHECK(paramNo<nParams);
   switch(paramNo)
   {
@@ -3663,12 +3662,12 @@ void CRbfardKern::setParam(double val, unsigned int paramNo)
     else
     {
       throw ndlexceptions::Error("Requested parameter doesn't exist.");
-    }    
+    }
   }
 }
 double CRbfardKern::getParam(unsigned int paramNo) const
 {
-  
+
   BOUNDCHECK(paramNo<nParams);
   switch(paramNo)
   {
@@ -3684,12 +3683,12 @@ double CRbfardKern::getParam(unsigned int paramNo) const
     else
     {
       throw ndlexceptions::Error("Requested parameter doesn't exist.");
-    }  
+    }
   }
 }
 void CRbfardKern::setInitParamVal(double val, unsigned int paramNo)
 {
-  
+
   BOUNDCHECK(paramNo<nParams);
   switch(paramNo)
   {
@@ -3705,12 +3704,12 @@ void CRbfardKern::setInitParamVal(double val, unsigned int paramNo)
     else
     {
       throw ndlexceptions::Error("Requested parameter doesn't exist.");
-    }    
+    }
   }
 }
 double CRbfardKern::getInitParamVal(unsigned int paramNo) const
 {
-  
+
   BOUNDCHECK(paramNo<nParams);
   switch(paramNo)
   {
@@ -3726,7 +3725,7 @@ double CRbfardKern::getInitParamVal(unsigned int paramNo) const
     else
     {
       throw ndlexceptions::Error("Requested parameter doesn't exist.");
-    }  
+    }
   }
 }
 void CRbfardKern::getGradX(CMatrix& gX, const CMatrix& X, unsigned int row, const CMatrix& X2, bool addG) const
@@ -3865,19 +3864,19 @@ void CRbfardKern::getGradParams(CMatrix& g, const CMatrix& X, const CMatrix& cov
     addPriorGrad(g);
 
 }
-double CRbfardKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& X2, const CMatrix& covGrad) const
+double CRbfardKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*X2*/, const CMatrix& /*covGrad*/) const
 {
-  
+
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError( "Error getGradParam is not currently implemented for CRbfardKern");
-  
+
 }
-double CRbfardKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& covGrad) const
+double CRbfardKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*covGrad*/) const
 {
-  
+
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError( "Error getGradParam is not currently implemented for CRbfardKern");
-  
+
 }
 
 // the MLP ARD kernel.
@@ -4310,19 +4309,19 @@ void CMlpardKern::getGradParams(CMatrix& g, const CMatrix& X, const CMatrix& cov
     addPriorGrad(g);
 
 }
-double CMlpardKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& covGrad) const
+double CMlpardKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*covGrad*/) const
 {
-  
+
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError( "Error getGradParam is not currently implemented for CMlpardKern");
-  
+
 }
-double CMlpardKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& X2, const CMatrix& covGrad) const
+double CMlpardKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*X2*/, const CMatrix& /*covGrad*/) const
 {
-  
+
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError( "Error getGradParam is not currently implemented for CMlpardKern");
-  
+
 }
 
 // the POLY ARD kernel.
@@ -4727,19 +4726,19 @@ void CPolyardKern::getGradParams(CMatrix& g, const CMatrix& X, const CMatrix& co
     addPriorGrad(g);
 
 }
-double CPolyardKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& covGrad) const
+double CPolyardKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*covGrad*/) const
 {
-  
+
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError( "Error getGradParam is not currently implemented for CPolyardKern");
-  
+
 }
-double CPolyardKern::getGradParam(unsigned int index, const CMatrix& X, const CMatrix& X2, const CMatrix& covGrad) const
+double CPolyardKern::getGradParam(unsigned int index, const CMatrix& /*X*/, const CMatrix& /*X2*/, const CMatrix& /*covGrad*/) const
 {
-  
+
   BOUNDCHECK(index<nParams);
   throw ndlexceptions::NotImplementedError( "Error getGradParam is not currently implemented for CPolyardKern");
-  
+
 }
 
 // Functions that operate on CKern.
@@ -4755,7 +4754,8 @@ void writeKernToStream(const CKern& kern, ostream& out)
 }
 CKern* readKernFromStream(istream& in)
 {
-  double ver = CStreamInterface::readVersionFromStream(in); 
+  double ver = CStreamInterface::readVersionFromStream(in);
+  (void)ver;
   string tbaseType = CStreamInterface::getBaseTypeStream(in);
   if(tbaseType != "kern")
     throw ndlexceptions::StreamFormatError("baseType", "Error mismatch between saved base type, " + tbaseType + ", and Class base type, kern.");

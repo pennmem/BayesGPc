@@ -13,13 +13,13 @@
 #include "CNdlInterfaces.h"
 #include "CTransform.h"
 #include "ndlutil.h"
-              
+
 
 const string DISTVERSION="0.1";
 
 // Base distribution class.
 class CDist : public CMatInterface, public CStreamInterface, public CTransformable {
-  
+
  public:
   CDist(){}
   virtual ~CDist(){}
@@ -33,7 +33,7 @@ class CDist : public CMatInterface, public CStreamInterface, public CTransformab
   }
   virtual double getParam(unsigned int paramNo) const=0;
   virtual void setParam(double val, unsigned int paramNo)=0;
-  virtual void getGradParams(CMatrix& g) const
+  virtual void getGradParams(CMatrix& /*g*/) const
   {
     // This is a dummy function
     cerr << "getGradParams should not be used in CDist" << endl;
@@ -43,8 +43,8 @@ class CDist : public CMatInterface, public CStreamInterface, public CTransformab
   {
     return "dist";
   }
-  
-  
+
+
 #ifdef _NDLMATLAB
   // returns an mxArray of the dist for use with matlab.
   virtual mxArray* toMxArray() const;
@@ -55,7 +55,7 @@ class CDist : public CMatInterface, public CStreamInterface, public CTransformab
   virtual void extractParamFromMxArray(const mxArray* matlabArray);
 #endif /* _NDLMATLAB*/
   bool equals(const CDist& dist, double tol=ndlutil::MATCHTOL) const;
- 
+
   virtual void writeParamsToStream(ostream& out) const;
   virtual void readParamsFromStream(istream& in);
   //CDist(CDist& dist);
@@ -67,8 +67,8 @@ class CDist : public CMatInterface, public CStreamInterface, public CTransformab
       DIMENSIONMATCH(g.getRows()==x.getRows());
       DIMENSIONMATCH(g.getCols()==x.getCols());
       for(unsigned int i=0; i<g.getRows(); i++)
-	for(unsigned int j=0; j<g.getCols(); j++)
-	  g.setVal(getGradInput(x.getVal(i, j)), i, j);
+        for(unsigned int j=0; j<g.getCols(); j++)
+          g.setVal(getGradInput(x.getVal(i, j)), i, j);
     }
   virtual void setInitParam()=0;
   // Get log probability at a particualar value
@@ -77,26 +77,25 @@ class CDist : public CMatInterface, public CStreamInterface, public CTransformab
     {
       double ll = 0.0;
       for(unsigned int i=0; i<x.getRows(); i++)
-	for(unsigned int j=0; j<x.getCols(); j++)
-		ll+=logProb(x.getVal(i, j));
+        for(unsigned int j=0; j<x.getCols(); j++)
+          ll+=logProb(x.getVal(i, j));
       return ll;
     }
   void setParamName(const string name, unsigned int index)
     {
-      
+
       BOUNDCHECK(index<nParams);
       if(paramNames.size() == index)
-	paramNames.push_back(name);
-      else 
-	{
-	  if(paramNames.size()<index)
-	    paramNames.resize(index+1, "no name");
-	  paramNames[index] = name;
-	}
+        paramNames.push_back(name);
+      else
+      {
+        if(paramNames.size()<index)
+          paramNames.resize(index+1, "no name");
+        paramNames[index] = name;
+      }
     }
   virtual string getParamName(unsigned int index) const
     {
-      
       BOUNDCHECK(index<paramNames.size());
       return paramNames[index];
     }
@@ -117,7 +116,7 @@ class CDist : public CMatInterface, public CStreamInterface, public CTransformab
     {
       return distName;
     }
-  
+
  private:
   void _init();
   unsigned int nParams;
@@ -198,7 +197,7 @@ class CWangDist : public CDist {
 };
 // A class which stores distributions in a container for priors over parameters.
 class CParamPriors : CMatInterface {
-  
+
  public:
 #ifdef _NDLMATLAB
   mxArray* toMxArray() const;
@@ -206,7 +205,6 @@ class CParamPriors : CMatInterface {
 #endif
   void addDist(CDist* dist, unsigned int index)
     {
-      
       distIndex.push_back(index);
       dists.push_back(dist);
     }
@@ -218,13 +216,11 @@ class CParamPriors : CMatInterface {
     }
   inline string getDistType(unsigned int ind) const
     {
-      
       BOUNDCHECK(ind<getNumDists());
       return dists[ind]->getType();
     }
   inline unsigned int getDistIndex(unsigned int ind) const
     {
-      
       BOUNDCHECK(ind<getNumDists());
       return distIndex[ind];
     }
@@ -255,16 +251,16 @@ class CRegularisable {
       DIMENSIONMATCH(params.getRows()==1);
       DIMENSIONMATCH(params.getCols()==getNumParams());
       for(unsigned int i=0; i<params.getCols(); i++)
-	params.setVal(getParam(i), i);
+        params.setVal(getParam(i), i);
     }
   virtual void setParams(const CMatrix& params)
     {
       DIMENSIONMATCH(params.getRows()==1);
       DIMENSIONMATCH(params.getCols()==getNumParams());
       for(unsigned int i=0; i<params.getCols(); i++)
-	setParam(params.getVal(i), i);
+      setParam(params.getVal(i), i);
     }
-  
+
   virtual void addPriorGrad(CMatrix& g) const
     {
       DIMENSIONMATCH(g.getRows()==1);
@@ -273,34 +269,34 @@ class CRegularisable {
       for(unsigned int i=0; i<distArray.distIndex.size(); i++)
       {
         param=getParam(distArray.distIndex[i]);
-        g.addVal(getPriorGradInput(param, i), 
+        g.addVal(getPriorGradInput(param, i),
           distArray.distIndex[i]);
-      }  
+      }
     }
-      
+
   virtual void writePriorsToStream(ostream& out) const
     {
       for(unsigned int i=0; i<distArray.distIndex.size(); i++)
-	{
-	  out << "priorIndex=" << distArray.distIndex[i] << endl;
-	  writeDistToStream(*distArray.dists[i], out);
-	}
+      {
+        out << "priorIndex=" << distArray.distIndex[i] << endl;
+        writeDistToStream(*distArray.dists[i], out);
+      }
     }
   virtual void readPriorsFromStream(istream& in, unsigned int numPriors)
     {
       string line;
       vector<string> tokens;
       for(unsigned int i=0; i<numPriors; i++)
-	{
-	  CDist* prior;
-	  getline(in, line);
-	  ndlstrutil::tokenise(tokens, line, "=");
-	  if(tokens.size()>2 || tokens[0]!="priorIndex")
-	    throw ndlexceptions::StreamFormatError("priorIndex");
-	  prior = readDistFromStream(in);
-	  addPrior(prior, atol(tokens[1].c_str()));
-	  tokens.clear();
-	}
+      {
+        CDist* prior;
+        getline(in, line);
+        ndlstrutil::tokenise(tokens, line, "=");
+        if(tokens.size()>2 || tokens[0]!="priorIndex")
+          throw ndlexceptions::StreamFormatError("priorIndex");
+        prior = readDistFromStream(in);
+        addPrior(prior, atol(tokens[1].c_str()));
+        tokens.clear();
+      }
     }
 
   virtual double priorLogProb() const
@@ -308,10 +304,10 @@ class CRegularisable {
       double L = 0.0;
       double param=0.0;
       for(unsigned int i=0; i<distArray.distIndex.size(); i++)
-	{
-	  param = getParam(distArray.distIndex[i]);
-	  L+=distArray.dists[i]->logProb(param);
-	}
+      {
+        param = getParam(distArray.distIndex[i]);
+        L+=distArray.dists[i]->logProb(param);
+      }
       return L;
     }
 
@@ -322,7 +318,7 @@ class CRegularisable {
     }
   inline CDist* getPrior(unsigned int ind) const
     {
-      
+
       BOUNDCHECK(ind<getNumPriors());
       return distArray.dists[ind];
     }
@@ -340,7 +336,6 @@ class CRegularisable {
     }
   void addPrior(CDist* dist, unsigned int index)
     {
-      
       BOUNDCHECK(index<getNumParams());
       distArray.distIndex.push_back(index);
       distArray.dists.push_back(dist);
@@ -370,4 +365,3 @@ class CRegularisable {
 
 #endif
 
-    

@@ -514,11 +514,11 @@ void CGp::out_sem(CMatrix& yPred, CMatrix& probPred, const CMatrix& Xin) const
     }
   }
 }
-double CGp::outGradParams(CMatrix& g, const CMatrix &Xin, unsigned int pointNo, unsigned int outputNo) const
+double CGp::outGradParams(CMatrix& /*g*/, const CMatrix &/*Xin*/, unsigned int /*pointNo*/, unsigned int /*outputNo*/) const
 {
   throw ndlexceptions::NotImplementedError("outGradParams not yet implemented for CGp.");
 }
-double CGp::outGradX(CMatrix& g, const CMatrix &Xin, unsigned int pointNo, unsigned int outputNo) const
+double CGp::outGradX(CMatrix& /*g*/, const CMatrix &/*Xin*/, unsigned int /*pointNo*/, unsigned int /*outputNo*/) const
 {
   throw ndlexceptions::NotImplementedError("outGradX not yet implemented for CGp.");
 }
@@ -947,7 +947,7 @@ void CGp::updateAD() const {
   }
 }
 // update invK with the inverse of the kernel plus beta terms computed from the active points.
-void CGp::_updateInvK(unsigned int dim) const
+void CGp::_updateInvK(unsigned int /*dim*/) const
 {
   if (getVerbosity() >= 3) { cout << "entering _updateInvK()" << endl; }
   double jit = 0.0;
@@ -1495,7 +1495,7 @@ void CGp::gpCovGrads() const
   }
   
 }
-void CGp::pointLogLikelihood(const CMatrix& y, const CMatrix& X) const
+void CGp::pointLogLikelihood(const CMatrix& /*y*/, const CMatrix& /*X*/) const
 {
   
 }

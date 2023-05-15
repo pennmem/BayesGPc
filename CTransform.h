@@ -108,7 +108,7 @@ class CLinearTransform : public CTransform
   {
     return m*x+c;
   }
-  double gradfact(double x) const
+  double gradfact(double /*x*/) const
   {
     return 1/m;
   }

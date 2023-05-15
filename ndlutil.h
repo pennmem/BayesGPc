@@ -125,15 +125,16 @@ namespace ndlutil {
    email: m-mat @ math.sci.hiroshima-u.ac.jp (remove space)
   */
 
-  /* Period parameters */  
+  /* Period parameters */
   const unsigned long MATRIX_A=0x9908b0dfUL;   /* constant vector a */
   const unsigned long UPPER_MASK=0x80000000UL; /* most significant w-r bits */
   const unsigned long LOWER_MASK=0x7fffffffUL; /* least significant r bits */
   const unsigned long N=624;
   const unsigned long M=397;
-    
-  static unsigned long mt[N]; /* the array for the state vector  */
-  static unsigned int mti=N+1; /* mti==N+1 means mt[N] is not initialized */
+
+  // Relocated to ndlutil.cpp to resolve build warnings.
+  //static unsigned long mt[N]; /* the array for the state vector  */
+  //static unsigned int mti=N+1; /* mti==N+1 means mt[N] is not initialized */
   void init_genrand(unsigned long s);
   void init_by_array(unsigned long init_key[], int key_length);
   unsigned long genrand_int32(void);
@@ -142,6 +143,5 @@ namespace ndlutil {
   double genrand_real2(void);
   double genrand_real3(void);
   double genrand_res53(void);
-  
 }
 #endif
